@@ -51,7 +51,8 @@ docker exec central-sso php artisan db:seed --class=AddTestUsersSeeder
 ## ✨ Key Features
 
 - **🏢 Multi-tenant Architecture** - Complete data isolation with separate databases per tenant
-- **🔐 Dual Authentication Methods** - SSO redirect flows + direct API authentication
+- **🔐 Seamless SSO Experience** - Auto-redirects authenticated users without login form
+- **⚡ Processing Page Flow** - JavaScript-based authentication checking with loading states
 - **🎟️ JWT-based Authentication** - Stateless token authentication with tenant-specific claims
 - **👥 Cross-tenant User Access** - Users can belong to multiple tenants
 - **🛡️ Security Best Practices** - CSRF protection, rate limiting, secure password hashing

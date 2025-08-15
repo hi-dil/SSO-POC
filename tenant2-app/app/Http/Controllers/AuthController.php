@@ -92,9 +92,20 @@ class AuthController extends Controller
         return redirect('/login')->withErrors(['error' => 'Invalid authentication token']);
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
+        // Check if user wants to logout from all SSO sessions
+        $logoutFromSSO = $request->get('sso_logout', false);
+        
         $this->ssoService->logout();
+        
+        if ($logoutFromSSO) {
+            // Redirect to central SSO logout to clear the SSO session
+            $callback = url('/');
+            $ssoLogoutUrl = env('CENTRAL_SSO_URL') . '/auth/logout?callback_url=' . urlencode($callback);
+            return redirect($ssoLogoutUrl);
+        }
+        
         return redirect('/')->with('success', 'You have been logged out.');
     }
 

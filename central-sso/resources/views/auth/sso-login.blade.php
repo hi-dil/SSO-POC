@@ -23,14 +23,24 @@
                 <input type="hidden" name="tenant_slug" value="{{ $tenant_slug }}">
                 <input type="hidden" name="callback_url" value="{{ $callback_url }}">
                 
-                @if($errors->any())
+                @if($errors->any() || isset($error))
                     <div class="rounded-md bg-red-50 p-4">
                         <div class="flex">
                             <div class="ml-3">
                                 <h3 class="text-sm font-medium text-red-800">
-                                    @foreach($errors->all() as $error)
+                                    @if(isset($error))
                                         {{ $error }}
-                                    @endforeach
+                                        <div class="mt-2">
+                                            <a href="{{ route('sso.logout', ['callback_url' => $callback_url]) }}" 
+                                               class="text-sm text-indigo-600 hover:text-indigo-500 underline">
+                                                Switch to a different account
+                                            </a>
+                                        </div>
+                                    @else
+                                        @foreach($errors->all() as $error)
+                                            {{ $error }}
+                                        @endforeach
+                                    @endif
                                 </h3>
                             </div>
                         </div>

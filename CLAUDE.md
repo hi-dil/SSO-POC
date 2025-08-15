@@ -106,9 +106,16 @@ All users use password: **password**
 
 ### Authentication Flows
 1. **Central SSO Login**: Users login at `localhost:8000/login` and get redirected to tenant apps
-2. **Tenant-Specific Login**: Users can login directly via tenant-specific SSO pages
-3. **API Authentication**: Direct API calls for programmatic access
-4. **Multi-Tenant Support**: Users can have access to multiple tenants
+2. **Seamless SSO**: Users already authenticated are automatically redirected without login form
+3. **Tenant-Specific Login**: Users can login directly via tenant-specific SSO pages
+4. **API Authentication**: Direct API calls for programmatic access
+5. **Multi-Tenant Support**: Users can have access to multiple tenants
+
+### Seamless SSO Process
+- **Processing Page**: Shows loading state while checking authentication
+- **Auto-Detection**: JavaScript checks if user is already authenticated
+- **Smart Redirect**: Automatically redirects authenticated users to tenant apps
+- **Graceful Fallback**: Shows login form only when authentication is required
 
 ### Token Management
 - JWT tokens with tenant-specific claims
@@ -137,6 +144,7 @@ All users use password: **password**
 - **Database connection**: Check Docker containers are running
 - **Token validation**: Verify tenant associations in database
 - **CORS issues**: Check tenant app configurations
+- **Domain consistency**: All apps must use `localhost` domain for session sharing
 
 ## Important Notes
 
@@ -145,3 +153,5 @@ All users use password: **password**
 - Test users are seeded via `AddTestUsersSeeder`
 - Tenant relationships are stored in `tenant_users` pivot table
 - JWT claims include `tenants` array and `current_tenant`
+- **Domain Consistency**: All apps use `localhost` domain to ensure proper session sharing
+- **Processing Page**: SSO authentication uses JavaScript-based checking for seamless UX

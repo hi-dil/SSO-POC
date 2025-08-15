@@ -8,6 +8,46 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/debug-session', function () {
+    $user = auth()->user();
+    return response()->json([
+        'session_config' => [
+            'driver' => config('session.driver'),
+            'domain' => config('session.domain'),
+            'cookie' => config('session.cookie'),
+            'secure' => config('session.secure'),
+            'same_site' => config('session.same_site'),
+        ],
+        'session_id' => session()->getId(),
+        'auth_check' => auth()->check(),
+        'user_id' => auth()->id(),
+        'user_email' => $user ? $user->email : null,
+        'session_data' => session()->all(),
+        'cookies_received' => request()->cookies->all(),
+    ]);
+});
+
+Route::get('/clear-all-cookies', function () {
+    $response = response('All session cookies cleared. <a href="/login">Login again</a>');
+    
+    // Clear all possible session cookies that might be conflicting
+    $cookiesToClear = [
+        'laravel_session',
+        'laravel-session', 
+        'central_sso_session',
+        'tenant1_session',
+        'tenant2_session',
+        'XSRF-TOKEN'
+    ];
+    
+    foreach ($cookiesToClear as $cookieName) {
+        $response->withCookie(cookie()->forget($cookieName));
+        $response->withCookie(cookie()->make($cookieName, '', -1, '/', 'localhost'));
+    }
+    
+    return $response;
+});
+
 // Main Central SSO Login Routes
 Route::get('/login', [MainAuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [MainAuthController::class, 'login'])->name('main.login.submit');
@@ -18,8 +58,12 @@ Route::post('/tenant-access', [MainAuthController::class, 'accessTenant'])->name
 Route::get('/logout', [MainAuthController::class, 'logout'])->name('main.logout');
 
 // SSO Authentication Routes (for tenant-specific login)
-Route::get('/auth/{tenant_slug}', [SSOController::class, 'showLoginForm'])->name('sso.form');
-Route::post('/auth/login', [SSOController::class, 'handleLogin'])->name('sso.login');
+Route::middleware(['web'])->group(function () {
+    Route::get('/auth/{tenant_slug}', [SSOController::class, 'showLoginForm'])->name('sso.form');
+    Route::get('/auth/{tenant_slug}/check', [SSOController::class, 'checkAuth'])->name('sso.check');
+    Route::post('/auth/login', [SSOController::class, 'handleLogin'])->name('sso.login');
+    Route::get('/auth/logout', [SSOController::class, 'logout'])->name('sso.logout');
+});
 
 // Admin Routes (Protected by authentication and permissions)
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {

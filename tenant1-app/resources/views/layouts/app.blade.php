@@ -88,10 +88,26 @@
                 @if(session('user'))
                     <span>Welcome, {{ session('user')['name'] ?? 'User' }}</span>
                     <a href="{{ route('dashboard') }}">Dashboard</a>
-                    <form action="{{ route('logout') }}" method="POST" style="display: inline;">
-                        @csrf
-                        <button type="submit">Logout</button>
-                    </form>
+                    <div style="position: relative; display: inline-block;" id="logout-dropdown">
+                        <button type="button" onclick="toggleLogoutDropdown()" style="background: none; border: none; color: #667eea; cursor: pointer; padding: 0.5rem 1rem; border-radius: 5px;">
+                            Logout ▼
+                        </button>
+                        <div id="logout-options" style="display: none; position: absolute; right: 0; top: 100%; background: white; border: 1px solid #ccc; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); min-width: 200px; z-index: 1000;">
+                            <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
+                                @csrf
+                                <button type="submit" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: none; cursor: pointer; color: #333;">
+                                    Logout from {{ config('app.name') }}
+                                </button>
+                            </form>
+                            <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
+                                @csrf
+                                <input type="hidden" name="sso_logout" value="1">
+                                <button type="submit" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: none; cursor: pointer; color: #333; border-top: 1px solid #eee;">
+                                    Logout from all apps
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 @else
                     <a href="{{ route('login') }}">Login</a>
                     <a href="{{ route('register') }}">Register</a>
@@ -115,5 +131,20 @@
 
         @yield('content')
     </main>
+
+    <script>
+        function toggleLogoutDropdown() {
+            const dropdown = document.getElementById('logout-options');
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('logout-dropdown');
+            if (dropdown && !dropdown.contains(event.target)) {
+                document.getElementById('logout-options').style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>

@@ -19,22 +19,16 @@ cd sso-poc-claude3
 docker-compose up -d
 ```
 
-### 3. Setup Hosts File
+### 3. Access Applications
 
-Add these entries to your `/etc/hosts` file (Linux/Mac) or `C:\Windows\System32\drivers\etc\hosts` (Windows):
+All applications run on localhost with different ports:
 
-```
-127.0.0.1 sso.localhost
-127.0.0.1 tenant1.localhost
-127.0.0.1 tenant2.localhost
-```
-
-### 4. Access Applications
-
-- **Central SSO**: http://sso.localhost:8000
-- **Tenant 1**: http://tenant1.localhost:8001
-- **Tenant 2**: http://tenant2.localhost:8002
+- **Central SSO**: http://localhost:8000
+- **Tenant 1**: http://localhost:8001
+- **Tenant 2**: http://localhost:8002
 - **Database**: localhost:3307 (MariaDB)
+
+> **Note**: All services use `localhost` domain for consistent session sharing across the SSO system.
 
 ## Detailed Setup
 
@@ -57,7 +51,7 @@ APP_NAME="Central SSO"
 APP_ENV=local
 APP_KEY=base64:generated_key_here
 APP_DEBUG=true
-APP_URL=http://sso.localhost:8000
+APP_URL=http://localhost:8000
 
 DB_CONNECTION=mysql
 DB_HOST=mariadb
@@ -78,7 +72,7 @@ APP_NAME="Tenant 1"
 APP_ENV=local
 APP_KEY=base64:generated_key_here
 APP_DEBUG=true
-APP_URL=http://tenant1.localhost:8001
+APP_URL=http://localhost:8001
 
 DB_CONNECTION=mysql
 DB_HOST=mariadb
@@ -87,7 +81,7 @@ DB_DATABASE=tenant1_db
 DB_USERNAME=sso_user
 DB_PASSWORD=sso_password
 
-CENTRAL_SSO_URL=http://sso.localhost:8000
+CENTRAL_SSO_URL=http://localhost:8000
 CENTRAL_SSO_API=http://central-sso:8000/api
 TENANT_SLUG=tenant1
 ```
@@ -225,9 +219,15 @@ kill -9 <PID>
 - Verify database exists
 
 #### Cross-Origin Issues
-- Ensure hosts file is configured correctly
+- **Domain Consistency**: Ensure all apps use `localhost` domain
 - Check CORS configuration in Laravel apps
 - Verify JWT token is being passed correctly
+
+#### Session Sharing Issues
+- **Critical**: All applications must use the same domain (`localhost`)
+- Different domains (e.g., `sso.localhost` vs `localhost`) prevent session sharing
+- Browser treats different domains as separate origins
+- Cookies and sessions are isolated between domains
 
 #### Container Won't Start
 ```bash

@@ -29,7 +29,59 @@ graph TB
     T2 -->|Validate Token| SSO
 ```
 
-## Current Implementation - Authentication Flow
+## Authentication Flows
+
+### 🔄 Seamless SSO Flow (New Implementation)
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant T as Tenant App<br/>(localhost:8001)
+    participant SSO as Central SSO<br/>(localhost:8000)
+    participant S as Session/Cookies
+    
+    Note over U,S: Already Authenticated User
+    U->>T: 1. Visit tenant app
+    U->>T: 2. Click "Login with SSO"
+    T->>U: 3. Redirect to SSO Processing Page
+    U->>SSO: 4. GET /auth/tenant1?callback_url=...
+    SSO->>U: 5. Show processing page (loading state)
+    
+    Note over U,S: JavaScript Authentication Check
+    U->>SSO: 6. AJAX: GET /auth/tenant1/check
+    SSO->>S: 7. Check existing session
+    S->>SSO: 8. Session valid + user authenticated
+    SSO->>SSO: 9. Verify tenant access
+    SSO->>SSO: 10. Generate JWT token
+    SSO->>U: 11. JSON: {authenticated: true, redirect_to: "..."}
+    U->>U: 12. JavaScript auto-redirect
+    U->>T: 13. Callback with JWT token
+    T->>T: 14. Validate token & authenticate user
+    T->>U: 15. Redirect to protected content
+```
+
+### 🎯 Processing Page Benefits
+
+- **Seamless UX**: No unnecessary login forms for authenticated users
+- **Fast Response**: JavaScript-based checking provides immediate feedback
+- **Loading State**: Users see clear progress indication
+- **Cross-Origin Compatible**: Works despite browser cookie isolation between ports
+- **Graceful Fallback**: Always provides login form when needed
+- **Security Maintained**: Proper tenant access validation and JWT generation
+
+### 🔧 Technical Implementation
+
+The processing page (`auth.sso-processing.blade.php`) uses JavaScript to:
+
+1. **Show Loading State**: Immediate visual feedback to user
+2. **AJAX Authentication Check**: Call `/auth/{tenant}/check` endpoint
+3. **Handle Response States**:
+   - `authenticated: true, redirect_to: "..."` → Auto-redirect
+   - `authenticated: true, access_denied: true` → Show access denied
+   - `authenticated: false` → Show login form
+4. **Error Handling**: Network failures gracefully fall back to login form
+
+## Standard Authentication Flow
 
 ### Complete Login Flow with Token Validation
 
