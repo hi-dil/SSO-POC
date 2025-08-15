@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(composer create-project:*)",
+      "Bash(composer:*)",
+      "Bash(php artisan tenancy:install:*)",
+      "Bash(php /Users/oztblueimac/git/sso-poc-claude3/central-sso/artisan make:migration add_is_admin_to_users_table --table=users)",
+      "Bash(php:*)",
+      "Bash(cp:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker exec:*)",
+      "Bash(curl:*)",
+      "Bash(/dev/null)",
+      "Bash(sqlite3:*)",
+      "Bash(rm:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
