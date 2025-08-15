@@ -6,15 +6,21 @@ Base URL: `http://localhost:8000`
 
 ## Test Users
 
-The following test users are available in the database:
+The following test users are available in the MariaDB database:
 
 | Email | Password | Tenant | Role | Description |
 |-------|----------|--------|------|-------------|
-| user@tenant1.com | tenant123 | tenant1 | User | Regular user for Tenant 1 |
-| admin@tenant1.com | admin123 | tenant1 | Admin | Administrator for Tenant 1 |
-| user@tenant2.com | tenant456 | tenant2 | User | Regular user for Tenant 2 |
-| admin@tenant2.com | admin456 | tenant2 | Admin | Administrator for Tenant 2 |
-| superadmin@sso.com | super123 | tenant1, tenant2 | Admin | Super admin with access to both tenants |
+| user@tenant1.com | password | tenant1 | User | Regular user for Tenant 1 |
+| admin@tenant1.com | password | tenant1 | Admin | Administrator for Tenant 1 |
+| user@tenant2.com | password | tenant2 | User | Regular user for Tenant 2 |
+| admin@tenant2.com | password | tenant2 | Admin | Administrator for Tenant 2 |
+| superadmin@sso.com | password | tenant1, tenant2 | Admin | Super admin with access to both tenants |
+
+### Legacy Users (unknown passwords)
+| Email | Description |
+|-------|-------------|
+| admin@example.com | Legacy admin user |
+| multi@example.com | Legacy multi-tenant user |
 
 ## Available Tenants
 
@@ -31,8 +37,8 @@ Authenticate user with credentials.
 **Request:**
 ```json
 {
-  "email": "user@example.com",
-  "password": "password123",
+  "email": "user@tenant1.com",
+  "password": "password",
   "tenant_slug": "tenant1"
 }
 ```
@@ -70,9 +76,9 @@ Register new user account.
 ```json
 {
   "name": "John Doe",
-  "email": "user@example.com",
-  "password": "password123",
-  "password_confirmation": "password123",
+  "email": "newuser@tenant1.com",
+  "password": "password",
+  "password_confirmation": "password",
   "tenant_slug": "tenant1"
 }
 ```
@@ -318,12 +324,54 @@ Laravel Telescope is available for debugging and monitoring in the development e
 - Cache operations
 - Mail preview
 
+### Docker Environment
+
+The application runs in Docker containers:
+
+```bash
+# Start all services
+docker compose up -d
+
+# Check running containers
+docker ps
+
+# View logs
+docker compose logs central-sso
+docker compose logs mariadb
+
+# Execute commands in containers
+docker exec central-sso php artisan migrate
+docker exec mariadb mysql -u sso_user -psso_password sso_main
+```
+
+**Container Services:**
+- **central-sso**: Main SSO application (port 8000)
+- **tenant1-app**: Tenant 1 application (port 8001) 
+- **tenant2-app**: Tenant 2 application (port 8002)
+- **mariadb**: Database server (port 3306)
+
 ### Database
 
-The application uses SQLite for development:
-- Database file: `/central-sso/database/database.sqlite`
-- Migrations: Run with `php artisan migrate`
-- Seeding: Run with `php artisan db:seed --class=TestDataSeeder`
+The application uses MariaDB via Docker Compose:
+- **Database**: MariaDB running in Docker container
+- **Connection**: Via Docker network (`mariadb` host)
+- **Database Name**: `sso_main`
+- **Migrations**: Run with `docker exec central-sso php artisan migrate`
+- **Seeding**: Run with `docker exec central-sso php artisan db:seed --class=AddTestUsersSeeder`
+
+#### Direct Database Access
+```bash
+# Connect to MariaDB
+docker exec -it mariadb mysql -u sso_user -psso_password sso_main
+
+# Check users
+SELECT email, name, is_admin FROM users;
+
+# Check tenant relationships
+SELECT u.email, t.id as tenant_id FROM users u 
+JOIN tenant_users tu ON u.id = tu.user_id 
+JOIN tenants t ON tu.tenant_id = t.id;
+```
 
 ## Rate Limiting
 

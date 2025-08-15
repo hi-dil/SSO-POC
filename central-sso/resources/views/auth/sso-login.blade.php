@@ -79,13 +79,13 @@
                 <div class="mt-6 grid grid-cols-1 gap-3">
                     <div class="text-sm text-gray-600">
                         @if($tenant_slug == 'tenant1')
-                            <p><strong>Regular User:</strong> user@tenant1.com / tenant123</p>
-                            <p><strong>Admin:</strong> admin@tenant1.com / admin123</p>
+                            <p><strong>Regular User:</strong> user@tenant1.com / password</p>
+                            <p><strong>Admin:</strong> admin@tenant1.com / password</p>
                         @elseif($tenant_slug == 'tenant2')
-                            <p><strong>Regular User:</strong> user@tenant2.com / tenant456</p>
-                            <p><strong>Admin:</strong> admin@tenant2.com / admin456</p>
+                            <p><strong>Regular User:</strong> user@tenant2.com / password</p>
+                            <p><strong>Admin:</strong> admin@tenant2.com / password</p>
                         @endif
-                        <p><strong>Super Admin:</strong> superadmin@sso.com / super123</p>
+                        <p><strong>Super Admin:</strong> superadmin@sso.com / password</p>
                     </div>
                 </div>
             </div>

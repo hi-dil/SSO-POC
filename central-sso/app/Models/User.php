@@ -69,6 +69,8 @@ class User extends Authenticatable implements JWTSubject
 
     public function hasAccessToTenant($tenantSlug)
     {
-        return $this->tenants->contains('slug', $tenantSlug);
+        return $this->tenants->contains(function ($tenant) use ($tenantSlug) {
+            return $tenant->slug === $tenantSlug;
+        });
     }
 }

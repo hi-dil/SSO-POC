@@ -38,7 +38,7 @@ class SSOController extends Controller
             'callback_url' => 'required|url'
         ]);
         
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->with('tenants')->first();
         
         if (!$user || !Hash::check($request->password, $user->password)) {
             return back()->withErrors(['email' => 'Invalid credentials'])->withInput();
@@ -50,7 +50,7 @@ class SSOController extends Controller
         
         try {
             $customClaims = [
-                'tenants' => $user->tenants->pluck('slug')->toArray(),
+                'tenants' => $user->tenants->map(function($tenant) { return $tenant->slug; })->toArray(),
                 'current_tenant' => $request->tenant_slug,
             ];
             

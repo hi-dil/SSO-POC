@@ -32,7 +32,7 @@ class AuthController extends Controller
         $credentials = $request->only('email', 'password');
         $tenantSlug = $request->tenant_slug;
 
-        $user = User::where('email', $credentials['email'])->first();
+        $user = User::where('email', $credentials['email'])->with('tenants')->first();
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json([
@@ -50,7 +50,7 @@ class AuthController extends Controller
 
         try {
             $customClaims = [
-                'tenants' => $user->tenants->pluck('slug')->toArray(),
+                'tenants' => $user->tenants->map(function($tenant) { return $tenant->slug; })->toArray(),
                 'current_tenant' => $tenantSlug,
             ];
 

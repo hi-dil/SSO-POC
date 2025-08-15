@@ -6,7 +6,7 @@
 graph TB
     subgraph "Central SSO Server"
         SSO[Central SSO<br/>localhost:8000]
-        DB[(SQLite DB)]
+        DB[(MariaDB)]
         JWT[JWT Service]
         SSO --> DB
         SSO --> JWT
@@ -160,26 +160,38 @@ sequenceDiagram
 
 ## Database Schema
 
-### Users Table
-- `id`: Primary key
+### Users Table (MariaDB)
+- `id`: Primary key (auto-increment)
 - `name`: User's full name
 - `email`: Unique email address
 - `password`: Bcrypt hashed password
-- `is_admin`: Boolean admin flag
+- `is_admin`: Boolean admin flag (0/1)
 - `created_at`, `updated_at`: Timestamps
 
-### Tenants Table
+### Tenants Table (MariaDB)
 - `id`: String primary key (e.g., "tenant1")
-- `data`: JSON field containing:
-  - `name`: Tenant display name
-  - `slug`: URL-safe identifier
-  - `domain`: Tenant domain
+- `data`: JSON field (can be null or empty)
 - `created_at`, `updated_at`: Timestamps
 
 ### Tenant_Users Table (Pivot)
-- `user_id`: Foreign key to users
-- `tenant_id`: Foreign key to tenants
+- `user_id`: Foreign key to users table
+- `tenant_id`: Foreign key to tenants table
 - `created_at`, `updated_at`: Timestamps
+
+### Database Access
+```bash
+# Connect to MariaDB
+docker exec -it mariadb mysql -u sso_user -psso_password sso_main
+
+# View users
+SELECT id, email, name, is_admin FROM users;
+
+# View tenant relationships
+SELECT u.email, t.id as tenant_id 
+FROM users u 
+JOIN tenant_users tu ON u.id = tu.user_id 
+JOIN tenants t ON tu.tenant_id = t.id;
+```
 
 ## Error Scenarios
 
@@ -242,13 +254,19 @@ flowchart TD
 
 ### Testing Credentials
 
-| User | Password | Tenant Access |
-|------|----------|---------------|
-| user@tenant1.com | tenant123 | tenant1 |
-| admin@tenant1.com | admin123 | tenant1 |
-| user@tenant2.com | tenant456 | tenant2 |
-| admin@tenant2.com | admin456 | tenant2 |
-| superadmin@sso.com | super123 | tenant1, tenant2 |
+| User | Password | Tenant Access | Role |
+|------|----------|---------------|------|
+| user@tenant1.com | password | tenant1 | User |
+| admin@tenant1.com | password | tenant1 | Admin |
+| user@tenant2.com | password | tenant2 | User |
+| admin@tenant2.com | password | tenant2 | Admin |
+| superadmin@sso.com | password | tenant1, tenant2 | Super Admin |
+
+### Legacy Users (unknown passwords)
+| User | Description |
+|------|-------------|
+| admin@example.com | Legacy admin user |
+| multi@example.com | Legacy multi-tenant user |
 
 ## Common Issues and Solutions
 
@@ -267,3 +285,11 @@ flowchart TD
 ### Issue: Token expires too quickly
 **Cause**: Default TTL is 60 minutes
 **Solution**: Adjust JWT_TTL in .env file or implement refresh token flow
+
+### Issue: "Invalid credentials" with correct password
+**Cause**: Using wrong database (SQLite vs MariaDB)
+**Solution**: Ensure using MariaDB in Docker, not local SQLite
+
+### Issue: User not found errors
+**Cause**: Database not seeded with test users
+**Solution**: Run `docker exec central-sso php artisan db:seed --class=AddTestUsersSeeder`
