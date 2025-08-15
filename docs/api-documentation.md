@@ -2,7 +2,26 @@
 
 ## Central SSO API Endpoints
 
-Base URL: `http://sso.localhost:8000`
+Base URL: `http://localhost:8000`
+
+## Test Users
+
+The following test users are available in the database:
+
+| Email | Password | Tenant | Role | Description |
+|-------|----------|--------|------|-------------|
+| user@tenant1.com | tenant123 | tenant1 | User | Regular user for Tenant 1 |
+| admin@tenant1.com | admin123 | tenant1 | Admin | Administrator for Tenant 1 |
+| user@tenant2.com | tenant456 | tenant2 | User | Regular user for Tenant 2 |
+| admin@tenant2.com | admin456 | tenant2 | Admin | Administrator for Tenant 2 |
+| superadmin@sso.com | super123 | tenant1, tenant2 | Admin | Super admin with access to both tenants |
+
+## Available Tenants
+
+| Tenant ID | Slug | Name | Domain |
+|-----------|------|------|--------|
+| tenant1 | tenant1 | Tenant 1 | tenant1.local |
+| tenant2 | tenant2 | Tenant 2 | tenant2.local |
 
 ### Authentication Endpoints
 
@@ -27,7 +46,8 @@ Authenticate user with credentials.
     "id": 1,
     "email": "user@example.com",
     "name": "John Doe",
-    "tenants": ["tenant1", "tenant2"]
+    "tenants": ["tenant1", "tenant2"],
+    "current_tenant": "tenant1"
   }
 }
 ```
@@ -104,15 +124,32 @@ Validate JWT token.
 }
 ```
 
-**Response:**
+**Response (Success):**
 ```json
 {
   "valid": true,
   "user": {
     "id": 1,
     "email": "user@example.com",
-    "name": "John Doe"
+    "name": "John Doe",
+    "tenants": ["tenant1", "tenant2"]
   }
+}
+```
+
+**Response (Invalid Token for Tenant):**
+```json
+{
+  "valid": false,
+  "message": "Token not valid for this tenant"
+}
+```
+
+**Response (Invalid Token):**
+```json
+{
+  "valid": false,
+  "message": "Token is invalid"
 }
 ```
 
@@ -264,6 +301,29 @@ Admin dashboard for tenant management (admin only).
   }
 }
 ```
+
+## Development Tools
+
+### Laravel Telescope
+
+Laravel Telescope is available for debugging and monitoring in the development environment.
+
+**Access URL:** `http://localhost:8000/telescope`
+
+**Features:**
+- Request monitoring
+- Database query inspection
+- Exception tracking
+- Job monitoring
+- Cache operations
+- Mail preview
+
+### Database
+
+The application uses SQLite for development:
+- Database file: `/central-sso/database/database.sqlite`
+- Migrations: Run with `php artisan migrate`
+- Seeding: Run with `php artisan db:seed --class=TestDataSeeder`
 
 ## Rate Limiting
 
