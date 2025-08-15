@@ -35,7 +35,7 @@ class AddTestUsersSeeder extends Seeder
         $user1 = User::create([
             'name' => 'Tenant 1 User',
             'email' => 'user@tenant1.com',
-            'password' => Hash::make('tenant123'),
+            'password' => Hash::make('password'),
             'is_admin' => false,
         ]);
         $user1->tenants()->attach($tenant1);
@@ -43,7 +43,7 @@ class AddTestUsersSeeder extends Seeder
         $admin1 = User::create([
             'name' => 'Tenant 1 Admin',
             'email' => 'admin@tenant1.com',
-            'password' => Hash::make('admin123'),
+            'password' => Hash::make('password'),
             'is_admin' => true,
         ]);
         $admin1->tenants()->attach($tenant1);
@@ -52,7 +52,7 @@ class AddTestUsersSeeder extends Seeder
         $user2 = User::create([
             'name' => 'Tenant 2 User',
             'email' => 'user@tenant2.com',
-            'password' => Hash::make('tenant456'),
+            'password' => Hash::make('password'),
             'is_admin' => false,
         ]);
         $user2->tenants()->attach($tenant2);
@@ -60,7 +60,7 @@ class AddTestUsersSeeder extends Seeder
         $admin2 = User::create([
             'name' => 'Tenant 2 Admin',
             'email' => 'admin@tenant2.com',
-            'password' => Hash::make('admin456'),
+            'password' => Hash::make('password'),
             'is_admin' => true,
         ]);
         $admin2->tenants()->attach($tenant2);
@@ -69,17 +69,17 @@ class AddTestUsersSeeder extends Seeder
         $superAdmin = User::create([
             'name' => 'Super Admin',
             'email' => 'superadmin@sso.com',
-            'password' => Hash::make('super123'),
+            'password' => Hash::make('password'),
             'is_admin' => true,
         ]);
         $superAdmin->tenants()->attach([$tenant1->id, $tenant2->id]);
 
         $this->command->info('Test users added successfully!');
         $this->command->info('Users created:');
-        $this->command->info('- user@tenant1.com (password: tenant123) - Tenant 1 User');
-        $this->command->info('- admin@tenant1.com (password: admin123) - Tenant 1 Admin');
-        $this->command->info('- user@tenant2.com (password: tenant456) - Tenant 2 User');
-        $this->command->info('- admin@tenant2.com (password: admin456) - Tenant 2 Admin');
-        $this->command->info('- superadmin@sso.com (password: super123) - Super Admin (both tenants)');
+        $this->command->info('- user@tenant1.com (password: password) - Tenant 1 User');
+        $this->command->info('- admin@tenant1.com (password: password) - Tenant 1 Admin');
+        $this->command->info('- user@tenant2.com (password: password) - Tenant 2 User');
+        $this->command->info('- admin@tenant2.com (password: password) - Tenant 2 Admin');
+        $this->command->info('- superadmin@sso.com (password: password) - Super Admin (both tenants)');
     }
 }

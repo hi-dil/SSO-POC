@@ -15,26 +15,24 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'name',
         'slug',
         'domain',
+        'is_active',
+        'max_users',
+        'description',
+        'logo_url',
         'data',
+        'settings',
     ];
 
     protected $casts = [
         'data' => 'array',
+        'settings' => 'array',
+        'is_active' => 'boolean',
     ];
 
-    public function getSlugAttribute()
+    // User count relationship helper
+    public function getUserCountAttribute()
     {
-        return $this->data['slug'] ?? $this->id;
-    }
-
-    public function getNameAttribute()
-    {
-        return $this->data['name'] ?? $this->id;
-    }
-
-    public function getDomainAttribute()
-    {
-        return $this->data['domain'] ?? null;
+        return $this->users()->count();
     }
 
     public function getIncrementing()

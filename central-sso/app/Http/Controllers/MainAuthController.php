@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class MainAuthController extends Controller
@@ -27,7 +28,14 @@ class MainAuthController extends Controller
             return back()->withErrors(['email' => 'Invalid credentials'])->withInput();
         }
 
-        // Load user's tenants
+        // Check if user has admin permissions and should access admin panel
+        if ($user->can('manage-tenants')) {
+            // Log the user in for Laravel session authentication
+            Auth::login($user);
+            return redirect()->route('admin.tenants.index')->with('success', 'Welcome to Admin Panel!');
+        }
+
+        // Load user's tenants for SSO flow
         $user->load('tenants');
         $tenants = $user->tenants;
 
@@ -35,7 +43,7 @@ class MainAuthController extends Controller
             return back()->withErrors(['email' => 'No tenant access assigned'])->withInput();
         }
 
-        // Store user in session temporarily
+        // Store user in session temporarily for SSO flow
         session(['pending_auth_user' => $user->id]);
 
         if ($tenants->count() === 1) {
@@ -127,6 +135,10 @@ class MainAuthController extends Controller
 
     public function logout()
     {
+        // Logout from Laravel session
+        Auth::logout();
+        
+        // Clear SSO pending session
         session()->forget('pending_auth_user');
         
         try {
@@ -136,6 +148,10 @@ class MainAuthController extends Controller
         } catch (\Exception $e) {
             // Token might not exist or be invalid
         }
+
+        // Invalidate the session and regenerate CSRF token
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
 
         return redirect('/')->with('success', 'Logged out successfully');
     }
