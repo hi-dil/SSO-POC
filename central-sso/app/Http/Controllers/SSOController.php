@@ -12,9 +12,7 @@ class SSOController extends Controller
 {
     public function showLoginForm($tenant_slug, Request $request)
     {
-        $tenant = Tenant::where('id', $tenant_slug)
-            ->orWhereJsonContains('data->slug', $tenant_slug)
-            ->first();
+        $tenant = Tenant::where('slug', $tenant_slug)->first();
         
         if (!$tenant) {
             abort(404, 'Tenant not found');
@@ -59,7 +57,20 @@ class SSOController extends Controller
             return back()->withErrors(['email' => 'Could not create authentication token'])->withInput();
         }
         
-        // Redirect back to tenant app with token
-        return redirect($request->callback_url . '?token=' . $token);
+        // Redirect back to tenant app with token and user data
+        $userParam = urlencode(base64_encode(json_encode([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email
+        ])));
+        
+        $callbackUrl = $request->callback_url . '?token=' . urlencode($token) . '&user=' . $userParam;
+        \Log::info('SSO Redirect to tenant', [
+            'callback_url' => $request->callback_url,
+            'full_url' => $callbackUrl,
+            'token_length' => strlen($token)
+        ]);
+        
+        return redirect($callbackUrl);
     }
 }

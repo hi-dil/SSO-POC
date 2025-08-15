@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSO System Test Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .test-card {
+            transition: all 0.3s ease;
+        }
+        .test-card:hover {
+            transform: translateY(-2px);
+        }
+        .status-success {
+            background-color: #10B981;
+        }
+        .status-error {
+            background-color: #EF4444;
+        }
+        .status-testing {
+            background-color: #F59E0B;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-6xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-gray-900 mb-2">🔐 SSO System Test Dashboard</h1>
+                <p class="text-gray-600">Test all login methods and API endpoints</p>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h2 class="text-xl font-semibold mb-4">🔗 Quick Test Links</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <a href="http://localhost:8000/login" target="_blank" 
+                       class="block p-4 bg-blue-50 hover:bg-blue-100 rounded-lg text-center transition-colors">
+                        <div class="text-blue-600 font-medium">Central SSO</div>
+                        <div class="text-sm text-gray-600">Main Dashboard</div>
+                    </a>
+                    <a href="http://localhost:8001/login" target="_blank"
+                       class="block p-4 bg-green-50 hover:bg-green-100 rounded-lg text-center transition-colors">
+                        <div class="text-green-600 font-medium">Tenant 1</div>
+                        <div class="text-sm text-gray-600">Direct & SSO Login</div>
+                    </a>
+                    <a href="http://localhost:8002/login" target="_blank"
+                       class="block p-4 bg-purple-50 hover:bg-purple-100 rounded-lg text-center transition-colors">
+                        <div class="text-purple-600 font-medium">Tenant 2</div>
+                        <div class="text-sm text-gray-600">Direct & SSO Login</div>
+                    </a>
+                    <a href="http://localhost:8000/admin/tenants" target="_blank"
+                       class="block p-4 bg-orange-50 hover:bg-orange-100 rounded-lg text-center transition-colors">
+                        <div class="text-orange-600 font-medium">Admin Panel</div>
+                        <div class="text-sm text-gray-600">Tenant Management</div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Test Credentials -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h2 class="text-xl font-semibold mb-4">👤 Test Credentials</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h3 class="font-medium text-gray-900">Super Admin</h3>
+                        <p class="text-sm text-gray-600">Email: <code class="bg-gray-200 px-1 rounded">superadmin@sso.com</code></p>
+                        <p class="text-sm text-gray-600">Password: <code class="bg-gray-200 px-1 rounded">password</code></p>
+                        <p class="text-xs text-gray-500 mt-1">Access: All tenants + Admin panel</p>
+                    </div>
+                    <div class="p-4 bg-blue-50 rounded-lg">
+                        <h3 class="font-medium text-blue-900">Tenant 1 Users</h3>
+                        <p class="text-sm text-blue-700">User: <code class="bg-blue-200 px-1 rounded">user@tenant1.com</code></p>
+                        <p class="text-sm text-blue-700">Admin: <code class="bg-blue-200 px-1 rounded">admin@tenant1.com</code></p>
+                        <p class="text-xs text-blue-600 mt-1">Password: <code class="bg-blue-200 px-1 rounded">password</code></p>
+                    </div>
+                    <div class="p-4 bg-purple-50 rounded-lg">
+                        <h3 class="font-medium text-purple-900">Tenant 2 Users</h3>
+                        <p class="text-sm text-purple-700">User: <code class="bg-purple-200 px-1 rounded">user@tenant2.com</code></p>
+                        <p class="text-sm text-purple-700">Admin: <code class="bg-purple-200 px-1 rounded">admin@tenant2.com</code></p>
+                        <p class="text-xs text-purple-600 mt-1">Password: <code class="bg-purple-200 px-1 rounded">password</code></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Automated Tests -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h2 class="text-xl font-semibold mb-4">🧪 Automated Tests</h2>
+                <div class="mb-4">
+                    <button id="runAllTests" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                        Run All Tests
+                    </button>
+                    <span id="testProgress" class="ml-4 text-gray-600"></span>
+                </div>
+                
+                <div id="testResults" class="space-y-4">
+                    <!-- Test results will be populated here -->
+                </div>
+            </div>
+
+            <!-- Manual Test Steps -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Test 1: Dashboard Login -->
+                <div class="test-card bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                        🎯 Method 1: Dashboard Login
+                    </h3>
+                    <div class="space-y-2 text-sm text-gray-600 mb-4">
+                        <p>1. Go to <a href="http://localhost:8000/login" target="_blank" class="text-blue-600 underline">Central SSO</a></p>
+                        <p>2. Login with <code class="bg-gray-200 px-1 rounded">superadmin@sso.com</code></p>
+                        <p>3. Choose tenant from dashboard</p>
+                        <p>4. Should redirect to tenant app</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="testDashboardLogin()" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white text-sm py-1 px-3 rounded transition-colors">
+                            Test Now
+                        </button>
+                        <div id="dashboard-status" class="flex items-center"></div>
+                    </div>
+                </div>
+
+                <!-- Test 2: SSO Button -->
+                <div class="test-card bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                        🔗 Method 2: SSO Button
+                    </h3>
+                    <div class="space-y-2 text-sm text-gray-600 mb-4">
+                        <p>1. Go to <a href="http://localhost:8001/login" target="_blank" class="text-blue-600 underline">Tenant 1</a></p>
+                        <p>2. Click "Login with Central SSO"</p>
+                        <p>3. Login with <code class="bg-gray-200 px-1 rounded">user@tenant1.com</code></p>
+                        <p>4. Should redirect back to tenant</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="testSSOButton()" 
+                                class="bg-green-600 hover:bg-green-700 text-white text-sm py-1 px-3 rounded transition-colors">
+                            Test Now
+                        </button>
+                        <div id="sso-status" class="flex items-center"></div>
+                    </div>
+                </div>
+
+                <!-- Test 3: Direct Login -->
+                <div class="test-card bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                        🎯 Method 3: Direct Login
+                    </h3>
+                    <div class="space-y-2 text-sm text-gray-600 mb-4">
+                        <p>1. Go to <a href="http://localhost:8001/login" target="_blank" class="text-blue-600 underline">Tenant 1</a></p>
+                        <p>2. Use the form directly</p>
+                        <p>3. Login with <code class="bg-gray-200 px-1 rounded">user@tenant1.com</code></p>
+                        <p>4. Should redirect to dashboard</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="testDirectLogin()" 
+                                class="bg-purple-600 hover:bg-purple-700 text-white text-sm py-1 px-3 rounded transition-colors">
+                            Test Now
+                        </button>
+                        <div id="direct-status" class="flex items-center"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Tests -->
+            <div class="mt-8 bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">🔌 API Endpoint Tests</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h3 class="font-medium text-gray-900 mb-2">Login API</h3>
+                        <button onclick="testAPILogin()" 
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-1 px-3 rounded transition-colors">
+                            Test Login API
+                        </button>
+                        <div id="api-login-status" class="mt-2"></div>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-gray-900 mb-2">Token Validation API</h3>
+                        <button onclick="testAPIValidation()" 
+                                class="bg-teal-600 hover:bg-teal-700 text-white text-sm py-1 px-3 rounded transition-colors">
+                            Test Validation API
+                        </button>
+                        <div id="api-validation-status" class="mt-2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let globalToken = null;
+
+        function setStatus(elementId, status, message = '') {
+            const element = document.getElementById(elementId);
+            const icons = {
+                'success': '✅',
+                'error': '❌',
+                'testing': '🔄'
+            };
+            
+            element.innerHTML = `
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${status === 'success' ? 'bg-green-100 text-green-800' : status === 'error' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}">
+                    ${icons[status]} ${message || status.toUpperCase()}
+                </span>
+            `;
+        }
+
+        function testDashboardLogin() {
+            setStatus('dashboard-status', 'testing', 'Opening...');
+            window.open('http://localhost:8000/login', '_blank');
+            setTimeout(() => setStatus('dashboard-status', 'success', 'Check manually'), 1000);
+        }
+
+        function testSSOButton() {
+            setStatus('sso-status', 'testing', 'Opening...');
+            window.open('http://localhost:8001/login', '_blank');
+            setTimeout(() => setStatus('sso-status', 'success', 'Check manually'), 1000);
+        }
+
+        function testDirectLogin() {
+            setStatus('direct-status', 'testing', 'Opening...');
+            window.open('http://localhost:8001/login', '_blank');
+            setTimeout(() => setStatus('direct-status', 'success', 'Check manually'), 1000);
+        }
+
+        async function testAPILogin() {
+            setStatus('api-login-status', 'testing', 'Testing...');
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'user@tenant1.com',
+                        password: 'password',
+                        tenant_slug: 'tenant1'
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success && result.token) {
+                    globalToken = result.token;
+                    setStatus('api-login-status', 'success', 'Login successful');
+                } else {
+                    setStatus('api-login-status', 'error', result.message || 'Login failed');
+                }
+            } catch (error) {
+                setStatus('api-login-status', 'error', 'Network error');
+                console.error('API Login Error:', error);
+            }
+        }
+
+        async function testAPIValidation() {
+            if (!globalToken) {
+                setStatus('api-validation-status', 'error', 'No token (run login first)');
+                return;
+            }
+
+            setStatus('api-validation-status', 'testing', 'Validating...');
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/auth/validate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        token: globalToken,
+                        tenant_slug: 'tenant1'
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.valid) {
+                    setStatus('api-validation-status', 'success', 'Token valid');
+                } else {
+                    setStatus('api-validation-status', 'error', result.message || 'Token invalid');
+                }
+            } catch (error) {
+                setStatus('api-validation-status', 'error', 'Network error');
+                console.error('API Validation Error:', error);
+            }
+        }
+
+        async function runAllTests() {
+            const button = document.getElementById('runAllTests');
+            const progress = document.getElementById('testProgress');
+            
+            button.disabled = true;
+            button.textContent = 'Running Tests...';
+            progress.textContent = 'Testing API endpoints...';
+            
+            // Run API tests
+            await testAPILogin();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testAPIValidation();
+            
+            // Set manual test statuses
+            setStatus('dashboard-status', 'success', 'Ready to test');
+            setStatus('sso-status', 'success', 'Ready to test');
+            setStatus('direct-status', 'success', 'Ready to test');
+            
+            button.disabled = false;
+            button.textContent = 'Run All Tests';
+            progress.textContent = 'API tests completed. Manual tests ready.';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('SSO Test Dashboard loaded');
+        });
+    </script>
+</body>
+</html>

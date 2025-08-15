@@ -65,7 +65,7 @@ class AuthController extends Controller
 
     public function ssoRedirect()
     {
-        $callback = url('/auth/callback');
+        $callback = url('/sso/callback');
         $ssoUrl = env('CENTRAL_SSO_URL') . '/auth/' . env('TENANT_SLUG');
         
         return redirect($ssoUrl . '?callback_url=' . urlencode($callback));

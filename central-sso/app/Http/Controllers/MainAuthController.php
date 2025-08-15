@@ -28,32 +28,33 @@ class MainAuthController extends Controller
             return back()->withErrors(['email' => 'Invalid credentials'])->withInput();
         }
 
-        // Check if user has admin permissions and should access admin panel
-        if ($user->can('manage-tenants')) {
-            // Log the user in for Laravel session authentication
-            Auth::login($user);
-            return redirect()->route('admin.tenants.index')->with('success', 'Welcome to Admin Panel!');
-        }
-
-        // Load user's tenants for SSO flow
+        // Load user's tenants
         $user->load('tenants');
         $tenants = $user->tenants;
 
-        if ($tenants->isEmpty()) {
-            return back()->withErrors(['email' => 'No tenant access assigned'])->withInput();
+        // Log the user in for Laravel session authentication
+        Auth::login($user);
+
+        // Redirect to dashboard after login
+        return redirect()->route('dashboard');
+    }
+
+    public function showDashboard()
+    {
+        $user = Auth::user();
+        
+        if (!$user) {
+            return redirect()->route('login');
         }
 
-        // Store user in session temporarily for SSO flow
-        session(['pending_auth_user' => $user->id]);
+        // Load user's tenants
+        $user->load('tenants');
+        $tenants = $user->tenants;
 
-        if ($tenants->count() === 1) {
-            // Single tenant - redirect directly
-            $tenant = $tenants->first();
-            return $this->redirectToTenant($user, $tenant->slug);
-        }
-
-        // Multiple tenants - show selection page
-        return redirect()->route('tenant.select');
+        return view('auth.dashboard', [
+            'user' => $user,
+            'tenants' => $tenants
+        ]);
     }
 
     public function showTenantSelection()
@@ -104,6 +105,26 @@ class MainAuthController extends Controller
         return $this->redirectToTenant($user, $request->tenant_slug);
     }
 
+    public function accessTenant(Request $request)
+    {
+        $request->validate([
+            'tenant_slug' => 'required'
+        ]);
+
+        $user = Auth::user();
+        
+        if (!$user) {
+            return redirect()->route('login')->withErrors(['error' => 'Please login first']);
+        }
+
+        // Verify user has access to selected tenant
+        if (!$user->hasAccessToTenant($request->tenant_slug)) {
+            return back()->withErrors(['tenant' => 'Access denied to selected tenant']);
+        }
+
+        return $this->redirectToTenant($user, $request->tenant_slug);
+    }
+
     private function redirectToTenant($user, $tenantSlug)
     {
         // Generate JWT token
@@ -121,16 +142,25 @@ class MainAuthController extends Controller
         // Clear temporary session
         session()->forget('pending_auth_user');
 
-        // For testing purposes, show success page with token instead of redirecting
-        return view('auth.login-success', [
-            'token' => $token,
-            'user' => $user,
-            'tenant_slug' => $tenantSlug,
-            'tenant_urls' => [
-                'tenant1' => 'http://localhost:8001',
-                'tenant2' => 'http://localhost:8002',
-            ]
-        ]);
+        // Tenant URL mapping
+        $tenantUrls = [
+            'tenant1' => 'http://localhost:8001',
+            'tenant2' => 'http://localhost:8002',
+        ];
+
+        $tenantUrl = $tenantUrls[$tenantSlug] ?? null;
+
+        if (!$tenantUrl) {
+            return redirect()->route('login')->withErrors(['error' => 'Invalid tenant']);
+        }
+
+        // Redirect to tenant application with token as query parameter
+        // The tenant application will capture this token and store it in session
+        return redirect($tenantUrl . '/sso/callback?token=' . urlencode($token) . '&user=' . urlencode(base64_encode(json_encode([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email
+        ]))));
     }
 
     public function logout()

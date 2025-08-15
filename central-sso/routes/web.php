@@ -11,8 +11,10 @@ Route::get('/', function () {
 // Main Central SSO Login Routes
 Route::get('/login', [MainAuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [MainAuthController::class, 'login'])->name('main.login.submit');
+Route::get('/dashboard', [MainAuthController::class, 'showDashboard'])->name('dashboard')->middleware('auth');
 Route::get('/tenant-select', [MainAuthController::class, 'showTenantSelection'])->name('tenant.select');
 Route::post('/tenant-select', [MainAuthController::class, 'selectTenant'])->name('tenant.select.submit');
+Route::post('/tenant-access', [MainAuthController::class, 'accessTenant'])->name('tenant.access');
 Route::get('/logout', [MainAuthController::class, 'logout'])->name('main.logout');
 
 // SSO Authentication Routes (for tenant-specific login)

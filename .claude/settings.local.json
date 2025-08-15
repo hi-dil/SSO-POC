@@ -13,7 +13,8 @@
       "Bash(curl:*)",
       "Bash(/dev/null)",
       "Bash(sqlite3:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(docker logs:*)"
     ],
     "deny": [],
     "ask": []

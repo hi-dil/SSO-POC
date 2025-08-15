@@ -46,7 +46,7 @@ services:
       - DB_DATABASE=tenant1_db
       - DB_USERNAME=sso_user
       - DB_PASSWORD=sso_password
-      - CENTRAL_SSO_URL=http://sso.localhost:8000
+      - CENTRAL_SSO_URL=http://localhost:8000
       - CENTRAL_SSO_API=http://central-sso:8000/api
       - TENANT_SLUG=tenant1
     depends_on:
@@ -75,7 +75,7 @@ services:
       - DB_DATABASE=tenant2_db
       - DB_USERNAME=sso_user
       - DB_PASSWORD=sso_password
-      - CENTRAL_SSO_URL=http://sso.localhost:8000
+      - CENTRAL_SSO_URL=http://localhost:8000
       - CENTRAL_SSO_API=http://central-sso:8000/api
       - TENANT_SLUG=tenant2
     depends_on:

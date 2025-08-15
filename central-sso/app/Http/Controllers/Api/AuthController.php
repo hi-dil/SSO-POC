@@ -135,7 +135,7 @@ class AuthController extends Controller
         ], 201);
     }
 
-    public function validate(Request $request)
+    public function validateToken(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'token' => 'required|string',

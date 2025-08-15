@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\SSOCallbackController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -17,6 +18,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // SSO Authentication Routes
 Route::get('/auth/sso', [AuthController::class, 'ssoRedirect'])->name('sso.redirect');
 Route::get('/auth/callback', [AuthController::class, 'ssoCallback'])->name('sso.callback');
+Route::get('/sso/callback', [SSOCallbackController::class, 'callback'])->name('sso.callback.new');
 
 // Protected Routes
 Route::middleware(['App\Http\Middleware\SSOAuthenticate'])->group(function () {
