@@ -7,6 +7,9 @@
     <title>@yield('title', 'Admin Panel') - Central SSO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
     <script>
         tailwind.config = {
             theme: {
@@ -124,7 +127,7 @@
                     <div class="pt-4">
                         <p class="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Developer Tools</p>
                         <div class="mt-2 space-y-1">
-                            @if(auth()->user()->hasPermission('swagger.access'))
+                            @can('swagger.access')
                                 <a href="/docs" target="_blank" class="text-muted-foreground hover:bg-accent hover:text-accent-foreground group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
                                     <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -134,8 +137,8 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
                                     </svg>
                                 </a>
-                            @endif
-                            @if(auth()->user()->hasPermission('telescope.access'))
+                            @endcan
+                            @can('telescope.access')
                                 <a href="/telescope" target="_blank" class="text-muted-foreground hover:bg-accent hover:text-accent-foreground group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
                                     <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
@@ -145,7 +148,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
                                     </svg>
                                 </a>
-                            @endif
+                            @endcan
                         </div>
                     </div>
                 </nav>
@@ -276,7 +279,7 @@
 
     <!-- Confirmation Modal -->
     <div x-data="{ showModal: false, confirmAction: null }" @confirm-action.window="showModal = true; confirmAction = $event.detail.action">
-        <div x-show="showModal" class="fixed inset-0 bg-black/50 overflow-y-auto h-full w-full z-50" x-transition>
+        <div x-show="showModal" x-cloak class="fixed inset-0 bg-black/50 overflow-y-auto h-full w-full z-50" x-transition>
             <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-card">
                 <div class="mt-3 text-center">
                     <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-destructive/10">

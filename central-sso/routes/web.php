@@ -104,8 +104,8 @@ Route::get('/debug/auth', function () {
                 'slug' => $role->slug
             ];
         }),
-        'has_telescope_access' => $user->hasPermission('telescope.access'),
-        'has_swagger_access' => $user->hasPermission('swagger.access'),
+        'has_telescope_access' => $user->hasPermissionTo('telescope.access'),
+        'has_swagger_access' => $user->hasPermissionTo('swagger.access'),
         'raw_roles_count' => $user->roles()->count(),
         'model_type_check' => get_class($user)
     ]);
@@ -119,7 +119,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     })->name('dashboard');
     
     // Tenant Management
-    Route::resource('tenants', \App\Http\Controllers\Admin\TenantController::class);
+    Route::resource('tenants', \App\Http\Controllers\Admin\TenantManagementController::class);
+    Route::post('tenants/bulk-create', [\App\Http\Controllers\Admin\TenantManagementController::class, 'bulkCreate'])->name('tenants.bulk-create');
     Route::get('tenants/{tenant}/users', [\App\Http\Controllers\Admin\TenantController::class, 'users'])->name('tenants.users');
     Route::post('tenants/{tenant}/users', [\App\Http\Controllers\Admin\TenantController::class, 'assignUser'])->name('tenants.assign-user');
     Route::delete('tenants/{tenant}/users/{user}', [\App\Http\Controllers\Admin\TenantController::class, 'removeUser'])->name('tenants.remove-user');
@@ -182,7 +183,7 @@ if (app()->environment('local', 'testing')) {
     Route::middleware(['auth'])->group(function () {
         Route::get('/docs', function () {
             // Check permission manually with better error handling
-            if (!auth()->user()->hasPermission('swagger.access')) {
+            if (!auth()->user()->hasPermissionTo('swagger.access')) {
                 return response()->json([
                     'error' => 'Access denied', 
                     'message' => 'You do not have permission to access API documentation',
@@ -196,7 +197,7 @@ if (app()->environment('local', 'testing')) {
         // Manual route for swagger docs JSON (workaround for missing l5-swagger.default.docs route)
         Route::get('/docs.json', function () {
             // Check permission manually with better error handling
-            if (!auth()->user()->hasPermission('swagger.access')) {
+            if (!auth()->user()->hasPermissionTo('swagger.access')) {
                 return response()->json([
                     'error' => 'Access denied', 
                     'message' => 'You do not have permission to access API documentation',

@@ -24,7 +24,7 @@ class SwaggerAccessMiddleware
         $user = Auth::user();
 
         // Check if user has permission to access Swagger docs
-        if (!$user->hasPermission('swagger.access')) {
+        if (!$user->hasPermissionTo('swagger.access')) {
             abort(403, 'Access denied. You do not have permission to access API documentation.');
         }
 

@@ -3,10 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Spatie\Permission\Models\Permission as SpatiePermission;
 
-class Permission extends Model
+class Permission extends SpatiePermission
 {
     use HasFactory;
 
@@ -25,30 +25,6 @@ class Permission extends Model
         'meta' => 'array',
     ];
 
-    /**
-     * A permission can belong to multiple roles
-     */
-    public function roles(): BelongsToMany
-    {
-        return $this->belongsToMany(Role::class, 'role_has_permissions');
-    }
-
-    /**
-     * Get all users that have this permission through roles
-     */
-    public function users(): BelongsToMany
-    {
-        return $this->belongsToManyThrough(
-            User::class,
-            Role::class,
-            'permission_role',
-            'role_user',
-            'permission_id',
-            'role_id',
-            'id',
-            'id'
-        );
-    }
 
     /**
      * Scope to get permissions by category

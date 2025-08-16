@@ -21,12 +21,26 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'logo_url',
         'data',
         'settings',
+        // Custom SSO fields
+        'plan',
+        'industry',
+        'region',
+        'employee_count',
+        'created_year',
+        'features',
+        'billing_status',
+        'billing_cycle',
+        'trial_ends_at',
     ];
 
     protected $casts = [
         'data' => 'array',
         'settings' => 'array',
         'is_active' => 'boolean',
+        'features' => 'array',
+        'employee_count' => 'integer',
+        'created_year' => 'integer',
+        'trial_ends_at' => 'date',
     ];
 
     // User count relationship helper

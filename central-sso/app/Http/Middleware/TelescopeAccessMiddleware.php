@@ -24,7 +24,7 @@ class TelescopeAccessMiddleware
         $user = Auth::user();
 
         // Check if user has permission to access Telescope
-        if (!$user->hasPermission('telescope.access')) {
+        if (!$user->hasPermissionTo('telescope.access')) {
             abort(403, 'Access denied. You do not have permission to access Telescope.');
         }
 

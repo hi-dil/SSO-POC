@@ -14,7 +14,7 @@ class CheckPermission
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, string $permission, ?string $tenantKey = null): Response
+    public function handle(Request $request, Closure $next, string $permission): Response
     {
         $user = Auth::user();
 
@@ -25,12 +25,7 @@ class CheckPermission
             ], 401);
         }
 
-        $tenantId = null;
-        if ($tenantKey) {
-            $tenantId = $request->route($tenantKey) ?? $request->input($tenantKey);
-        }
-
-        if (!$user->hasPermission($permission, $tenantId)) {
+        if (!$user->hasPermissionTo($permission)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Insufficient permissions'

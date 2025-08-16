@@ -8,11 +8,17 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements JWTSubject
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles;
+
+    /**
+     * The guard name for Spatie permissions
+     */
+    protected $guard_name = 'web';
 
     /**
      * The attributes that are mass assignable.
@@ -76,17 +82,7 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
-     * A user can have multiple roles
-     */
-    public function roles(): BelongsToMany
-    {
-        return $this->belongsToMany(Role::class, 'model_has_roles', 'model_id', 'role_id')
-                    ->where('model_type', User::class)
-                    ->withPivot('tenant_id');
-    }
-
-    /**
-     * Get roles for a specific tenant
+     * Get roles for a specific tenant (keeping for backward compatibility)
      */
     public function rolesInTenant($tenantId): BelongsToMany
     {
@@ -94,144 +90,11 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
-     * Get all roles across all tenants
+     * Get all roles across all tenants (keeping for backward compatibility)
      */
     public function globalRoles(): BelongsToMany
     {
         return $this->roles()->wherePivotNull('tenant_id');
-    }
-
-    /**
-     * Check if user has specific role (or any of the roles if array is provided)
-     */
-    public function hasRole(string|array $role, $tenantId = null): bool
-    {
-        // If array is provided, check if user has any of the roles
-        if (is_array($role)) {
-            return $this->hasAnyRole($role, $tenantId);
-        }
-        
-        $query = $this->roles()->where('slug', $role);
-        
-        if ($tenantId !== null) {
-            $query->wherePivot('tenant_id', $tenantId);
-        }
-        
-        return $query->exists();
-    }
-
-    /**
-     * Check if user has any of the given roles
-     */
-    public function hasAnyRole(array $roles, $tenantId = null): bool
-    {
-        foreach ($roles as $role) {
-            if ($this->hasRole($role, $tenantId)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Check if user has all of the given roles
-     */
-    public function hasAllRoles(array $roles, $tenantId = null): bool
-    {
-        foreach ($roles as $role) {
-            if (!$this->hasRole($role, $tenantId)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Check if user has specific permission
-     */
-    public function hasPermission(string $permission, $tenantId = null): bool
-    {
-        $query = $this->roles();
-        
-        if ($tenantId !== null) {
-            $query->wherePivot('tenant_id', $tenantId);
-        }
-        
-        return $query->whereHas('permissions', function ($q) use ($permission) {
-            $q->where('slug', $permission);
-        })->exists();
-    }
-
-    /**
-     * Assign role to user
-     */
-    public function assignRole(Role|string $role, $tenantId = null): self
-    {
-        if (is_string($role)) {
-            $role = Role::where('slug', $role)->firstOrFail();
-        }
-
-        if (!$this->hasRole($role->slug, $tenantId)) {
-            // Insert into model_has_roles with proper model_type
-            \DB::table('model_has_roles')->insert([
-                'role_id' => $role->id,
-                'model_type' => get_class($this),
-                'model_id' => $this->id,
-                'tenant_id' => $tenantId
-            ]);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Remove role from user
-     */
-    public function removeRole(Role|string $role, $tenantId = null): self
-    {
-        if (is_string($role)) {
-            $role = Role::where('slug', $role)->firstOrFail();
-        }
-
-        // Delete from model_has_roles with proper conditions
-        \DB::table('model_has_roles')
-            ->where('role_id', $role->id)
-            ->where('model_type', get_class($this))
-            ->where('model_id', $this->id)
-            ->where('tenant_id', $tenantId)
-            ->delete();
-
-        return $this;
-    }
-
-    /**
-     * Sync roles for user in specific tenant
-     */
-    public function syncRoles(array $roles, $tenantId = null): self
-    {
-        // First remove all existing roles for this tenant
-        $this->roles()->wherePivot('tenant_id', $tenantId)->detach();
-
-        // Then assign new roles
-        foreach ($roles as $role) {
-            $this->assignRole($role, $tenantId);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Get all permissions for user through roles
-     */
-    public function getAllPermissions($tenantId = null)
-    {
-        $roles = $tenantId !== null 
-            ? $this->rolesInTenant($tenantId) 
-            : $this->roles;
-
-        return $roles->flatMap(function ($role) {
-            return $role->permissions;
-        })->unique('id');
     }
 
     /**
