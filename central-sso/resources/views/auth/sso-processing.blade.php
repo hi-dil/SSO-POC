@@ -43,16 +43,34 @@
 
             <!-- Access Denied State (hidden by default) -->
             <div id="access-denied-state" class="hidden">
-                <div class="rounded-md bg-yellow-50 p-4">
+                <div class="rounded-md bg-red-50 border border-red-200 p-6">
                     <div class="flex">
-                        <div class="ml-3">
-                            <h3 class="text-sm font-medium text-yellow-800" id="access-denied-message">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                        </div>
+                        <div class="ml-3 w-full">
+                            <h3 class="text-lg font-medium text-red-800" id="access-denied-title">
                                 Access Denied
                             </h3>
-                            <div class="mt-4">
+                            <div class="mt-2 text-sm text-red-700" id="access-denied-message">
+                                You don't have permission to access this tenant.
+                            </div>
+                            <div class="mt-3 text-sm text-red-600" id="access-denied-details">
+                                <!-- Details will be populated by JavaScript -->
+                            </div>
+                            <div class="mt-4 text-sm text-red-600" id="access-denied-contact">
+                                <!-- Contact info will be populated by JavaScript -->
+                            </div>
+                            <div class="mt-6 flex space-x-3">
                                 <a href="{{ $callback_url }}" 
-                                   class="text-sm bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-medium py-2 px-4 rounded">
+                                   class="inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                                     Back to {{ $tenant->name ?? $tenant->id }}
+                                </a>
+                                <a href="http://localhost:8000/dashboard" 
+                                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                    Go to Central SSO Dashboard
                                 </a>
                             </div>
                         </div>
@@ -71,6 +89,25 @@
                     </p>
                 </div>
                 
+                @if($errors->any())
+                    <div class="rounded-md bg-red-50 p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-red-800">
+                                    @foreach($errors->all() as $error)
+                                        {{ $error }}
+                                    @endforeach
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+                
                 <form class="mt-8 space-y-6" action="{{ route('sso.login') }}" method="POST">
                     @csrf
                     <input type="hidden" name="tenant_slug" value="{{ $tenant_slug }}">
@@ -81,7 +118,7 @@
                             <label for="email" class="sr-only">Email address</label>
                             <input id="email" name="email" type="email" autocomplete="email" required 
                                    class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
-                                   placeholder="Email address">
+                                   placeholder="Email address" value="{{ old('email') }}">
                         </div>
                         <div>
                             <label for="password" class="sr-only">Password</label>
@@ -174,6 +211,17 @@
                     if (data.access_denied) {
                         // User is authenticated but doesn't have access to this tenant
                         document.getElementById('access-denied-message').textContent = data.message || 'You do not have access to this tenant.';
+                        
+                        // Show additional details if available
+                        if (data.details) {
+                            document.getElementById('access-denied-details').textContent = data.details;
+                        }
+                        
+                        // Show contact information if available
+                        if (data.contact_info) {
+                            document.getElementById('access-denied-contact').textContent = data.contact_info;
+                        }
+                        
                         showState('access-denied');
                     } else if (data.redirect_to) {
                         // User is authenticated and has access - redirect to tenant app

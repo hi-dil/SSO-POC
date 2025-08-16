@@ -42,13 +42,32 @@ class SSOCallbackController extends Controller
                 return redirect('/login')->withErrors(['error' => 'Invalid authentication token']);
             }
 
-            // Store token and user data in session
+            // Find or create local user based on SSO user data
+            $localUser = \App\Models\User::where('email', $userData['email'])->first();
+            
+            if (!$localUser) {
+                // Create new local user if they don't exist
+                $localUser = \App\Models\User::create([
+                    'name' => $userData['name'],
+                    'email' => $userData['email'],
+                    'password' => bcrypt(\Illuminate\Support\Str::random(32)), // Random password since SSO handles auth
+                ]);
+                Log::info('SSO Callback: Created new local user', ['email' => $userData['email']]);
+            } else {
+                // Update existing user's name in case it changed
+                $localUser->update(['name' => $userData['name']]);
+                Log::info('SSO Callback: Updated existing user', ['email' => $userData['email']]);
+            }
+            
+            // Authenticate the local user using Laravel's auth system
+            auth()->login($localUser);
+            
+            // Store JWT token for API calls to central SSO
             Session::put('jwt_token', $token);
-            Session::put('user', $userData);
             
             Log::info('SSO Callback: User authenticated successfully', [
-                'user_id' => $userData['id'],
-                'email' => $userData['email']
+                'user_id' => $localUser->id,
+                'email' => $localUser->email
             ]);
 
             // Redirect to dashboard

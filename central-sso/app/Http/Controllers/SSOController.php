@@ -102,7 +102,9 @@ class SSOController extends Controller
                 return response()->json([
                     'authenticated' => true,
                     'access_denied' => true,
-                    'message' => 'You do not have access to this tenant. Please contact your administrator.'
+                    'message' => "Access Denied: You don't have permission to access {$tenant->name}.",
+                    'details' => "Your account ({$user->email}) has access to: " . implode(', ', $user->tenants->pluck('name')->toArray() ?: ['No tenants assigned']),
+                    'contact_info' => 'Please contact your administrator to request access to this tenant.'
                 ]);
             }
         }
@@ -201,7 +203,18 @@ class SSOController extends Controller
         }
         
         if (!$user->hasAccessToTenant($request->tenant_slug)) {
-            return back()->withErrors(['email' => 'Access denied to this tenant'])->withInput();
+            $tenant = Tenant::where('slug', $request->tenant_slug)->first();
+            $userTenants = $user->tenants->pluck('name')->toArray();
+            
+            $errorMessage = "Access Denied: Your account ({$user->email}) doesn't have permission to access " . ($tenant->name ?? $request->tenant_slug) . ".";
+            if (!empty($userTenants)) {
+                $errorMessage .= " You have access to: " . implode(', ', $userTenants) . ".";
+            } else {
+                $errorMessage .= " You don't have access to any tenants.";
+            }
+            $errorMessage .= " Please contact your administrator to request access.";
+            
+            return back()->withErrors(['email' => $errorMessage])->withInput();
         }
         
         // Log the user into Laravel session for future SSO requests

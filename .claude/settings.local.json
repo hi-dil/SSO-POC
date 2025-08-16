@@ -14,7 +14,8 @@
       "Bash(/dev/null)",
       "Bash(sqlite3:*)",
       "Bash(rm:*)",
-      "Bash(docker logs:*)"
+      "Bash(docker logs:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

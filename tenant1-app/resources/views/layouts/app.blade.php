@@ -85,8 +85,8 @@
         <div class="header-content">
             <div class="logo">{{ config('app.name', 'Tenant One') }}</div>
             <nav class="nav-links">
-                @if(session('user'))
-                    <span>Welcome, {{ session('user')['name'] ?? 'User' }}</span>
+                @if(auth()->check())
+                    <span>Welcome, {{ auth()->user()->name ?? 'User' }}</span>
                     <a href="{{ route('dashboard') }}">Dashboard</a>
                     <div style="position: relative; display: inline-block;" id="logout-dropdown">
                         <button type="button" onclick="toggleLogoutDropdown()" style="background: none; border: none; color: #667eea; cursor: pointer; padding: 0.5rem 1rem; border-radius: 5px;">

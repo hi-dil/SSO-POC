@@ -26,13 +26,15 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        $result = $this->ssoService->login($request->email, $request->password);
-
-        if ($result['success']) {
+        // Try local authentication first
+        $credentials = $request->only('email', 'password');
+        
+        if (auth()->attempt($credentials)) {
+            $request->session()->regenerate();
             return redirect()->intended('/dashboard')->with('success', 'Welcome back!');
         }
 
-        return back()->withErrors(['email' => $result['message']])->withInput();
+        return back()->withErrors(['email' => 'Invalid credentials'])->withInput();
     }
 
     public function showRegisterForm()
@@ -83,8 +85,28 @@ class AuthController extends Controller
         $result = $this->ssoService->validateToken($token);
         
         if ($result['valid']) {
+            $ssoUser = $result['user'];
+            
+            // Find or create local user based on SSO user data
+            $localUser = \App\Models\User::where('email', $ssoUser['email'])->first();
+            
+            if (!$localUser) {
+                // Create new local user if they don't exist
+                $localUser = \App\Models\User::create([
+                    'name' => $ssoUser['name'],
+                    'email' => $ssoUser['email'],
+                    'password' => bcrypt(\Illuminate\Support\Str::random(32)), // Random password since SSO handles auth
+                ]);
+            } else {
+                // Update existing user's name in case it changed
+                $localUser->update(['name' => $ssoUser['name']]);
+            }
+            
+            // Authenticate the local user using Laravel's auth system
+            auth()->login($localUser);
+            
+            // Store JWT token for API calls to central SSO
             session(['jwt_token' => $token]);
-            session(['user' => $result['user']]);
             
             return redirect('/dashboard')->with('success', 'Welcome!');
         }
@@ -97,9 +119,15 @@ class AuthController extends Controller
         // Check if user wants to logout from all SSO sessions
         $logoutFromSSO = $request->get('sso_logout', false);
         
-        $this->ssoService->logout();
+        // Logout from local session
+        auth()->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
         
         if ($logoutFromSSO) {
+            // Also clear JWT token session data
+            $request->session()->forget('jwt_token');
+            
             // Redirect to central SSO logout to clear the SSO session
             $callback = url('/');
             $ssoLogoutUrl = env('CENTRAL_SSO_URL') . '/auth/logout?callback_url=' . urlencode($callback);
@@ -111,11 +139,27 @@ class AuthController extends Controller
 
     public function dashboard()
     {
-        if (!$this->ssoService->isAuthenticated()) {
-            return redirect('/login')->withErrors(['error' => 'Please login to continue']);
+        // Get local authenticated user (auth middleware ensures user is authenticated)
+        $localUser = auth()->user();
+        
+        // Try to get extended user info from JWT token if available
+        $jwtToken = session('jwt_token');
+        $user = [
+            'id' => $localUser->id,
+            'name' => $localUser->name,
+            'email' => $localUser->email,
+            'current_tenant' => env('TENANT_SLUG'),
+            'tenants' => [env('TENANT_SLUG')] // Default to current tenant
+        ];
+        
+        // If we have a JWT token, try to get the full tenant info
+        if ($jwtToken) {
+            $result = $this->ssoService->validateToken($jwtToken);
+            if ($result['valid'] && isset($result['user']['tenants'])) {
+                $user['tenants'] = $result['user']['tenants'];
+            }
         }
-
-        $user = session('user');
+        
         return view('dashboard', compact('user'));
     }
 }

@@ -105,17 +105,22 @@ All users use password: **password**
 ## Key Features
 
 ### Authentication Flows
-1. **Central SSO Login**: Users login at `localhost:8000/login` and get redirected to tenant apps
-2. **Seamless SSO**: Users already authenticated are automatically redirected without login form
-3. **Tenant-Specific Login**: Users can login directly via tenant-specific SSO pages
-4. **API Authentication**: Direct API calls for programmatic access
-5. **Multi-Tenant Support**: Users can have access to multiple tenants
+1. **Central SSO Login**: Users login at `localhost:8000/login` and access tenant dashboard
+2. **Seamless SSO Button**: Users click "Login with SSO" in tenant apps for automatic authentication
+3. **Tenant Selection**: Multi-tenant users can select which tenant to access from central dashboard
+4. **Direct Tenant Login**: Users can login directly within tenant applications
+5. **API Authentication**: Direct API calls for programmatic access
+6. **Multi-Tenant Support**: Users can have access to multiple tenants with proper access control
 
 ### Seamless SSO Process
-- **Processing Page**: Shows loading state while checking authentication
-- **Auto-Detection**: JavaScript checks if user is already authenticated
-- **Smart Redirect**: Automatically redirects authenticated users to tenant apps
-- **Graceful Fallback**: Shows login form only when authentication is required
+1. **SSO Button Click**: Tenant app redirects to central SSO processing page
+2. **Processing Page**: Shows loading spinner while checking authentication status
+3. **Authentication Check**: JavaScript makes API call to verify if user is logged in
+4. **Auto-Redirect**: If authenticated and has access, automatically redirects back to tenant
+5. **Access Control**: Shows error message if user doesn't have permission for the tenant
+6. **Login Form**: Shows login form only if user is not authenticated
+7. **Local User Sync**: Creates/updates local tenant users based on SSO user data
+8. **Laravel Authentication**: Uses Laravel's built-in auth system for local sessions
 
 ### Token Management
 - JWT tokens with tenant-specific claims
@@ -145,6 +150,9 @@ All users use password: **password**
 - **Token validation**: Verify tenant associations in database
 - **CORS issues**: Check tenant app configurations
 - **Domain consistency**: All apps must use `localhost` domain for session sharing
+- **SSO authentication not working**: Check that Laravel Telescope is installed in all apps
+- **"Please login to continue"**: Verify SSOCallbackController calls auth()->login() for local users
+- **Access denied errors**: Check user-tenant relationships in database
 
 ## Important Notes
 
@@ -155,3 +163,7 @@ All users use password: **password**
 - JWT claims include `tenants` array and `current_tenant`
 - **Domain Consistency**: All apps use `localhost` domain to ensure proper session sharing
 - **Processing Page**: SSO authentication uses JavaScript-based checking for seamless UX
+- **Laravel Authentication**: Tenant apps use Laravel's built-in auth system with local user accounts
+- **User Synchronization**: SSO users are automatically created/updated as local users in tenant apps
+- **Dual Authentication**: Supports both local login and SSO authentication in tenant applications
+- **Laravel Telescope**: Required dependency for all applications to function properly

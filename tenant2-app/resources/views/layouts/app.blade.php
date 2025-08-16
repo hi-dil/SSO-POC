@@ -85,8 +85,8 @@
         <div class="header-content">
             <div class="logo">{{ config('app.name', 'Tenant Two') }}</div>
             <nav class="nav-links">
-                @if(session('user'))
-                    <span>Welcome, {{ session('user')['name'] ?? 'User' }}</span>
+                @if(auth()->check())
+                    <span>Welcome, {{ auth()->user()->name ?? 'User' }}</span>
                     <a href="{{ route('dashboard') }}">Dashboard</a>
                     <form action="{{ route('logout') }}" method="POST" style="display: inline;">
                         @csrf

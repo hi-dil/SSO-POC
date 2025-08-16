@@ -23,10 +23,16 @@ class SSOAuthenticate
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!$this->ssoService->isAuthenticated()) {
-            return redirect('/login')->withErrors(['error' => 'Please login to continue']);
+        // Check Laravel's session-based authentication first
+        if (auth()->check()) {
+            return $next($request);
+        }
+        
+        // Fallback to JWT token validation for API-style authentication
+        if ($this->ssoService->isAuthenticated()) {
+            return $next($request);
         }
 
-        return $next($request);
+        return redirect('/login')->withErrors(['error' => 'Please login to continue']);
     }
 }

@@ -21,7 +21,7 @@ Route::get('/auth/callback', [AuthController::class, 'ssoCallback'])->name('sso.
 Route::get('/sso/callback', [SSOCallbackController::class, 'callback'])->name('sso.callback.new');
 
 // Protected Routes
-Route::middleware(['App\Http\Middleware\SSOAuthenticate'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 });
 
