@@ -102,10 +102,15 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
-     * Check if user has specific role
+     * Check if user has specific role (or any of the roles if array is provided)
      */
-    public function hasRole(string $role, $tenantId = null): bool
+    public function hasRole(string|array $role, $tenantId = null): bool
     {
+        // If array is provided, check if user has any of the roles
+        if (is_array($role)) {
+            return $this->hasAnyRole($role, $tenantId);
+        }
+        
         $query = $this->roles()->where('slug', $role);
         
         if ($tenantId !== null) {
@@ -167,7 +172,13 @@ class User extends Authenticatable implements JWTSubject
         }
 
         if (!$this->hasRole($role->slug, $tenantId)) {
-            $this->roles()->attach($role->id, ['tenant_id' => $tenantId]);
+            // Insert into model_has_roles with proper model_type
+            \DB::table('model_has_roles')->insert([
+                'role_id' => $role->id,
+                'model_type' => get_class($this),
+                'model_id' => $this->id,
+                'tenant_id' => $tenantId
+            ]);
         }
 
         return $this;
@@ -182,9 +193,13 @@ class User extends Authenticatable implements JWTSubject
             $role = Role::where('slug', $role)->firstOrFail();
         }
 
-        $this->roles()->wherePivot('role_id', $role->id)
-            ->wherePivot('tenant_id', $tenantId)
-            ->detach();
+        // Delete from model_has_roles with proper conditions
+        \DB::table('model_has_roles')
+            ->where('role_id', $role->id)
+            ->where('model_type', get_class($this))
+            ->where('model_id', $this->id)
+            ->where('tenant_id', $tenantId)
+            ->delete();
 
         return $this;
     }

@@ -35,6 +35,10 @@ class DefaultRolesAndPermissionsSeeder extends Seeder
             ['name' => 'System Settings', 'slug' => 'system.settings', 'category' => 'system', 'description' => 'Can manage system settings', 'is_system' => true],
             ['name' => 'View Logs', 'slug' => 'system.logs', 'category' => 'system', 'description' => 'Can view system logs'],
             ['name' => 'Manage API', 'slug' => 'api.manage', 'category' => 'api', 'description' => 'Can manage API settings and tokens'],
+            
+            // Developer Tools
+            ['name' => 'Access Telescope', 'slug' => 'telescope.access', 'category' => 'developer', 'description' => 'Can access Laravel Telescope debugging interface', 'is_system' => true],
+            ['name' => 'Access Swagger Documentation', 'slug' => 'swagger.access', 'category' => 'developer', 'description' => 'Can access API documentation (Swagger/OpenAPI)'],
         ];
 
         foreach ($permissions as $permissionData) {
@@ -66,7 +70,7 @@ class DefaultRolesAndPermissionsSeeder extends Seeder
                     'users.view', 'users.create', 'users.edit', 'users.delete',
                     'roles.view', 'roles.assign',
                     'tenants.view', 'tenants.edit',
-                    'system.logs'
+                    'system.logs', 'telescope.access', 'swagger.access'
                 ]
             ],
             [

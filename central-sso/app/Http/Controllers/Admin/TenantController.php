@@ -55,7 +55,7 @@ class TenantController extends Controller
         $stats = [
             'total_users' => $tenant->users->count(),
             'admin_users' => $tenant->users->filter(function($user) {
-                return $user->hasRole(['super-admin', 'tenant-admin']);
+                return $user->hasRole(['super-admin', 'admin']);
             })->count(),
             'regular_users' => $tenant->users->filter(function($user) {
                 return $user->hasRole('user');

@@ -3,103 +3,123 @@
 @section('title', 'Roles & Permissions')
 
 @section('header')
-    <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-        Roles & Permissions Management
-    </h2>
-    <p class="mt-1 text-sm text-gray-500">
-        Manage central SSO authentication roles and permissions. These roles control access to the central SSO system only.
-    </p>
+    <div>
+        <h1 class="text-2xl font-semibold text-card-foreground">Roles & Permissions</h1>
+        <p class="text-sm text-muted-foreground mt-1">
+            Manage authentication roles and permissions for the central SSO system
+        </p>
+    </div>
 @endsection
 
 @section('actions')
-    <button onclick="showCreateRoleModal()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-        <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <button onclick="window.dispatchEvent(new CustomEvent('show-create-role'))" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
         </svg>
-        Create Role
+        New Role
     </button>
 @endsection
 
 @section('content')
 <div x-data="roleManagement()" x-init="initializeData()">
     <!-- Tabs -->
-    <div class="border-b border-gray-200">
-        <nav class="-mb-px flex space-x-8 px-6 pt-6">
+    <div class="border-b border-border">
+        <nav class="-mb-px flex space-x-8">
             <button @click="activeTab = 'roles'" 
-                    :class="activeTab === 'roles' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                    :class="activeTab === 'roles' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground'"
+                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
                 Roles (<span x-text="roles.length"></span>)
             </button>
             <button @click="activeTab = 'permissions'" 
-                    :class="activeTab === 'permissions' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                    :class="activeTab === 'permissions' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground'"
+                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
                 Permissions (<span x-text="permissions.length"></span>)
             </button>
             <button @click="activeTab = 'users'" 
-                    :class="activeTab === 'users' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                    :class="activeTab === 'users' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground'"
+                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
                 User Assignments
             </button>
         </nav>
     </div>
 
     <!-- Roles Tab -->
-    <div x-show="activeTab === 'roles'" class="p-6">
-        <div class="space-y-6">
-            <!-- Roles List -->
+    <div x-show="activeTab === 'roles'" class="py-6">
+        <div class="space-y-4">
             <template x-for="role in roles" :key="role.id">
-                <div class="bg-white border border-gray-200 rounded-lg p-6">
-                    <div class="flex items-center justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-center space-x-3">
-                                <h3 class="text-lg font-medium text-gray-900" x-text="role.name"></h3>
-                                <span x-show="role.is_system" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                    System Role
-                                </span>
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800" x-text="role.permissions?.length + ' permissions'"></span>
+                <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm">
+                    <div class="p-6">
+                        <div class="flex items-start justify-between">
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-lg font-semibold" x-text="role.name"></h3>
+                                    <span x-show="role.is_system" class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-destructive/10 text-destructive">
+                                        System
+                                    </span>
+                                    <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80" x-text="(role.permissions?.length || 0) + ' permissions'"></span>
+                                </div>
+                                <p class="text-sm text-muted-foreground" x-text="role.description || 'No description'"></p>
+                                
+                                <!-- Permission Badges -->
+                                <div class="flex flex-wrap gap-1 mt-3" x-show="role.permissions?.length > 0">
+                                    <template x-for="permission in role.permissions" :key="permission.slug">
+                                        <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10" x-text="permission.slug"></span>
+                                    </template>
+                                </div>
                             </div>
-                            <p class="mt-1 text-sm text-gray-500" x-text="role.description || 'No description'"></p>
                             
-                            <!-- Permission Tags -->
-                            <div class="mt-2 flex flex-wrap gap-1" x-show="role.permissions?.length > 0">
-                                <template x-for="permission in role.permissions" :key="permission.slug">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800" x-text="permission.slug"></span>
-                                </template>
+                            <div class="flex items-center gap-2">
+                                <button @click="editRole(role)" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3">
+                                    <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    Edit
+                                </button>
+                                <button x-show="!role.is_system" @click="deleteRole(role)" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground h-9 px-3">
+                                    <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    Delete
+                                </button>
                             </div>
-                        </div>
-                        
-                        <div class="flex items-center space-x-2">
-                            <button @click="editRole(role)" class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">Edit</button>
-                            <button x-show="!role.is_system" @click="deleteRole(role)" class="text-red-600 hover:text-red-900 text-sm font-medium">Delete</button>
                         </div>
                     </div>
                 </div>
             </template>
+            
+            <div x-show="roles.length === 0" class="text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 48 48">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M34 40h10v-4a6 6 0 00-10.712-3.714M34 40H14m20 0v-4a9.971 9.971 0 00-.712-3.714M14 40H4v-4a6 6 0 0110.713-3.714M14 40v-4c0-1.313.253-2.566.713-3.714m0 0A9.971 9.971 0 0124 30c4.21 0 7.813 2.602 9.288 6.286"></path>
+                </svg>
+                <h3 class="mt-2 text-sm font-semibold text-foreground">No roles</h3>
+                <p class="mt-1 text-sm text-muted-foreground">Get started by creating a new role.</p>
+            </div>
         </div>
     </div>
 
     <!-- Permissions Tab -->
-    <div x-show="activeTab === 'permissions'" class="p-6">
+    <div x-show="activeTab === 'permissions'" class="py-6">
         <div class="space-y-6">
-            <!-- Permission Categories -->
             <template x-for="category in permissionCategories" :key="category">
-                <div class="bg-white border border-gray-200 rounded-lg p-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4 capitalize" x-text="category + ' Permissions'"></h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <template x-for="permission in getPermissionsByCategory(category)" :key="permission.id">
-                            <div class="border border-gray-200 rounded p-3">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <h4 class="font-medium text-gray-900" x-text="permission.name"></h4>
-                                        <p class="text-sm text-gray-500" x-text="permission.slug"></p>
-                                        <p class="text-xs text-gray-400 mt-1" x-text="permission.description"></p>
+                <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold mb-4 capitalize" x-text="category + ' Permissions'"></h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <template x-for="permission in getPermissionsByCategory(category)" :key="permission.id">
+                                <div class="rounded-lg border border-border p-4 space-y-2">
+                                    <div class="flex items-start justify-between">
+                                        <div class="space-y-1">
+                                            <h4 class="text-sm font-medium" x-text="permission.name"></h4>
+                                            <p class="text-xs font-mono text-muted-foreground" x-text="permission.slug"></p>
+                                            <p class="text-xs text-muted-foreground" x-text="permission.description"></p>
+                                        </div>
+                                        <span x-show="permission.is_system" class="inline-flex items-center rounded-full border px-1.5 py-0.5 text-xs font-semibold border-destructive/10 text-destructive">
+                                            System
+                                        </span>
                                     </div>
-                                    <span x-show="permission.is_system" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                                        System
-                                    </span>
                                 </div>
-                            </div>
-                        </template>
+                            </template>
+                        </div>
                     </div>
                 </div>
             </template>
@@ -107,32 +127,32 @@
     </div>
 
     <!-- Users Tab -->
-    <div x-show="activeTab === 'users'" class="p-6">
-        <div class="space-y-6">
-            <div class="bg-white border border-gray-200 rounded-lg p-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">User Role Assignments</h3>
-                <p class="text-sm text-gray-500 mb-4">Assign roles to users for central SSO access control.</p>
+    <div x-show="activeTab === 'users'" class="py-6">
+        <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold mb-4">User Role Assignments</h3>
+                <p class="text-sm text-muted-foreground mb-6">Manage role assignments for central SSO users.</p>
                 
-                <!-- User Search -->
-                <div class="mb-4">
-                    <input type="text" x-model="userSearch" @input="loadUsers()" placeholder="Search users..." 
-                           class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                </div>
-
-                <!-- Users List -->
-                <div class="space-y-3">
+                <div class="space-y-4">
                     <template x-for="user in users" :key="user.id">
-                        <div class="flex items-center justify-between py-3 border-b border-gray-200">
-                            <div>
-                                <h4 class="font-medium text-gray-900" x-text="user.name"></h4>
-                                <p class="text-sm text-gray-500" x-text="user.email"></p>
-                                <div class="mt-1" x-show="user.roles?.length > 0">
-                                    <template x-for="userRole in user.roles" :key="userRole.role.id">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 mr-1" x-text="userRole.role.name + (userRole.tenant_id ? ' (Tenant ' + userRole.tenant_id + ')' : ' (Global)')"></span>
+                        <div class="flex items-center justify-between py-4 border-b border-border last:border-0">
+                            <div class="space-y-1">
+                                <h4 class="text-sm font-medium" x-text="user.name"></h4>
+                                <p class="text-sm text-muted-foreground" x-text="user.email"></p>
+                                <div class="flex flex-wrap gap-1" x-show="user.roles?.length > 0">
+                                    <template x-for="userRole in user.roles" :key="userRole.role.id + (userRole.tenant_id || 'global')">
+                                        <span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                                            <span x-text="userRole.role.name"></span>
+                                            <span x-show="userRole.tenant_id" x-text="' (Tenant ' + userRole.tenant_id + ')'"></span>
+                                            <span x-show="!userRole.tenant_id"> (Global)</span>
+                                        </span>
                                     </template>
                                 </div>
                             </div>
-                            <button @click="manageUserRoles(user)" class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
+                            <button @click="manageUserRoles(user)" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3">
+                                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                </svg>
                                 Manage Roles
                             </button>
                         </div>
@@ -143,38 +163,43 @@
     </div>
 
     <!-- Create/Edit Role Modal -->
-    <div x-show="showRoleModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" x-transition>
-        <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+    <div x-show="showRoleModal" class="fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" x-transition>
+        <div class="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-border bg-card p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
             <form @submit.prevent="saveRole()">
-                <div class="mt-3">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4" x-text="editingRole ? 'Edit Role' : 'Create New Role'"></h3>
+                <div class="space-y-4">
+                    <div class="space-y-2">
+                        <h2 class="text-lg font-semibold leading-none tracking-tight" x-text="editingRole ? 'Edit Role' : 'Create New Role'"></h2>
+                        <p class="text-sm text-muted-foreground">Configure role settings and permissions.</p>
+                    </div>
                     
                     <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Name</label>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Name</label>
                             <input type="text" x-model="roleForm.name" required 
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                   class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                   placeholder="Enter role name">
                         </div>
                         
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Description</label>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Description</label>
                             <textarea x-model="roleForm.description" rows="3"
-                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+                                      class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                      placeholder="Enter role description"></textarea>
                         </div>
                         
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Permissions</label>
-                            <div class="space-y-3 max-h-64 overflow-y-auto border border-gray-200 rounded p-3">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Permissions</label>
+                            <div class="space-y-3 max-h-64 overflow-y-auto rounded-md border border-input p-3">
                                 <template x-for="category in permissionCategories" :key="category">
                                     <div>
-                                        <h4 class="font-medium text-gray-900 capitalize mb-2" x-text="category"></h4>
-                                        <div class="space-y-1 ml-4">
+                                        <h4 class="text-sm font-medium capitalize mb-2" x-text="category"></h4>
+                                        <div class="space-y-2 ml-4">
                                             <template x-for="permission in getPermissionsByCategory(category)" :key="permission.slug">
-                                                <label class="flex items-center">
-                                                    <input type="checkbox" :value="permission.slug" x-model="roleForm.permissions"
-                                                           class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                                                    <span class="ml-2 text-sm text-gray-700" x-text="permission.name"></span>
-                                                </label>
+                                                <div class="flex items-center space-x-2">
+                                                    <input type="checkbox" :value="permission.slug" x-model="roleForm.permissions" :id="'perm-' + permission.slug"
+                                                           class="peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground">
+                                                    <label :for="'perm-' + permission.slug" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" x-text="permission.name"></label>
+                                                </div>
                                             </template>
                                         </div>
                                     </div>
@@ -183,11 +208,11 @@
                         </div>
                     </div>
                     
-                    <div class="mt-6 flex justify-end space-x-3">
-                        <button type="button" @click="showRoleModal = false" class="px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-400">
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" @click="showRoleModal = false" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
                             Cancel
                         </button>
-                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">
+                        <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
                             <span x-text="editingRole ? 'Update' : 'Create'"></span> Role
                         </button>
                     </div>
@@ -197,34 +222,38 @@
     </div>
 
     <!-- User Roles Modal -->
-    <div x-show="showUserRolesModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" x-transition>
-        <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
-            <div class="mt-3">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Manage User Roles</h3>
-                <div x-show="selectedUser">
-                    <p class="text-sm text-gray-600 mb-4">
-                        User: <span class="font-medium" x-text="selectedUser?.name + ' (' + selectedUser?.email + ')'"></span>
-                    </p>
-                    
-                    <div class="space-y-3">
-                        <template x-for="role in roles" :key="role.id">
-                            <div class="flex items-center justify-between py-2 border-b border-gray-100">
-                                <div>
-                                    <span class="font-medium" x-text="role.name"></span>
-                                    <span x-show="role.is_system" class="ml-2 text-xs text-red-600">(System)</span>
-                                </div>
-                                <button @click="toggleUserRole(role)" 
-                                        :class="userHasRole(role) ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white'"
-                                        class="px-3 py-1 text-xs font-medium rounded">
-                                    <span x-text="userHasRole(role) ? 'Remove' : 'Assign'"></span>
-                                </button>
-                            </div>
-                        </template>
+    <div x-show="showUserRolesModal" class="fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" x-transition>
+        <div class="fixed left-[50%] top-[50%] z-50 grid w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 border border-border bg-card p-6 shadow-lg duration-200 sm:rounded-lg">
+            <div class="space-y-4">
+                <div class="space-y-2">
+                    <h2 class="text-lg font-semibold leading-none tracking-tight">Manage User Roles</h2>
+                    <div x-show="selectedUser">
+                        <p class="text-sm text-muted-foreground">
+                            User: <span class="font-medium" x-text="selectedUser?.name + ' (' + selectedUser?.email + ')'"></span>
+                        </p>
                     </div>
                 </div>
                 
-                <div class="mt-6 flex justify-end">
-                    <button @click="showUserRolesModal = false" class="px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-400">
+                <div class="space-y-3">
+                    <template x-for="role in roles" :key="role.id">
+                        <div class="flex items-center justify-between py-2 border-b border-border last:border-0">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm font-medium" x-text="role.name"></span>
+                                <span x-show="role.is_system" class="inline-flex items-center rounded-full border px-1.5 py-0.5 text-xs font-semibold border-destructive/10 text-destructive">
+                                    System
+                                </span>
+                            </div>
+                            <button @click="toggleUserRole(role)" 
+                                    :class="userHasRole(role) ? 'bg-destructive text-destructive-foreground hover:bg-destructive/80' : 'bg-primary text-primary-foreground hover:bg-primary/80'"
+                                    class="inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-8 px-3">
+                                <span x-text="userHasRole(role) ? 'Remove' : 'Assign'"></span>
+                            </button>
+                        </div>
+                    </template>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button @click="showUserRolesModal = false" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
                         Close
                     </button>
                 </div>
@@ -240,7 +269,6 @@ function roleManagement() {
         roles: [],
         permissions: [],
         users: [],
-        userSearch: '',
         showRoleModal: false,
         showUserRolesModal: false,
         editingRole: null,
@@ -256,10 +284,14 @@ function roleManagement() {
         },
         
         initializeData() {
-            // Load initial data passed from the server
             this.roles = @json($roles ?? []);
             this.permissions = @json($permissions ?? []);
             this.users = @json($users ?? []);
+            
+            // Show a welcome toast
+            setTimeout(() => {
+                this.showToast('Role management interface loaded successfully', 'success');
+            }, 500);
         },
         
         async loadData() {
@@ -360,19 +392,21 @@ function roleManagement() {
                 if (response.ok) {
                     this.showRoleModal = false;
                     await this.loadRoles();
-                    alert(this.editingRole ? 'Role updated successfully!' : 'Role created successfully!');
+                    this.showToast(this.editingRole ? 'Role updated successfully!' : 'Role created successfully!', 'success');
                 } else {
                     const error = await response.json();
-                    alert('Error: ' + (error.message || 'Failed to save role'));
+                    this.showToast('Error: ' + (error.message || 'Failed to save role'), 'error');
                 }
             } catch (error) {
                 console.error('Error saving role:', error);
-                alert('Error saving role');
+                this.showToast('Error saving role', 'error');
             }
         },
         
         async deleteRole(role) {
-            if (!confirm(`Are you sure you want to delete the role "${role.name}"?`)) return;
+            // Use a more elegant confirmation
+            const confirmed = await this.confirmAction(`Are you sure you want to delete the role "${role.name}"?`, 'This action cannot be undone.');
+            if (!confirmed) return;
             
             try {
                 const response = await fetch(`/api/roles/${role.id}`, {
@@ -386,14 +420,14 @@ function roleManagement() {
                 
                 if (response.ok) {
                     await this.loadRoles();
-                    alert('Role deleted successfully!');
+                    this.showToast('Role deleted successfully!', 'success');
                 } else {
                     const error = await response.json();
-                    alert('Error: ' + (error.message || 'Failed to delete role'));
+                    this.showToast('Error: ' + (error.message || 'Failed to delete role'), 'error');
                 }
             } catch (error) {
                 console.error('Error deleting role:', error);
-                alert('Error deleting role');
+                this.showToast('Error deleting role', 'error');
             }
         },
         
@@ -426,31 +460,47 @@ function roleManagement() {
                 
                 if (response.ok) {
                     await this.loadUsers();
-                    // Update selected user
                     this.selectedUser = this.users.find(u => u.id === this.selectedUser.id);
-                    alert(hasRole ? 'Role removed successfully!' : 'Role assigned successfully!');
+                    this.showToast(hasRole ? 'Role removed successfully!' : 'Role assigned successfully!', 'success');
                 } else {
                     const error = await response.json();
-                    alert('Error: ' + (error.message || 'Failed to update role'));
+                    this.showToast('Error: ' + (error.message || 'Failed to update role'), 'error');
                 }
             } catch (error) {
                 console.error('Error toggling role:', error);
-                alert('Error updating role');
+                this.showToast('Error updating role', 'error');
             }
         },
         
         async getToken() {
-            // Get CSRF token for web-based authentication
-            // For API calls from the admin panel, we'll use session-based auth
             return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        },
+
+        showToast(message, type = 'info') {
+            // Use the global toast system
+            if (window.showToast) {
+                window.showToast(message, type);
+            } else {
+                // Fallback for demo
+                console.log(`${type.toUpperCase()}: ${message}`);
+                alert(message);
+            }
+        },
+
+        confirmAction(title, message = '') {
+            return new Promise((resolve) => {
+                // Use browser confirm as fallback - could be enhanced with a custom modal
+                const result = confirm(title + (message ? '\n\n' + message : ''));
+                resolve(result);
+            });
         }
     };
 }
 
 // Global function for the create button
-function showCreateRoleModal() {
-    // This will be called by Alpine's roleManagement component
-    window.dispatchEvent(new CustomEvent('show-create-role'));
-}
+window.addEventListener('show-create-role', function() {
+    // Trigger Alpine.js event to show modal
+    document.querySelector('[x-data]').__x.$data.showCreateRoleModal();
+});
 </script>
 @endsection

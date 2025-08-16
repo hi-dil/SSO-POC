@@ -3,131 +3,144 @@
 @section('title', 'Tenant Management')
 
 @section('header')
-    <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-        Tenant Management
-    </h2>
-    <p class="mt-1 text-sm text-gray-500">
-        Manage all tenants in the system
-    </p>
+    <div>
+        <h1 class="text-2xl font-semibold text-card-foreground">Tenant Management</h1>
+        <p class="text-sm text-muted-foreground mt-1">
+            Manage all tenants in the central SSO system
+        </p>
+    </div>
 @endsection
 
 @section('actions')
     @can('manage-tenants')
-        <a href="{{ route('admin.tenants.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        <a href="{{ route('admin.tenants.create') }}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+            <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
             </svg>
-            Add Tenant
+            New Tenant
         </a>
     @endcan
 @endsection
 
 @section('content')
-<div class="px-4 py-5 sm:p-6">
+<div class="space-y-6">
     @if($tenants->count() > 0)
         <!-- Tenants Table -->
-        <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-            <table class="min-w-full divide-y divide-gray-300">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Tenant
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Domain
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Users
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Created
-                        </th>
-                        <th scope="col" class="relative px-6 py-3">
-                            <span class="sr-only">Actions</span>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach($tenants as $tenant)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0 h-10 w-10">
-                                        <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                            <span class="text-sm font-medium text-gray-700">
+        <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm">
+            <div class="overflow-hidden">
+                <table class="w-full caption-bottom text-sm">
+                    <thead class="[&_tr]:border-b border-border">
+                        <tr class="border-b border-border transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
+                                Tenant
+                            </th>
+                            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
+                                Domain
+                            </th>
+                            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
+                                Users
+                            </th>
+                            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
+                                Status
+                            </th>
+                            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
+                                Created
+                            </th>
+                            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
+                                <span class="sr-only">Actions</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="[&_tr:last-child]:border-0">
+                        @foreach($tenants as $tenant)
+                            <tr class="border-b border-border transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                                <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                                    <div class="flex items-center gap-3">
+                                        <div class="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                                            <span class="text-sm font-medium text-muted-foreground">
                                                 {{ substr($tenant->name, 0, 2) }}
                                             </span>
                                         </div>
-                                    </div>
-                                    <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900">
-                                            {{ $tenant->name }}
+                                        <div>
+                                            <div class="font-medium text-card-foreground">
+                                                {{ $tenant->name }}
+                                            </div>
+                                            <div class="text-sm text-muted-foreground">
+                                                {{ $tenant->slug }}
+                                            </div>
                                         </div>
-                                        <div class="text-sm text-gray-500">
-                                            {{ $tenant->slug }}
-                                        </div>
                                     </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $tenant->domain ?? 'Not set' }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    {{ $tenant->users_count }} users
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                    @if($tenant->is_active) bg-green-100 text-green-800 @else bg-red-100 text-red-800 @endif">
-                                    {{ $tenant->is_active ? 'Active' : 'Inactive' }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ $tenant->created_at->format('M d, Y') }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <div class="flex items-center space-x-2">
-                                    <a href="{{ route('admin.tenants.show', $tenant) }}" 
-                                       class="text-indigo-600 hover:text-indigo-900">
-                                        View
-                                    </a>
-                                    
-                                    @can('manage-tenants')
-                                        <a href="{{ route('admin.tenants.users', $tenant) }}" 
-                                           class="text-blue-600 hover:text-blue-900">
-                                            Users
+                                </td>
+                                <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0 text-card-foreground">
+                                    {{ $tenant->domain ?? 'Not set' }}
+                                </td>
+                                <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                                    <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
+                                        {{ $tenant->users_count }} users
+                                    </span>
+                                </td>
+                                <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                                    <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 
+                                        @if($tenant->is_active) border-transparent bg-green-50 text-green-700 @else border-destructive/10 text-destructive @endif">
+                                        {{ $tenant->is_active ? 'Active' : 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0 text-muted-foreground">
+                                    {{ $tenant->created_at->format('M d, Y') }}
+                                </td>
+                                <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                                    <div class="flex items-center gap-2 justify-end">
+                                        <a href="{{ route('admin.tenants.show', $tenant) }}" 
+                                           class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3">
+                                            <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                            View
                                         </a>
                                         
-                                        <a href="{{ route('admin.tenants.edit', $tenant) }}" 
-                                           class="text-yellow-600 hover:text-yellow-900">
-                                            Edit
-                                        </a>
-                                        
-                                        <form method="POST" action="{{ route('admin.tenants.toggle', $tenant) }}" class="inline">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="text-gray-600 hover:text-gray-900">
-                                                {{ $tenant->is_active ? 'Deactivate' : 'Activate' }}
-                                            </button>
-                                        </form>
-                                        
-                                        @if($tenant->users_count == 0)
-                                            <button onclick="confirmDelete('{{ route('admin.tenants.destroy', $tenant) }}')" 
-                                                    class="text-red-600 hover:text-red-900">
-                                                Delete
-                                            </button>
-                                        @endif
-                                    @endcan
-                                </div>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                                        @can('manage-tenants')
+                                            <a href="{{ route('admin.tenants.users', $tenant) }}" 
+                                               class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3">
+                                                <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                                </svg>
+                                                Users
+                                            </a>
+                                            
+                                            <a href="{{ route('admin.tenants.edit', $tenant) }}" 
+                                               class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3">
+                                                <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                </svg>
+                                                Edit
+                                            </a>
+                                            
+                                            <form method="POST" action="{{ route('admin.tenants.toggle', $tenant) }}" class="inline">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3">
+                                                    {{ $tenant->is_active ? 'Deactivate' : 'Activate' }}
+                                                </button>
+                                            </form>
+                                            
+                                            @if($tenant->users_count == 0)
+                                                <button onclick="confirmDelete('{{ route('admin.tenants.destroy', $tenant) }}')" 
+                                                        class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground h-8 px-3">
+                                                    <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                    </svg>
+                                                    Delete
+                                                </button>
+                                            @endif
+                                        @endcan
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Pagination -->
@@ -138,22 +151,24 @@
         @endif
     @else
         <!-- Empty State -->
-        <div class="text-center py-12">
-            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-            </svg>
-            <h3 class="mt-2 text-sm font-medium text-gray-900">No tenants</h3>
-            <p class="mt-1 text-sm text-gray-500">Get started by creating a new tenant.</p>
-            @can('manage-tenants')
-                <div class="mt-6">
-                    <a href="{{ route('admin.tenants.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        Add Tenant
-                    </a>
-                </div>
-            @endcan
+        <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm">
+            <div class="flex flex-col items-center justify-center py-12 px-6">
+                <svg class="mx-auto h-12 w-12 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m14 0v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5m-4 0h4"></path>
+                </svg>
+                <h3 class="mt-4 text-lg font-semibold text-card-foreground">No tenants</h3>
+                <p class="mt-2 text-sm text-muted-foreground text-center">Get started by creating a new tenant application.</p>
+                @can('manage-tenants')
+                    <div class="mt-6">
+                        <a href="{{ route('admin.tenants.create') }}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                            <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            New Tenant
+                        </a>
+                    </div>
+                @endcan
+            </div>
         </div>
     @endif
 </div>
@@ -170,7 +185,28 @@ function confirmDelete(url) {
         const form = document.getElementById('deleteForm');
         form.action = url;
         form.submit();
+        
+        // Show loading toast
+        if (window.showToast) {
+            window.showToast('Deleting tenant...', 'info');
+        }
     }
 }
+
+// Show success message for form submissions
+document.addEventListener('DOMContentLoaded', function() {
+    // Check for success/error messages from Laravel
+    @if(session('success'))
+        if (window.showToast) {
+            window.showToast('{{ session('success') }}', 'success');
+        }
+    @endif
+    
+    @if(session('error'))
+        if (window.showToast) {
+            window.showToast('{{ session('error') }}', 'error');
+        }
+    @endif
+});
 </script>
 @endsection

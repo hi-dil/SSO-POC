@@ -65,6 +65,52 @@ Route::middleware(['web'])->group(function () {
     Route::get('/auth/logout', [SSOController::class, 'logout'])->name('sso.logout');
 });
 
+// Debug route to check authentication (temporary)
+Route::get('/debug/auth', function () {
+    if (!auth()->check()) {
+        return response()->json(['error' => 'Not authenticated', 'session_id' => session()->getId()]);
+    }
+    
+    $user = auth()->user();
+    
+    // Debug the hasPermission method step by step
+    $rolesQuery = $user->roles();
+    $rolesWithSwagger = $rolesQuery->whereHas('permissions', function ($q) {
+        $q->where('slug', 'swagger.access');
+    })->get();
+    
+    return response()->json([
+        'authenticated' => true,
+        'session_id' => session()->getId(),
+        'user' => [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'is_admin' => $user->is_admin,
+        ],
+        'roles' => $user->roles->map(function($role) {
+            return [
+                'id' => $role->id,
+                'name' => $role->name,
+                'slug' => $role->slug,
+                'permissions_count' => $role->permissions->count(),
+                'permissions' => $role->permissions->pluck('slug')
+            ];
+        }),
+        'all_permissions' => $user->getAllPermissions()->pluck('slug'),
+        'roles_with_swagger' => $rolesWithSwagger->map(function($role) {
+            return [
+                'name' => $role->name,
+                'slug' => $role->slug
+            ];
+        }),
+        'has_telescope_access' => $user->hasPermission('telescope.access'),
+        'has_swagger_access' => $user->hasPermission('swagger.access'),
+        'raw_roles_count' => $user->roles()->count(),
+        'model_type_check' => get_class($user)
+    ]);
+});
+
 // Admin Routes (Protected by authentication and permissions)
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
     // Admin Dashboard
@@ -86,6 +132,19 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::get('users/data', [\App\Http\Controllers\Admin\RoleManagementController::class, 'getUsers'])->name('users.data');
 });
 
+// API-style routes for admin role management (web authenticated)
+Route::prefix('api')->middleware(['auth', 'web'])->group(function () {
+    // Role management API routes for the admin interface
+    Route::get('roles', [\App\Http\Controllers\Api\RoleController::class, 'index']);
+    Route::post('roles', [\App\Http\Controllers\Api\RoleController::class, 'store']);
+    Route::put('roles/{role}', [\App\Http\Controllers\Api\RoleController::class, 'update']);
+    Route::delete('roles/{role}', [\App\Http\Controllers\Api\RoleController::class, 'destroy']);
+    
+    // User role assignment routes
+    Route::post('users/{userId}/roles', [\App\Http\Controllers\Api\UserRoleController::class, 'assignRole']);
+    Route::delete('users/{userId}/roles', [\App\Http\Controllers\Api\UserRoleController::class, 'removeRole']);
+});
+
 // Telescope routes (only in development)
 if (app()->environment('local', 'testing')) {
     Route::get('/telescope', function () {
@@ -95,18 +154,39 @@ if (app()->environment('local', 'testing')) {
 
 // API Documentation (only in development)
 if (app()->environment('local', 'testing')) {
-    Route::get('/docs', function () {
-        return redirect('/api/documentation');
-    })->name('api.docs');
-    
-    // Manual route for swagger docs JSON (workaround for missing l5-swagger.default.docs route)
-    Route::get('/docs.json', function () {
-        $path = storage_path('api-docs/api-docs.json');
-        if (file_exists($path)) {
-            return response()->file($path, [
-                'Content-Type' => 'application/json'
-            ]);
-        }
-        return response()->json(['error' => 'Documentation not found'], 404);
-    })->name('l5-swagger.default.docs');
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/docs', function () {
+            // Check permission manually with better error handling
+            if (!auth()->user()->hasPermission('swagger.access')) {
+                return response()->json([
+                    'error' => 'Access denied', 
+                    'message' => 'You do not have permission to access API documentation',
+                    'user_id' => auth()->id(),
+                    'user_permissions' => auth()->user()->getAllPermissions()->pluck('slug')
+                ], 403);
+            }
+            return redirect('/api/documentation');
+        })->name('api.docs');
+        
+        // Manual route for swagger docs JSON (workaround for missing l5-swagger.default.docs route)
+        Route::get('/docs.json', function () {
+            // Check permission manually with better error handling
+            if (!auth()->user()->hasPermission('swagger.access')) {
+                return response()->json([
+                    'error' => 'Access denied', 
+                    'message' => 'You do not have permission to access API documentation',
+                    'user_id' => auth()->id(),
+                    'user_permissions' => auth()->user()->getAllPermissions()->pluck('slug')
+                ], 403);
+            }
+            
+            $path = storage_path('api-docs/api-docs.json');
+            if (file_exists($path)) {
+                return response()->file($path, [
+                    'Content-Type' => 'application/json'
+                ]);
+            }
+            return response()->json(['error' => 'Documentation not found'], 404);
+        })->name('l5-swagger.default.docs');
+    });
 }

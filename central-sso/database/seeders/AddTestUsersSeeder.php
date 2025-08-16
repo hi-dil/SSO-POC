@@ -73,6 +73,12 @@ class AddTestUsersSeeder extends Seeder
             'is_admin' => true,
         ]);
         $superAdmin->tenants()->attach([$tenant1->id, $tenant2->id]);
+        
+        // Assign super-admin role to the super admin user
+        $superAdminRole = \App\Models\Role::where('slug', 'super-admin')->first();
+        if ($superAdminRole) {
+            $superAdmin->assignRole($superAdminRole);
+        }
 
         $this->command->info('Test users added successfully!');
         $this->command->info('Users created:');

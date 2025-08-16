@@ -16,6 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\CheckRole::class,
             'permission' => \App\Http\Middleware\CheckPermission::class,
             'super-admin' => \App\Http\Middleware\CheckSuperAdmin::class,
+            'telescope.access' => \App\Http\Middleware\TelescopeAccessMiddleware::class,
+            'swagger.access' => \App\Http\Middleware\SwaggerAccessMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
