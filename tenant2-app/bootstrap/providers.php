@@ -2,5 +2,5 @@
 
 return [
     App\Providers\AppServiceProvider::class,
-    // App\Providers\TelescopeServiceProvider::class, // Removed - Telescope not installed
+    App\Providers\TelescopeServiceProvider::class,
 ];

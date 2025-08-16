@@ -19,6 +19,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'telescope.access' => \App\Http\Middleware\TelescopeAccessMiddleware::class,
             'swagger.access' => \App\Http\Middleware\SwaggerAccessMiddleware::class,
             'track.activity' => \App\Http\Middleware\TrackUserActivity::class,
+            'api.key' => \App\Http\Middleware\ApiKeyAuth::class,
+            'rate.limit' => \App\Http\Middleware\RateLimitMiddleware::class,
+            'request.id' => \App\Http\Middleware\RequestIdMiddleware::class,
+        ]);
+        
+        // Add global middleware
+        $middleware->api(prepend: [
+            \App\Http\Middleware\RequestIdMiddleware::class,
         ]);
         
         // Add activity tracking to web middleware group

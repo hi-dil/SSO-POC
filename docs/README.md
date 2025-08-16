@@ -5,6 +5,8 @@ This documentation covers the architecture, implementation, and usage of a compl
 ## Documentation Structure
 
 - [Architecture Overview](./architecture.md) - System design and component relationships
+- [Dual-Session Architecture](./dual-session-architecture.md) - **New!** Comprehensive guide to the dual-session authentication system
+- [shadcn/ui Design System](./shadcn-ui-design-system.md) - **New!** Complete guide to the UI design system and components
 - [Authentication Flow](./authentication-flow.md) - Detailed auth workflows and JWT handling
 - [API Documentation](./api-documentation.md) - Central SSO API endpoints and usage
 - [Setup Guide](./setup-guide.md) - Local development setup with Docker
@@ -30,11 +32,16 @@ This documentation covers the architecture, implementation, and usage of a compl
 ## Key Features
 
 ### Authentication & SSO
-- **Seamless SSO Flow** with JavaScript-based authentication checking
-- **Dual authentication methods** (SSO redirect + local forms)
-- **JWT-based authentication** for stateless auth
+- **🏗️ Dual-Session Architecture** - Direct login to tenant apps with centralized credential validation
+- **Multiple Authentication Methods**:
+  - **Direct Login**: Users login directly in tenant apps using SSO credentials
+  - **SSO Redirect**: Traditional SSO flow with seamless JavaScript-based checking
+  - **API Authentication**: Programmatic access with JWT tokens
+- **Centralized Security** - All credentials validated through central SSO API
+- **Local Session Management** - Each tenant app maintains independent Laravel sessions
+- **Automatic User Sync** - User data synchronized from central SSO on every login
 - **Multi-tenant user access** with proper access control
-- **Session-based auth** for web interfaces
+- **Performance Optimized** - Local sessions reduce API calls after authentication
 
 ### User & Access Management
 - **Complete user management** with CRUD operations and tenant access control
@@ -61,10 +68,14 @@ This documentation covers the architecture, implementation, and usage of a compl
 - **API-driven role management** with complete REST endpoints
 
 ### Modern UI & UX
+- **🎨 shadcn/ui Design System** - Complete design system with dark/light themes and accessible components
 - **Professional landing page** with live statistics and feature showcase
-- **Modern admin interface** using shadcn/ui design system
-- **Toast notifications** for user-friendly feedback
-- **Responsive design** working on desktop and mobile
+- **Modern admin interface** with consistent visual language and responsive design
+- **Dark Mode Support** - Full dark/light theme system with user preference persistence
+- **Toast notification system** with animated, dismissible notifications
+- **Responsive design** working seamlessly on desktop and mobile devices
+- **Alpine.js Interactivity** - Lightweight JavaScript framework for reactive components
+- **Accessible Components** - WCAG compliant with proper color contrast and semantic HTML
 - **Developer tools integration** with permission-controlled access
 
 ### Developer Experience
@@ -94,11 +105,30 @@ This documentation covers the architecture, implementation, and usage of a compl
 
 All users use password: **password**
 
+### 🔄 Authentication Methods Available
+
+✅ **All users can login using EITHER method:**
+- **Direct Login**: Visit tenant apps directly (`localhost:8001/login`, `localhost:8002/login`)
+- **SSO Redirect**: Click "Login with Central SSO" button in tenant apps
+
 ### Single Tenant Users
-- `user@tenant1.com` - Tenant 1 User
-- `admin@tenant1.com` - Tenant 1 Admin
-- `user@tenant2.com` - Tenant 2 User
-- `admin@tenant2.com` - Tenant 2 Admin
+- `user@tenant1.com` - Tenant 1 User (Direct + SSO Login)
+- `admin@tenant1.com` - Tenant 1 Admin (Direct + SSO Login)
+- `user@tenant2.com` - Tenant 2 User (Direct + SSO Login)
+- `admin@tenant2.com` - Tenant 2 Admin (Direct + SSO Login)
 
 ### Multi-Tenant User
-- `superadmin@sso.com` - Super Admin with access to both tenants and all permissions
+- `superadmin@sso.com` - Super Admin with access to both tenants and all permissions (Direct + SSO Login)
+
+### Example Usage
+```bash
+# Direct login to Tenant 1
+# Visit: http://localhost:8001/login
+# Enter: superadmin@sso.com / password
+# Result: Authenticated via dual-session architecture
+
+# Direct login to Tenant 2  
+# Visit: http://localhost:8002/login
+# Enter: superadmin@sso.com / password
+# Result: Same seamless authentication experience
+```

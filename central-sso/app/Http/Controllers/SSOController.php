@@ -12,9 +12,15 @@ class SSOController extends Controller
 {
     public function showLoginForm($tenant_slug, Request $request)
     {
+        \Log::info('SSOController::showLoginForm called', [
+            'tenant_slug' => $tenant_slug,
+            'callback_url' => $request->get('callback_url')
+        ]);
+        
         $tenant = Tenant::where('slug', $tenant_slug)->first();
         
         if (!$tenant) {
+            \Log::error('Tenant not found', ['tenant_slug' => $tenant_slug]);
             abort(404, 'Tenant not found');
         }
         

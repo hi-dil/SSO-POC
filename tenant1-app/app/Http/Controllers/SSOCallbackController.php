@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
-use App\Services\SSOService;
+use App\Services\SecureSSOService;
 use App\Services\LoginAuditService;
 
 class SSOCallbackController extends Controller
@@ -13,7 +13,7 @@ class SSOCallbackController extends Controller
     protected $ssoService;
     protected $auditService;
 
-    public function __construct(SSOService $ssoService, LoginAuditService $auditService)
+    public function __construct(SecureSSOService $ssoService, LoginAuditService $auditService)
     {
         $this->ssoService = $ssoService;
         $this->auditService = $auditService;
@@ -65,16 +65,23 @@ class SSOCallbackController extends Controller
                     'name' => $userData['name'],
                     'email' => $userData['email'],
                     'password' => bcrypt(\Illuminate\Support\Str::random(32)), // Random password since SSO handles auth
+                    'sso_user_id' => $userData['id'], // Mark as SSO user
                 ]);
                 Log::info('SSO Callback: Created new local user', ['email' => $userData['email']]);
             } else {
-                // Update existing user's name in case it changed
-                $localUser->update(['name' => $userData['name']]);
+                // Update existing user's name and mark as SSO user if not already marked
+                $localUser->update([
+                    'name' => $userData['name'],
+                    'sso_user_id' => $userData['id'], // Mark as SSO user
+                ]);
                 Log::info('SSO Callback: Updated existing user', ['email' => $userData['email']]);
             }
             
             // Authenticate the local user using Laravel's auth system
-            auth()->login($localUser);
+            auth()->login($localUser, true); // Remember the user
+            
+            // Regenerate session for security
+            request()->session()->regenerate();
             
             // Store JWT token for API calls to central SSO
             Session::put('jwt_token', $token);

@@ -117,7 +117,46 @@ sequenceDiagram
     T->>U: 20. User logged in
 ```
 
-### API-Based Login Flow (Alternative)
+### 🏗️ Dual-Session Architecture (Direct Login)
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant T as Tenant App
+    participant API as SSO API
+    participant DB as Database
+    participant S as Local Session
+    
+    Note over U,S: Direct Login to Tenant App
+    U->>T: 1. Fill login form on tenant app
+    T->>API: 2. POST /api/auth/login<br/>{email, password, tenant_slug}
+    API->>DB: 3. Query user by email
+    DB->>API: 4. User data
+    API->>API: 5. Verify password hash
+    API->>DB: 6. Check hasAccessToTenant()
+    DB->>API: 7. Tenant relationships
+    API->>API: 8. Generate JWT with custom claims
+    API->>T: 9. Return {token, user}
+    
+    Note over T,S: Local Session Creation
+    T->>T: 10. Create/update local user record
+    T->>S: 11. Create Laravel session
+    T->>S: 12. Store JWT token + SSO user data
+    T->>U: 13. Set session cookie & redirect
+    T->>U: 14. User logged in with local session
+```
+
+### 🔄 Dual-Session Benefits
+
+- **🎯 Centralized Authentication**: All credentials validated by central SSO
+- **⚡ Local Session Management**: Each tenant manages independent sessions
+- **🚀 Performance**: Reduced API calls after initial authentication
+- **🔄 User Data Sync**: Local users auto-sync with central SSO on login
+- **📊 Audit Trail**: All authentications tracked in central audit system
+- **🛡️ Security**: Consistent authentication across all tenant apps
+- **🔧 Flexibility**: Tenant-specific session lifetimes and configurations
+
+### API-Based Login Flow (Legacy)
 
 ```mermaid
 sequenceDiagram
@@ -126,6 +165,7 @@ sequenceDiagram
     participant API as SSO API
     participant DB as Database
     
+    Note over U,DB: Legacy Flow (API Only)
     U->>T: 1. Fill login form on tenant app
     T->>API: 2. POST /api/auth/login<br/>{email, password, tenant_slug}
     API->>DB: 3. Query user by email
@@ -137,6 +177,53 @@ sequenceDiagram
     API->>T: 9. Return {token, user}
     T->>T: 10. Store token in session
     T->>U: 11. User logged in
+```
+
+## Session Management
+
+### 🔄 Dual-Session Data Storage
+
+In the dual-session architecture, each tenant app maintains both:
+
+#### Local Laravel Session
+```php
+// Standard Laravel session data
+session([
+    '_token' => 'CSRF_TOKEN',
+    'login_web_AUTH_ID' => 123,  // Local user ID
+    'login_web_AUTH_PASSWORD_HASH' => 'hash',
+    
+    // SSO Integration Data
+    'jwt_token' => 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...',
+    'sso_user_data' => [
+        'id' => 25,           // Central SSO user ID
+        'name' => 'Super Admin',
+        'email' => 'superadmin@sso.com',
+        'tenants' => ['tenant1', 'tenant2'],
+        'current_tenant' => 'tenant1',
+        'is_admin' => true
+    ]
+]);
+```
+
+#### Session Data Usage
+- **Local User ID**: For Laravel authentication and database relations
+- **JWT Token**: For API calls to central SSO (if needed)
+- **SSO User Data**: Rich user information from central SSO
+- **CSRF Protection**: Standard Laravel CSRF tokens
+- **Session Security**: HTTP-only cookies with proper expiration
+
+### Session Lifecycle
+```mermaid
+flowchart LR
+    A[Login] --> B[Central SSO Auth]
+    B --> C[Create Local User]
+    C --> D[Laravel Session]
+    D --> E[Store JWT + SSO Data]
+    E --> F[Session Cookie]
+    F --> G[Protected Access]
+    G --> H[Logout]
+    H --> I[Clear All Session Data]
 ```
 
 ## JWT Token Structure
@@ -157,7 +244,7 @@ sequenceDiagram
 ```
 
 ### Token Claims Explanation
-- `sub`: User ID
+- `sub`: User ID from central SSO
 - `tenants`: Array of tenant slugs user has access to
 - `current_tenant`: The tenant context for this session
 - `exp`: Token expiration (1 hour by default)
@@ -306,13 +393,26 @@ flowchart TD
 
 ### Testing Credentials
 
-| User | Password | Tenant Access | Role |
-|------|----------|---------------|------|
-| user@tenant1.com | password | tenant1 | User |
-| admin@tenant1.com | password | tenant1 | Admin |
-| user@tenant2.com | password | tenant2 | User |
-| admin@tenant2.com | password | tenant2 | Admin |
-| superadmin@sso.com | password | tenant1, tenant2 | Super Admin |
+| User | Password | Tenant Access | Role | Login Methods |
+|------|----------|---------------|------|---------------|
+| user@tenant1.com | password | tenant1 | User | SSO + Direct |
+| admin@tenant1.com | password | tenant1 | Admin | SSO + Direct |
+| user@tenant2.com | password | tenant2 | User | SSO + Direct |
+| admin@tenant2.com | password | tenant2 | Admin | SSO + Direct |
+| superadmin@sso.com | password | tenant1, tenant2 | Super Admin | SSO + Direct |
+
+#### Login Method Examples
+
+**Direct Login to Tenant Apps:**
+- Visit `http://localhost:8001/login` or `http://localhost:8002/login`
+- Use any valid credentials above
+- Authentication happens through central SSO API
+- Local Laravel session created automatically
+
+**SSO Redirect Login:**
+- Click "Login with Central SSO" button in tenant apps
+- Redirected to central SSO for authentication
+- Same result as direct login but different user flow
 
 ### Legacy Users (unknown passwords)
 | User | Description |

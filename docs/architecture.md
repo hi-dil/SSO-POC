@@ -20,12 +20,15 @@
 - **Tenant 1**: `localhost:8001` (Laravel 11)
 - **Tenant 2**: `localhost:8002` (Laravel 11)
 - **Features**:
-  - Dual login methods (SSO redirect + local forms)
-  - JWT token validation with tenant access control
-  - Seamless SSO processing with JavaScript-based authentication
-  - Local user synchronization from SSO
-  - Laravel authentication system for local sessions
-  - Support for both authenticated and guest users
+  - **Dual-Session Architecture**: Local Laravel sessions + central SSO authentication
+  - **Multiple Login Methods**: SSO redirect + direct login forms
+  - **API-based Authentication**: All credentials validated through central SSO API
+  - **JWT token validation** with tenant access control
+  - **Seamless SSO processing** with JavaScript-based authentication
+  - **Local user synchronization** from central SSO with automatic updates
+  - **Laravel authentication system** for local session management
+  - **Session data caching**: Stores JWT tokens and SSO user data for performance
+  - **Support for both authenticated and guest users**
 
 ### Database Layer
 - **Engine**: MariaDB
@@ -130,7 +133,80 @@ User Request → Middleware → Permission Check → Role Validation → Resourc
 - **No cross-tenant data leakage** through proper access controls
 
 ### Authentication Security
-- **Dual authentication support** (SSO + local)
+- **Dual-session architecture** with centralized credential validation
 - **Session-based web authentication** with CSRF protection
 - **Rate limiting** on authentication endpoints
 - **Secure session management** with proper invalidation
+- **JWT token storage** in secure session cookies
+- **Automatic user data synchronization** on each authentication
+
+## Dual-Session Architecture Details
+
+### 🏗️ Architecture Overview
+
+The system implements a **dual-session architecture** that combines the benefits of centralized authentication with local session management:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Dual-Session Flow                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  User Login    →  Central SSO API  →  Local Session Creation    │
+│      ↓               ↓                      ↓                   │
+│  Credentials   →  JWT + User Data   →  Laravel Auth System      │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────┐     API Call      ┌─────────────────┐
+│   Tenant App    │ ←──────────────── │  Central SSO    │
+│                 │                   │                 │
+│ ┌─────────────┐ │     Response      │ ┌─────────────┐ │
+│ │ Login Form  │ │ ──────────────→   │ │ JWT Service │ │
+│ └─────────────┘ │                   │ └─────────────┘ │
+│       ↓         │                   │                 │
+│ ┌─────────────┐ │                   │ ┌─────────────┐ │
+│ │Local Session│ │                   │ │User Validator│ │
+│ │+ JWT Token  │ │                   │ │             │ │
+│ └─────────────┘ │                   │ └─────────────┘ │
+└─────────────────┘                   └─────────────────┘
+```
+
+### 🔄 Session Management Strategy
+
+#### Central Authentication
+- **All credentials** validated by central SSO API
+- **Consistent security** across all tenant applications
+- **Centralized user management** with roles and permissions
+- **Audit trail** for all authentication events
+
+#### Local Session Benefits
+- **Performance**: No API calls for protected route access
+- **Independence**: Tenant apps work independently after authentication
+- **Flexibility**: Custom session lifetimes per tenant
+- **Laravel Integration**: Full compatibility with Laravel's auth system
+
+#### Data Synchronization
+- **User data sync** on every login (name, email, tenant access)
+- **Role information** cached for UI personalization
+- **JWT storage** for potential API calls to central SSO
+- **Automatic user creation/updates** in tenant databases
+
+### 🔧 Implementation Benefits
+
+#### For Developers
+- **Familiar Laravel Auth**: Standard `auth()->user()` works as expected
+- **Rich User Data**: Access to both local and SSO user information
+- **Flexible Architecture**: Easy to extend for new requirements
+- **Clear Separation**: Authentication vs. authorization clearly separated
+
+#### For Users
+- **Seamless Experience**: No difference between login methods
+- **Consistent Access**: Same credentials work across all applications
+- **Single Sign-On**: Optional SSO flow for convenience
+- **Direct Access**: Can login directly to any tenant application
+
+#### For System Administrators
+- **Centralized Control**: All user management in one place
+- **Audit Visibility**: Complete authentication tracking
+- **Scalable Design**: Easy to add new tenant applications
+- **Security Consistency**: Same security standards across all apps

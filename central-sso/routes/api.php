@@ -7,7 +7,7 @@ use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\UserRoleController;
 use App\Http\Controllers\Api\LoginAuditController;
 
-Route::prefix('auth')->group(function () {
+Route::prefix('auth')->middleware(['api.key:auth', 'rate.limit'])->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/validate', [AuthController::class, 'validateToken']);
@@ -19,7 +19,7 @@ Route::prefix('auth')->group(function () {
     });
 });
 
-Route::middleware(['auth:api,web'])->group(function () {
+Route::middleware(['auth:api,web', 'rate.limit:120'])->group(function () {
     // Role management routes - allow super admins full access for UI
     Route::get('roles', [RoleController::class, 'index']);
     Route::get('roles/{role}', [RoleController::class, 'show']);
@@ -47,8 +47,8 @@ Route::middleware(['auth:api,web'])->group(function () {
     });
 });
 
-// Audit routes for tenant applications (no authentication required for internal services)
-Route::prefix('audit')->group(function () {
+// Audit routes for tenant applications (secured with API key authentication)
+Route::prefix('audit')->middleware(['api.key:audit', 'rate.limit'])->group(function () {
     Route::post('/login', [LoginAuditController::class, 'recordLogin']);
     Route::post('/logout', [LoginAuditController::class, 'recordLogout']);
 });

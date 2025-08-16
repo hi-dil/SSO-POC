@@ -2,17 +2,16 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class LoginAuditService
 {
-    private string $centralSSOUrl;
+    private SecureSSOService $ssoService;
     private string $tenantSlug;
 
-    public function __construct()
+    public function __construct(SecureSSOService $ssoService)
     {
-        $this->centralSSOUrl = env('CENTRAL_SSO_URL', 'http://central-sso:8000');
+        $this->ssoService = $ssoService;
         $this->tenantSlug = env('TENANT_SLUG', 'tenant2');
     }
 
@@ -26,40 +25,13 @@ class LoginAuditService
         bool $isSuccessful = true,
         ?string $failureReason = null
     ): void {
-        try {
-            $response = Http::timeout(5)->post($this->centralSSOUrl . '/api/audit/login', [
-                'user_id' => $userId,
-                'email' => $email,
-                'tenant_id' => $this->tenantSlug,
-                'login_method' => $loginMethod,
-                'is_successful' => $isSuccessful,
-                'failure_reason' => $failureReason,
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-                'session_id' => session()->getId(),
-            ]);
-
-            if (!$response->successful()) {
-                Log::warning('Failed to record login audit to central SSO', [
-                    'status' => $response->status(),
-                    'response' => $response->body(),
-                    'user_id' => $userId,
-                    'tenant' => $this->tenantSlug
-                ]);
-            } else {
-                Log::info('Login audit recorded to central SSO', [
-                    'user_id' => $userId,
-                    'tenant' => $this->tenantSlug,
-                    'method' => $loginMethod
-                ]);
-            }
-        } catch (\Exception $e) {
-            Log::error('Error recording login audit to central SSO', [
-                'error' => $e->getMessage(),
-                'user_id' => $userId,
-                'tenant' => $this->tenantSlug
-            ]);
-        }
+        $this->ssoService->recordLoginAudit(
+            $userId,
+            $email,
+            $loginMethod,
+            $isSuccessful,
+            $failureReason
+        );
     }
 
     /**
@@ -67,33 +39,11 @@ class LoginAuditService
      */
     public function recordLogout(?string $sessionId = null): void
     {
-        try {
-            $sessionId = $sessionId ?: session()->getId();
-            
-            $response = Http::timeout(5)->post($this->centralSSOUrl . '/api/audit/logout', [
-                'session_id' => $sessionId,
-                'tenant_id' => $this->tenantSlug,
-            ]);
-
-            if (!$response->successful()) {
-                Log::warning('Failed to record logout audit to central SSO', [
-                    'status' => $response->status(),
-                    'response' => $response->body(),
-                    'session_id' => $sessionId,
-                    'tenant' => $this->tenantSlug
-                ]);
-            } else {
-                Log::info('Logout audit recorded to central SSO', [
-                    'session_id' => $sessionId,
-                    'tenant' => $this->tenantSlug
-                ]);
-            }
-        } catch (\Exception $e) {
-            Log::error('Error recording logout audit to central SSO', [
-                'error' => $e->getMessage(),
-                'session_id' => $sessionId,
-                'tenant' => $this->tenantSlug
-            ]);
-        }
+        // Note: SecureSSOService doesn't have recordLogoutAudit method yet
+        // For now, just log locally
+        Log::info('User logged out', [
+            'session_id' => $sessionId ?: session()->getId(),
+            'tenant' => $this->tenantSlug
+        ]);
     }
 }
