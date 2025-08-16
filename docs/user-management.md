@@ -260,6 +260,194 @@ WHERE u.email = 'user@example.com'
 AND mhr.model_type = 'App\\Models\\User';
 ```
 
+## User Profile Management
+
+### Overview
+
+The Central SSO system includes a comprehensive user profile management system that extends beyond basic user account information to provide detailed personal, professional, and contact data management.
+
+### Profile Categories
+
+#### Basic Profile Information
+- **Personal Details**: Name, date of birth, gender, nationality, biographical information
+- **Contact Information**: Primary phone number, emergency contacts
+- **Professional Data**: Job title, department, company, work location, employment status
+- **System Data**: Avatar/profile photos, account preferences
+
+#### Extended Profile Data
+- **Family Members**: Relationships, emergency contacts, dependent information
+- **Contact Methods**: Multiple phone numbers, email addresses, communication preferences
+- **Addresses**: Home, work, billing, and shipping addresses with full geographic data
+- **Social Media**: Professional networks, social media profiles, online presence
+
+### Profile Management Interface
+
+#### User Profile Views
+
+**Personal Profile Page**: `/profile/show`
+- Comprehensive view of all profile information
+- Organized into tabbed sections for easy navigation
+- Display of family members, contacts, addresses, and social media
+- Quick edit buttons for each section
+
+**Profile Editing**: `/profile/edit`
+- Modal-based editing forms for each profile category
+- Real-time validation and updates
+- File upload support for avatars and documents
+- Responsive design for desktop and mobile
+
+#### Admin Profile Management
+
+**Admin User Profile Access**: `/admin/users/{id}`
+- View complete user profiles from admin interface
+- Edit all profile categories for any user
+- Bulk profile operations and data management
+- Profile completion analytics and reports
+
+### Profile Management API
+
+#### Core Profile Endpoints
+
+```http
+GET    /api/user/profile              # Get complete user profile
+PUT    /api/user/profile              # Update basic profile information
+POST   /api/user/profile/avatar       # Upload profile avatar
+DELETE /api/user/profile/avatar       # Remove profile avatar
+```
+
+#### Family Member Management
+
+```http
+GET    /api/user/profile/family                    # Get all family members
+POST   /api/user/profile/family                    # Add new family member
+GET    /api/user/profile/family/{id}               # Get specific family member
+PUT    /api/user/profile/family/{id}               # Update family member
+DELETE /api/user/profile/family/{id}               # Remove family member
+```
+
+#### Contact Information Management
+
+```http
+GET    /api/user/profile/contacts                  # Get all contact methods
+POST   /api/user/profile/contacts                  # Add new contact method
+GET    /api/user/profile/contacts/{id}             # Get specific contact
+PUT    /api/user/profile/contacts/{id}             # Update contact information
+DELETE /api/user/profile/contacts/{id}             # Remove contact method
+```
+
+#### Address Management
+
+```http
+GET    /api/user/profile/addresses                 # Get all addresses
+POST   /api/user/profile/addresses                 # Add new address
+GET    /api/user/profile/addresses/{id}            # Get specific address
+PUT    /api/user/profile/addresses/{id}            # Update address
+DELETE /api/user/profile/addresses/{id}            # Remove address
+```
+
+#### Social Media Management
+
+```http
+GET    /api/user/profile/social-media              # Get all social media profiles
+POST   /api/user/profile/social-media              # Add new social media profile
+GET    /api/user/profile/social-media/{id}         # Get specific profile
+PUT    /api/user/profile/social-media/{id}         # Update social media profile
+DELETE /api/user/profile/social-media/{id}         # Remove social media profile
+```
+
+### Database Schema
+
+#### Extended User Table
+```sql
+users:
+  -- Basic Information
+  id, name, email, password, is_admin
+  
+  -- Profile Fields
+  phone, date_of_birth, gender, nationality, bio, avatar_url
+  
+  -- Address Information
+  address_line_1, address_line_2, city, state_province, postal_code, country
+  
+  -- Emergency Contacts
+  emergency_contact_name, emergency_contact_phone, emergency_contact_relationship
+  
+  -- Professional Information
+  job_title, department, company, work_location, hire_date, employment_status
+  
+  -- Timestamps
+  created_at, updated_at
+```
+
+#### Profile Extension Tables
+```sql
+user_family_members:
+  id, user_id, name, relationship, date_of_birth, phone, email, address, 
+  emergency_contact, notes, created_at, updated_at
+
+user_contacts:
+  id, user_id, contact_type, contact_value, is_primary, is_verified, notes,
+  created_at, updated_at
+
+user_addresses:
+  id, user_id, address_type, address_line_1, address_line_2, city,
+  state_province, postal_code, country, is_primary, notes,
+  created_at, updated_at
+
+user_social_media:
+  id, user_id, platform, username, profile_url, is_public, notes,
+  created_at, updated_at
+```
+
+### Profile Management Features
+
+#### Data Validation
+- **Email Validation**: Ensures valid email formats
+- **Phone Validation**: Supports international phone number formats
+- **Date Validation**: Proper date formatting and age restrictions
+- **URL Validation**: Validates social media and website URLs
+- **Address Validation**: Geographic location validation
+
+#### Privacy Controls
+- **Visibility Settings**: Control what profile information is visible
+- **Public/Private Toggle**: Granular control over data sharing
+- **Export Controls**: Manage data export permissions
+- **Admin Override**: Administrative access to all profile data
+
+#### File Management
+- **Avatar Upload**: Profile photo upload and management
+- **Document Storage**: Support for additional profile documents
+- **File Validation**: Size, type, and security validation
+- **CDN Integration**: Optimized file delivery and storage
+
+### Profile Management Permissions
+
+The profile management system includes granular permissions:
+
+- **profile.view.own**: View own profile information
+- **profile.edit.own**: Edit own profile information  
+- **profile.view.all**: View all user profiles (admin)
+- **profile.edit.all**: Edit all user profiles (admin)
+- **profile.export**: Export profile data
+- **profile.analytics**: Access profile completion analytics
+
+### Integration Points
+
+#### Authentication Integration
+- Profile data available in JWT tokens for tenant applications
+- Automatic profile synchronization across SSO ecosystem
+- Profile-based access control and personalization
+
+#### Tenant Application Access
+- Tenant applications can access user profile data via API
+- Profile information can be used for personalization
+- Contact and address data available for business processes
+
+#### Reporting and Analytics
+- Profile completion statistics and metrics
+- Data quality reports and validation
+- User engagement and profile usage analytics
+
 ## Future Enhancements
 
 Potential improvements to the user management system:
@@ -272,3 +460,6 @@ Potential improvements to the user management system:
 - **Email Verification**: Require email verification for new accounts
 - **Password Reset**: Admin-initiated password reset functionality
 - **Export Functionality**: Export user lists and reports
+- **Profile Templates**: Pre-configured profile structures for different user types
+- **Data Import/Export**: Bulk profile data management tools
+- **Advanced Search**: Search users by profile criteria and custom fields

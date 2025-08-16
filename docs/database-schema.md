@@ -10,7 +10,7 @@ The multi-tenant SSO system uses separate databases for complete data isolation:
 ## Central Database Schema (`sso_main`)
 
 ### Users Table
-Primary user identity management.
+Primary user identity management with extended profile information.
 
 ```sql
 CREATE TABLE users (
@@ -21,11 +21,142 @@ CREATE TABLE users (
     password VARCHAR(255) NOT NULL,
     is_admin BOOLEAN DEFAULT FALSE,
     remember_token VARCHAR(100) NULL,
+    
+    -- Profile Information
+    phone VARCHAR(20) NULL,
+    date_of_birth DATE NULL,
+    gender ENUM('male', 'female', 'other', 'prefer_not_to_say') NULL,
+    nationality VARCHAR(2) NULL, -- ISO 3166-1 alpha-2 country code
+    bio TEXT NULL,
+    avatar_url VARCHAR(500) NULL,
+    
+    -- Address Information
+    address_line_1 VARCHAR(255) NULL,
+    address_line_2 VARCHAR(255) NULL,
+    city VARCHAR(100) NULL,
+    state_province VARCHAR(100) NULL,
+    postal_code VARCHAR(20) NULL,
+    country VARCHAR(2) NULL, -- ISO 3166-1 alpha-2 country code
+    
+    -- Emergency Contact
+    emergency_contact_name VARCHAR(255) NULL,
+    emergency_contact_phone VARCHAR(20) NULL,
+    emergency_contact_relationship VARCHAR(50) NULL,
+    
+    -- Professional Information
+    job_title VARCHAR(100) NULL,
+    department VARCHAR(100) NULL,
+    company VARCHAR(255) NULL,
+    work_location VARCHAR(255) NULL,
+    hire_date DATE NULL,
+    employment_status ENUM('active', 'inactive', 'terminated', 'on_leave') DEFAULT 'active',
+    
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
     
     INDEX idx_email (email),
-    INDEX idx_admin (is_admin)
+    INDEX idx_admin (is_admin),
+    INDEX idx_phone (phone),
+    INDEX idx_company (company),
+    INDEX idx_employment_status (employment_status)
+);
+```
+
+### User Family Members Table
+Extended family and emergency contact information.
+
+```sql
+CREATE TABLE user_family_members (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    relationship VARCHAR(50) NOT NULL, -- spouse, child, parent, sibling, etc.
+    date_of_birth DATE NULL,
+    phone VARCHAR(20) NULL,
+    email VARCHAR(255) NULL,
+    address TEXT NULL,
+    emergency_contact BOOLEAN DEFAULT FALSE,
+    notes TEXT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_id (user_id),
+    INDEX idx_relationship (relationship),
+    INDEX idx_emergency_contact (emergency_contact)
+);
+```
+
+### User Contacts Table
+Multiple contact methods for users.
+
+```sql
+CREATE TABLE user_contacts (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    contact_type VARCHAR(50) NOT NULL, -- mobile_phone, work_phone, home_phone, work_email, personal_email, etc.
+    contact_value VARCHAR(255) NOT NULL,
+    is_primary BOOLEAN DEFAULT FALSE,
+    is_verified BOOLEAN DEFAULT FALSE,
+    notes TEXT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_id (user_id),
+    INDEX idx_contact_type (contact_type),
+    INDEX idx_is_primary (is_primary),
+    INDEX idx_is_verified (is_verified)
+);
+```
+
+### User Addresses Table
+Multiple addresses for users (home, work, billing, shipping, etc.).
+
+```sql
+CREATE TABLE user_addresses (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    address_type VARCHAR(50) NOT NULL, -- home, work, billing, shipping, etc.
+    address_line_1 VARCHAR(255) NOT NULL,
+    address_line_2 VARCHAR(255) NULL,
+    city VARCHAR(100) NOT NULL,
+    state_province VARCHAR(100) NULL,
+    postal_code VARCHAR(20) NULL,
+    country VARCHAR(2) NOT NULL, -- ISO 3166-1 alpha-2 country code
+    is_primary BOOLEAN DEFAULT FALSE,
+    notes TEXT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_id (user_id),
+    INDEX idx_address_type (address_type),
+    INDEX idx_country (country),
+    INDEX idx_is_primary (is_primary)
+);
+```
+
+### User Social Media Table
+Social media profiles and professional networks.
+
+```sql
+CREATE TABLE user_social_media (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    platform VARCHAR(50) NOT NULL, -- linkedin, twitter, facebook, github, etc.
+    username VARCHAR(100) NOT NULL,
+    profile_url VARCHAR(500) NULL,
+    is_public BOOLEAN DEFAULT TRUE,
+    notes TEXT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_id (user_id),
+    INDEX idx_platform (platform),
+    INDEX idx_username (username),
+    INDEX idx_is_public (is_public)
 );
 ```
 
@@ -313,7 +444,11 @@ Schema::create('users', function (Blueprint $table) {
 ## Indexing Strategy
 
 ### Central Database Indexes
-- **Users**: Email (unique), admin status
+- **Users**: Email (unique), admin status, phone, company, employment status
+- **User Family Members**: User ID, relationship, emergency contact
+- **User Contacts**: User ID, contact type, is_primary, is_verified
+- **User Addresses**: User ID, address type, country, is_primary
+- **User Social Media**: User ID, platform, username, is_public
 - **Tenants**: Slug (unique), domain
 - **Tenant Users**: User ID, tenant ID, composite unique
 - **Domains**: Domain (unique), tenant ID
@@ -328,6 +463,10 @@ Schema::create('users', function (Blueprint $table) {
 ```mermaid
 erDiagram
     USERS ||--o{ TENANT_USERS : "belongs to many"
+    USERS ||--o{ USER_FAMILY_MEMBERS : "has many"
+    USERS ||--o{ USER_CONTACTS : "has many"
+    USERS ||--o{ USER_ADDRESSES : "has many"
+    USERS ||--o{ USER_SOCIAL_MEDIA : "has many"
     TENANTS ||--o{ TENANT_USERS : "has many"
     TENANTS ||--o{ DOMAINS : "has many"
     TENANTS ||--|| TENANT_DB : "owns"
@@ -338,6 +477,54 @@ erDiagram
         string email UK
         string password
         boolean is_admin
+        string phone
+        date date_of_birth
+        string gender
+        string nationality
+        text bio
+        string avatar_url
+        string job_title
+        string department
+        string company
+    }
+    
+    USER_FAMILY_MEMBERS {
+        bigint id PK
+        bigint user_id FK
+        string name
+        string relationship
+        date date_of_birth
+        string phone
+        string email
+        boolean emergency_contact
+    }
+    
+    USER_CONTACTS {
+        bigint id PK
+        bigint user_id FK
+        string contact_type
+        string contact_value
+        boolean is_primary
+        boolean is_verified
+    }
+    
+    USER_ADDRESSES {
+        bigint id PK
+        bigint user_id FK
+        string address_type
+        string address_line_1
+        string city
+        string country
+        boolean is_primary
+    }
+    
+    USER_SOCIAL_MEDIA {
+        bigint id PK
+        bigint user_id FK
+        string platform
+        string username
+        string profile_url
+        boolean is_public
     }
     
     TENANTS {

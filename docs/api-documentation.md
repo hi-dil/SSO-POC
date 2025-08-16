@@ -443,6 +443,319 @@ Get users for specific tenant.
 
 **Required Permission:** `tenants.view`
 
+### User Profile Management Endpoints
+
+The Central SSO system provides comprehensive user profile management APIs for extended user data beyond basic authentication information.
+
+#### GET `/api/user/profile`
+Get complete user profile information for authenticated user.
+
+**Required Permission:** `profile.view.own` (or `profile.view.all` for admin)
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com",
+    "phone": "+1234567890",
+    "date_of_birth": "1990-01-15",
+    "gender": "male",
+    "nationality": "US",
+    "bio": "Software engineer and tech enthusiast",
+    "avatar_url": "https://example.com/avatars/john.jpg",
+    "job_title": "Senior Developer",
+    "department": "Engineering",
+    "company": "Tech Corp",
+    "family_members": [
+      {
+        "id": 1,
+        "name": "Jane Doe",
+        "relationship": "spouse",
+        "phone": "+0987654321"
+      }
+    ],
+    "contacts": [
+      {
+        "id": 1,
+        "contact_type": "work_phone",
+        "contact_value": "+1234567890",
+        "is_primary": true
+      }
+    ],
+    "addresses": [
+      {
+        "id": 1,
+        "address_type": "home",
+        "address_line_1": "123 Main St",
+        "city": "Anytown",
+        "state_province": "CA",
+        "postal_code": "12345",
+        "country": "US",
+        "is_primary": true
+      }
+    ],
+    "social_media": [
+      {
+        "id": 1,
+        "platform": "linkedin",
+        "username": "johndoe",
+        "profile_url": "https://linkedin.com/in/johndoe",
+        "is_public": true
+      }
+    ]
+  }
+}
+```
+
+#### PUT `/api/user/profile`
+Update basic user profile information.
+
+**Required Permission:** `profile.edit.own` (or `profile.edit.all` for admin)
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+Content-Type: application/json
+```
+
+**Request:**
+```json
+{
+  "name": "John Doe",
+  "phone": "+1234567890",
+  "date_of_birth": "1990-01-15",
+  "gender": "male",
+  "nationality": "US",
+  "bio": "Updated bio",
+  "job_title": "Senior Developer",
+  "department": "Engineering"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Profile updated successfully",
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com",
+    "phone": "+1234567890"
+  }
+}
+```
+
+#### POST `/api/user/profile/avatar`
+Upload user avatar/profile photo.
+
+**Required Permission:** `profile.edit.own` (or `profile.edit.all` for admin)
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+Content-Type: multipart/form-data
+```
+
+**Request:**
+```
+avatar: [file] (JPG, PNG, GIF, max 2MB)
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Avatar uploaded successfully",
+  "avatar_url": "https://example.com/avatars/user-1-avatar.jpg"
+}
+```
+
+#### Family Member Management
+
+#### GET `/api/user/profile/family`
+Get all family members for authenticated user.
+
+**Required Permission:** `profile.view.own`
+
+**Response:**
+```json
+{
+  "success": true,
+  "family_members": [
+    {
+      "id": 1,
+      "name": "Jane Doe",
+      "relationship": "spouse",
+      "date_of_birth": "1992-03-20",
+      "phone": "+0987654321",
+      "email": "jane@example.com",
+      "emergency_contact": true
+    }
+  ]
+}
+```
+
+#### POST `/api/user/profile/family`
+Add new family member.
+
+**Required Permission:** `profile.edit.own`
+
+**Request:**
+```json
+{
+  "name": "Jane Doe",
+  "relationship": "spouse",
+  "date_of_birth": "1992-03-20",
+  "phone": "+0987654321",
+  "email": "jane@example.com",
+  "emergency_contact": true,
+  "notes": "Emergency contact"
+}
+```
+
+#### PUT `/api/user/profile/family/{id}`
+Update family member information.
+
+**Required Permission:** `profile.edit.own`
+
+#### DELETE `/api/user/profile/family/{id}`
+Remove family member.
+
+**Required Permission:** `profile.edit.own`
+
+#### Contact Information Management
+
+#### GET `/api/user/profile/contacts`
+Get all contact methods for authenticated user.
+
+**Response:**
+```json
+{
+  "success": true,
+  "contacts": [
+    {
+      "id": 1,
+      "contact_type": "work_phone",
+      "contact_value": "+1234567890",
+      "is_primary": true,
+      "is_verified": true,
+      "notes": "Direct office line"
+    }
+  ]
+}
+```
+
+#### POST `/api/user/profile/contacts`
+Add new contact method.
+
+**Request:**
+```json
+{
+  "contact_type": "mobile_phone",
+  "contact_value": "+0987654321",
+  "is_primary": false,
+  "notes": "Personal mobile"
+}
+```
+
+#### Address Management
+
+#### GET `/api/user/profile/addresses`
+Get all addresses for authenticated user.
+
+**Response:**
+```json
+{
+  "success": true,
+  "addresses": [
+    {
+      "id": 1,
+      "address_type": "home",
+      "address_line_1": "123 Main St",
+      "address_line_2": "Apt 4B",
+      "city": "Anytown",
+      "state_province": "CA",
+      "postal_code": "12345",
+      "country": "US",
+      "is_primary": true
+    }
+  ]
+}
+```
+
+#### POST `/api/user/profile/addresses`
+Add new address.
+
+**Request:**
+```json
+{
+  "address_type": "work",
+  "address_line_1": "456 Business Ave",
+  "city": "Business City",
+  "state_province": "CA",
+  "postal_code": "54321",
+  "country": "US",
+  "is_primary": false
+}
+```
+
+#### Social Media Management
+
+#### GET `/api/user/profile/social-media`
+Get all social media profiles for authenticated user.
+
+**Response:**
+```json
+{
+  "success": true,
+  "social_media": [
+    {
+      "id": 1,
+      "platform": "linkedin",
+      "username": "johndoe",
+      "profile_url": "https://linkedin.com/in/johndoe",
+      "is_public": true,
+      "notes": "Professional profile"
+    }
+  ]
+}
+```
+
+#### POST `/api/user/profile/social-media`
+Add new social media profile.
+
+**Request:**
+```json
+{
+  "platform": "twitter",
+  "username": "johndoe",
+  "profile_url": "https://twitter.com/johndoe",
+  "is_public": false,
+  "notes": "Personal Twitter account"
+}
+```
+
+#### Admin Profile Management
+
+#### GET `/api/admin/users/{id}/profile`
+Get complete profile for any user (admin only).
+
+**Required Permission:** `profile.view.all`
+
+#### PUT `/api/admin/users/{id}/profile`
+Update profile for any user (admin only).
+
+**Required Permission:** `profile.edit.all`
+
 ### Web Routes (SSO Flow)
 
 #### GET `/auth/{tenant_slug}`

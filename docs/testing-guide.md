@@ -209,6 +209,248 @@ ORDER BY tenant_id, login_method;"
 - **Recent Activity**: Real-time login feed
 - **Export Functionality**: CSV download capability
 
+## User Profile Management Testing
+
+The user profile management system includes comprehensive testing for all profile-related functionality, including basic profile information, family members, contacts, addresses, and social media profiles.
+
+### Manual Profile Testing
+
+#### Basic Profile Management
+1. **Access Profile Page**: Login and navigate to `/profile/show`
+2. **Edit Profile Information**: Test updating basic profile fields
+   - Name, phone, date of birth, gender, nationality
+   - Job title, department, company information
+   - Bio and avatar upload functionality
+3. **Profile Validation**: Test form validation and error handling
+
+#### Family Member Management
+1. **Add Family Members**: Test adding family relationships
+   - Spouse, children, parents, emergency contacts
+   - Include phone, email, and address information
+2. **Edit Family Members**: Update existing family member details
+3. **Delete Family Members**: Remove family members and verify cleanup
+
+#### Contact Information Management
+1. **Multiple Contact Methods**: Add various contact types
+   - Work phone, mobile phone, personal email, work email
+   - Test primary/secondary contact designation
+   - Verify contact validation and formatting
+2. **Contact Verification**: Test contact verification workflow
+3. **Contact Management**: Edit and delete contact methods
+
+#### Address Management
+1. **Multiple Addresses**: Add different address types
+   - Home, work, billing, shipping addresses
+   - Test international address formats
+   - Verify primary address designation
+2. **Address Validation**: Test geographic validation
+3. **Address Management**: Edit and delete addresses
+
+#### Social Media Management
+1. **Platform Profiles**: Add various social media platforms
+   - LinkedIn, Twitter, Facebook, GitHub, etc.
+   - Test profile URL validation
+   - Configure public/private visibility
+2. **Profile Management**: Edit and delete social media profiles
+
+### API Profile Testing
+
+#### Profile API Endpoints
+```bash
+# Test basic profile retrieval
+curl -X GET "http://localhost:8000/api/user/profile" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Accept: application/json"
+
+# Test profile updates
+curl -X PUT "http://localhost:8000/api/user/profile" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Name",
+    "phone": "+1234567890",
+    "job_title": "Senior Developer"
+  }'
+
+# Test avatar upload
+curl -X POST "http://localhost:8000/api/user/profile/avatar" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "avatar=@/path/to/test-image.jpg"
+```
+
+#### Family Member API Testing
+```bash
+# Add family member
+curl -X POST "http://localhost:8000/api/user/profile/family" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Jane Doe",
+    "relationship": "spouse",
+    "phone": "+0987654321",
+    "emergency_contact": true
+  }'
+
+# Get family members
+curl -X GET "http://localhost:8000/api/user/profile/family" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Update family member
+curl -X PUT "http://localhost:8000/api/user/profile/family/1" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"phone": "+1111111111"}'
+```
+
+#### Contact API Testing
+```bash
+# Add contact method
+curl -X POST "http://localhost:8000/api/user/profile/contacts" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contact_type": "work_phone",
+    "contact_value": "+1234567890",
+    "is_primary": true
+  }'
+
+# Get all contacts
+curl -X GET "http://localhost:8000/api/user/profile/contacts" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+#### Address API Testing
+```bash
+# Add address
+curl -X POST "http://localhost:8000/api/user/profile/addresses" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "address_type": "home",
+    "address_line_1": "123 Main St",
+    "city": "Anytown",
+    "state_province": "CA",
+    "postal_code": "12345",
+    "country": "US",
+    "is_primary": true
+  }'
+
+# Get all addresses
+curl -X GET "http://localhost:8000/api/user/profile/addresses" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+#### Social Media API Testing
+```bash
+# Add social media profile
+curl -X POST "http://localhost:8000/api/user/profile/social-media" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "platform": "linkedin",
+    "username": "johndoe",
+    "profile_url": "https://linkedin.com/in/johndoe",
+    "is_public": true
+  }'
+
+# Get social media profiles
+curl -X GET "http://localhost:8000/api/user/profile/social-media" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Database Profile Testing
+
+#### Profile Data Verification
+```sql
+-- Check user profile completeness
+SELECT 
+    u.id, u.name, u.email,
+    CASE WHEN u.phone IS NOT NULL THEN 1 ELSE 0 END as has_phone,
+    CASE WHEN u.bio IS NOT NULL THEN 1 ELSE 0 END as has_bio,
+    CASE WHEN u.avatar_url IS NOT NULL THEN 1 ELSE 0 END as has_avatar,
+    COUNT(DISTINCT fm.id) as family_members,
+    COUNT(DISTINCT c.id) as contacts,
+    COUNT(DISTINCT a.id) as addresses,
+    COUNT(DISTINCT sm.id) as social_media_profiles
+FROM users u
+LEFT JOIN user_family_members fm ON u.id = fm.user_id
+LEFT JOIN user_contacts c ON u.id = c.user_id
+LEFT JOIN user_addresses a ON u.id = a.user_id
+LEFT JOIN user_social_media sm ON u.id = sm.user_id
+WHERE u.id = 1
+GROUP BY u.id;
+
+-- Check profile relationships
+SELECT 
+    'Family Members' as category,
+    COUNT(*) as total,
+    COUNT(CASE WHEN emergency_contact = 1 THEN 1 END) as emergency_contacts
+FROM user_family_members WHERE user_id = 1
+
+UNION ALL
+
+SELECT 
+    'Contacts' as category,
+    COUNT(*) as total,
+    COUNT(CASE WHEN is_primary = 1 THEN 1 END) as primary_contacts
+FROM user_contacts WHERE user_id = 1
+
+UNION ALL
+
+SELECT 
+    'Addresses' as category,
+    COUNT(*) as total,
+    COUNT(CASE WHEN is_primary = 1 THEN 1 END) as primary_addresses
+FROM user_addresses WHERE user_id = 1;
+```
+
+### Admin Profile Management Testing
+
+#### Admin Profile Access
+1. **Login as Admin**: Use `superadmin@sso.com` / `password`
+2. **Access User Profiles**: Navigate to `/admin/users/{id}` 
+3. **Edit User Profiles**: Test admin editing capabilities
+4. **Profile Analytics**: View profile completion statistics
+
+#### Permission Testing
+```bash
+# Test profile permissions
+curl -X GET "http://localhost:8000/api/admin/users/1/profile" \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+
+# Test profile editing permissions
+curl -X PUT "http://localhost:8000/api/admin/users/1/profile" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"job_title": "Updated by Admin"}'
+```
+
+### Profile Testing Checklist
+
+#### Basic Profile Testing
+- [ ] Profile information CRUD operations
+- [ ] Avatar upload and management
+- [ ] Profile validation and error handling
+- [ ] Profile completion tracking
+
+#### Extended Profile Testing
+- [ ] Family member management (CRUD)
+- [ ] Contact information management (CRUD)
+- [ ] Address management (CRUD)
+- [ ] Social media profile management (CRUD)
+
+#### Permission and Security Testing
+- [ ] User can only edit own profile
+- [ ] Admin can edit all profiles
+- [ ] Proper API authentication
+- [ ] Data validation and sanitization
+
+#### Integration Testing
+- [ ] Profile data in JWT tokens
+- [ ] Profile synchronization across tenants
+- [ ] Profile-based authentication features
+- [ ] Profile analytics and reporting
+
 ## Test Data and Factories
 
 The system includes comprehensive test data generation using Laravel model factories for consistent and reliable testing scenarios.

@@ -230,6 +230,7 @@ All users use password: **password**
 - **System**: settings, logs
 - **API**: manage
 - **Developer**: telescope.access, swagger.access
+- **Profile**: view.own, edit.own, view.all, edit.all, export, analytics
 
 #### Role Management Features:
 - **Interactive UI**: Create, edit, and delete roles with full permission management
@@ -287,6 +288,101 @@ All users use password: **password**
 - **Visual Indicators**: Admin badges, tenant access tags, role assignments
 - **Safety Features**: Confirmation dialogs and self-deletion prevention
 - **Clean Interface**: No intrusive welcome messages or unnecessary notifications
+
+### User Profile Management - Comprehensive User Data System
+
+The central SSO system includes an advanced user profile management system that extends beyond basic authentication to provide comprehensive user data management capabilities.
+
+#### Profile System Features:
+- **Extended User Profiles**: Complete user information management with personal, contact, and professional details
+- **Multi-Dimensional Data**: Organized into categories for better data management and user experience
+- **Family Member Management**: Track family relationships, emergency contacts, and dependent information
+- **Contact Information**: Multiple contact methods including phone, email, and communication preferences
+- **Address Management**: Support for multiple addresses (home, work, billing, shipping) with full geographic data
+- **Social Media Integration**: Track and manage user social media profiles and professional networks
+- **Professional Information**: Job titles, departments, company information, and career details
+- **Personal Demographics**: Age, nationality, gender, biographical information, and personal preferences
+
+#### Profile Data Categories:
+
+##### Basic Profile Information:
+- **Personal Details**: Name, date of birth, gender, nationality, biographical information
+- **Contact Information**: Primary phone, emergency contacts, preferred communication methods
+- **Professional Data**: Job title, department, company, work location, employment details
+- **System Data**: Avatar/profile photos, account preferences, authentication settings
+
+##### Extended Profile Tables:
+- **user_family_members**: Family relationships, emergency contacts, dependent information
+- **user_contacts**: Multiple contact methods, phone numbers, email addresses, communication preferences
+- **user_addresses**: Residential, work, billing, and shipping addresses with full geographic data
+- **user_social_media**: Social media profiles, professional networks, online presence management
+
+#### Profile Management API Endpoints:
+- `GET /api/user/profile` - Get complete user profile information
+- `PUT /api/user/profile` - Update basic profile information
+- `GET /api/user/profile/family` - Get family member information
+- `POST /api/user/profile/family` - Add family member
+- `PUT /api/user/profile/family/{id}` - Update family member
+- `DELETE /api/user/profile/family/{id}` - Remove family member
+- `GET /api/user/profile/contacts` - Get contact information
+- `POST /api/user/profile/contacts` - Add contact method
+- `PUT /api/user/profile/contacts/{id}` - Update contact information
+- `DELETE /api/user/profile/contacts/{id}` - Remove contact method
+- `GET /api/user/profile/addresses` - Get address information
+- `POST /api/user/profile/addresses` - Add address
+- `PUT /api/user/profile/addresses/{id}` - Update address
+- `DELETE /api/user/profile/addresses/{id}` - Remove address
+- `GET /api/user/profile/social-media` - Get social media profiles
+- `POST /api/user/profile/social-media` - Add social media profile
+- `PUT /api/user/profile/social-media/{id}` - Update social media profile
+- `DELETE /api/user/profile/social-media/{id}` - Remove social media profile
+
+#### Profile Management UI Features:
+- **Comprehensive Profile Views**: Organized tabs for different profile categories
+- **Modal-Based Editing**: User-friendly forms for adding and editing profile information
+- **Real-Time Updates**: Live interface updates without page refresh
+- **Data Validation**: Comprehensive validation for all profile fields
+- **File Upload Support**: Avatar and document upload capabilities
+- **Privacy Controls**: Granular control over profile data visibility
+- **Responsive Design**: Mobile-friendly interface for profile management
+
+#### Admin Profile Management:
+- **Administrative Profile Access**: Admins can view and edit user profiles
+- **Bulk Profile Operations**: Mass updates and data management tools
+- **Profile Analytics**: Usage statistics and data completeness metrics
+- **Data Export**: Export profile data for reporting and compliance
+- **Audit Trails**: Track all profile changes and administrative actions
+
+#### Profile Database Schema:
+```sql
+-- Extended user table with profile fields
+users: id, name, email, phone, date_of_birth, gender, nationality, bio, avatar_url, 
+       address_line_1, address_line_2, city, state_province, postal_code, country,
+       emergency_contact_name, emergency_contact_phone, emergency_contact_relationship,
+       job_title, department, company, work_location, hire_date, employment_status
+
+-- Family member relationships
+user_family_members: id, user_id, name, relationship, date_of_birth, phone, email, 
+                     address, emergency_contact, notes
+
+-- Multiple contact methods
+user_contacts: id, user_id, contact_type, contact_value, is_primary, is_verified, notes
+
+-- Multiple addresses
+user_addresses: id, user_id, address_type, address_line_1, address_line_2, city, 
+                state_province, postal_code, country, is_primary, notes
+
+-- Social media profiles
+user_social_media: id, user_id, platform, username, profile_url, is_public, notes
+```
+
+#### Profile Management Permissions:
+- `profile.view.own` - View own profile information
+- `profile.edit.own` - Edit own profile information
+- `profile.view.all` - View all user profiles (admin)
+- `profile.edit.all` - Edit all user profiles (admin)
+- `profile.export` - Export profile data
+- `profile.analytics` - Access profile analytics
 
 ### Login Audit System - Comprehensive Authentication Tracking
 

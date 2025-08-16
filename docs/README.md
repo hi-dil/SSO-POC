@@ -43,9 +43,19 @@ This documentation covers the architecture, implementation, and usage of a compl
 - **Password management** with secure confirmation and hashing
 - **Admin flag management** for elevated privileges
 
+### User Profile Management
+- **Extended user profiles** with personal, professional, and contact information
+- **Multi-dimensional profile data** organized into family, contacts, addresses, and social media
+- **Family member management** with emergency contacts and relationship tracking
+- **Contact information management** supporting multiple contact methods and verification
+- **Address management** for home, work, billing, and shipping addresses with international support
+- **Social media integration** for professional networks and online presence management
+- **Profile completion analytics** and data quality reporting
+- **Admin profile management** with bulk operations and comprehensive editing capabilities
+
 ### Role-Based Access Control (RBAC)
-- **Granular permissions** across 6 categories (Users, Roles, Tenants, System, API, Developer)
-- **19 built-in permissions** with extensible architecture
+- **Granular permissions** across 7 categories (Users, Roles, Tenants, System, API, Developer, Profile)
+- **25+ built-in permissions** with extensible architecture
 - **Multi-tenant role assignment** with global and tenant-specific roles
 - **Interactive role management UI** with modern shadcn/ui design
 - **API-driven role management** with complete REST endpoints
