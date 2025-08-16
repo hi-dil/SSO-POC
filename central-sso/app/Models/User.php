@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements JWTSubject
@@ -30,6 +31,28 @@ class User extends Authenticatable implements JWTSubject
         'email',
         'password',
         'is_admin',
+        'phone',
+        'date_of_birth',
+        'gender',
+        'nationality',
+        'bio',
+        'avatar_url',
+        'address_line_1',
+        'address_line_2',
+        'city',
+        'state_province',
+        'postal_code',
+        'country',
+        'emergency_contact_name',
+        'emergency_contact_phone',
+        'emergency_contact_relationship',
+        'job_title',
+        'department',
+        'employee_id',
+        'hire_date',
+        'timezone',
+        'language',
+        'notification_preferences',
     ];
 
     /**
@@ -53,6 +76,9 @@ class User extends Authenticatable implements JWTSubject
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'date_of_birth' => 'date',
+            'hire_date' => 'date',
+            'notification_preferences' => 'array',
         ];
     }
 
@@ -102,6 +128,101 @@ class User extends Authenticatable implements JWTSubject
      */
     public function isSuperAdmin(): bool
     {
-        return $this->hasRole('super-admin') || $this->is_admin;
+        return $this->hasRole('Super Admin') || $this->is_admin;
+    }
+
+    /**
+     * Get family members
+     */
+    public function familyMembers(): HasMany
+    {
+        return $this->hasMany(UserFamilyMember::class);
+    }
+
+    /**
+     * Get user contacts
+     */
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(UserContact::class);
+    }
+
+    /**
+     * Get user addresses
+     */
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(UserAddress::class);
+    }
+
+    /**
+     * Get user social media links
+     */
+    public function socialMedia(): HasMany
+    {
+        return $this->hasMany(UserSocialMedia::class)->ordered();
+    }
+
+    /**
+     * Get primary contact of a specific type
+     */
+    public function primaryContact($type)
+    {
+        return $this->contacts()->ofType($type)->primary()->first();
+    }
+
+    /**
+     * Get primary address
+     */
+    public function primaryAddress()
+    {
+        return $this->addresses()->primary()->first();
+    }
+
+    /**
+     * Get public social media links
+     */
+    public function publicSocialMedia(): HasMany
+    {
+        return $this->hasMany(UserSocialMedia::class)->public()->ordered();
+    }
+
+    /**
+     * Get full address
+     */
+    public function getFullAddressAttribute(): string
+    {
+        $parts = array_filter([
+            $this->address_line_1,
+            $this->address_line_2,
+            $this->city,
+            $this->state_province,
+            $this->postal_code,
+            $this->country
+        ]);
+        
+        return implode(', ', $parts);
+    }
+
+    /**
+     * Get avatar URL or generate initials
+     */
+    public function getAvatarAttribute(): string
+    {
+        if ($this->avatar_url) {
+            return $this->avatar_url;
+        }
+        
+        // Generate initials-based avatar
+        $initials = strtoupper(substr($this->name, 0, 2));
+        return "https://ui-avatars.com/api/?name=" . urlencode($this->name) . "&background=6366f1&color=fff&size=200";
+    }
+
+    /**
+     * Get age from date of birth
+     */
+    public function getAgeAttribute(): ?int
+    {
+        return $this->date_of_birth ? $this->date_of_birth->age : null;
     }
 }

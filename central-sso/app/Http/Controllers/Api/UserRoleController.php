@@ -168,7 +168,7 @@ class UserRoleController extends Controller
                 ], 404);
             }
 
-            if ($user->hasRole($dto->role_slug, $dto->tenant_id)) {
+            if ($user->hasRole($role->name, $dto->tenant_id)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Role already assigned to user'
@@ -245,7 +245,7 @@ class UserRoleController extends Controller
             $dto = AssignRoleRequestDTO::fromArray($validatedData);
             $role = Role::where('slug', $dto->role_slug)->firstOrFail();
 
-            if (!$user->hasRole($dto->role_slug, $dto->tenant_id)) {
+            if (!$user->hasRole($role->name, $dto->tenant_id)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Role not assigned to user'

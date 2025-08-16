@@ -57,6 +57,38 @@ Route::post('/tenant-select', [MainAuthController::class, 'selectTenant'])->name
 Route::post('/tenant-access', [MainAuthController::class, 'accessTenant'])->name('tenant.access');
 Route::get('/logout', [MainAuthController::class, 'logout'])->name('main.logout');
 
+// User Profile Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/profile', [App\Http\Controllers\UserProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/edit', [App\Http\Controllers\UserProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [App\Http\Controllers\UserProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [App\Http\Controllers\UserProfileController::class, 'updatePassword'])->name('profile.password');
+    
+    // Family Members
+    Route::get('/profile/family', [App\Http\Controllers\UserProfileController::class, 'family'])->name('profile.family');
+    Route::post('/profile/family', [App\Http\Controllers\UserProfileController::class, 'storeFamilyMember'])->name('profile.family.store');
+    Route::put('/profile/family/{familyMember}', [App\Http\Controllers\UserProfileController::class, 'updateFamilyMember'])->name('profile.family.update');
+    Route::delete('/profile/family/{familyMember}', [App\Http\Controllers\UserProfileController::class, 'destroyFamilyMember'])->name('profile.family.destroy');
+    
+    // Contacts
+    Route::get('/profile/contacts', [App\Http\Controllers\UserProfileController::class, 'contacts'])->name('profile.contacts');
+    Route::post('/profile/contacts', [App\Http\Controllers\UserProfileController::class, 'storeContact'])->name('profile.contacts.store');
+    Route::put('/profile/contacts/{contact}', [App\Http\Controllers\UserProfileController::class, 'updateContact'])->name('profile.contacts.update');
+    Route::delete('/profile/contacts/{contact}', [App\Http\Controllers\UserProfileController::class, 'destroyContact'])->name('profile.contacts.destroy');
+    
+    // Addresses
+    Route::get('/profile/addresses', [App\Http\Controllers\UserProfileController::class, 'addresses'])->name('profile.addresses');
+    Route::post('/profile/addresses', [App\Http\Controllers\UserProfileController::class, 'storeAddress'])->name('profile.addresses.store');
+    Route::put('/profile/addresses/{address}', [App\Http\Controllers\UserProfileController::class, 'updateAddress'])->name('profile.addresses.update');
+    Route::delete('/profile/addresses/{address}', [App\Http\Controllers\UserProfileController::class, 'destroyAddress'])->name('profile.addresses.destroy');
+    
+    // Social Media
+    Route::get('/profile/social-media', [App\Http\Controllers\UserProfileController::class, 'socialMedia'])->name('profile.social-media');
+    Route::post('/profile/social-media', [App\Http\Controllers\UserProfileController::class, 'storeSocialMedia'])->name('profile.social-media.store');
+    Route::put('/profile/social-media/{socialMedia}', [App\Http\Controllers\UserProfileController::class, 'updateSocialMedia'])->name('profile.social-media.update');
+    Route::delete('/profile/social-media/{socialMedia}', [App\Http\Controllers\UserProfileController::class, 'destroySocialMedia'])->name('profile.social-media.destroy');
+});
+
 // SSO Authentication Routes (for tenant-specific login)
 Route::middleware(['web'])->group(function () {
     Route::get('/auth/{tenant_slug}', [SSOController::class, 'showLoginForm'])->name('sso.form');
@@ -128,12 +160,39 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     
     // User Management
     Route::get('users', [\App\Http\Controllers\Admin\UserManagementController::class, 'index'])->name('users.index');
-    Route::get('users/data', [\App\Http\Controllers\Admin\UserManagementController::class, 'getUsers'])->name('users.data');
+    Route::get('users/create', [\App\Http\Controllers\Admin\UserManagementController::class, 'create'])->name('users.create');
     Route::post('users', [\App\Http\Controllers\Admin\UserManagementController::class, 'store'])->name('users.store');
+    Route::get('users/{user}', [\App\Http\Controllers\Admin\UserManagementController::class, 'show'])->name('users.show');
+    Route::get('users/{user}/edit', [\App\Http\Controllers\Admin\UserManagementController::class, 'edit'])->name('users.edit');
     Route::put('users/{user}', [\App\Http\Controllers\Admin\UserManagementController::class, 'update'])->name('users.update');
     Route::delete('users/{user}', [\App\Http\Controllers\Admin\UserManagementController::class, 'destroy'])->name('users.destroy');
+    Route::get('users/data', [\App\Http\Controllers\Admin\UserManagementController::class, 'getUsers'])->name('users.data');
     Route::post('users/{userId}/tenants', [\App\Http\Controllers\Admin\UserManagementController::class, 'assignTenant'])->name('users.assign-tenant');
     Route::delete('users/{userId}/tenants', [\App\Http\Controllers\Admin\UserManagementController::class, 'removeTenant'])->name('users.remove-tenant');
+    
+    // User Contact Management
+    Route::get('users/{user}/contacts', [\App\Http\Controllers\Admin\UserManagementController::class, 'contacts'])->name('users.contacts')->middleware('can:View User Contacts');
+    Route::post('users/{user}/contacts', [\App\Http\Controllers\Admin\UserManagementController::class, 'storeContact'])->name('users.contacts.store')->middleware('can:Manage User Contacts');
+    Route::put('users/{user}/contacts/{contact}', [\App\Http\Controllers\Admin\UserManagementController::class, 'updateContact'])->name('users.contacts.update')->middleware('can:Manage User Contacts');
+    Route::delete('users/{user}/contacts/{contact}', [\App\Http\Controllers\Admin\UserManagementController::class, 'destroyContact'])->name('users.contacts.destroy')->middleware('can:Manage User Contacts');
+    
+    // User Address Management
+    Route::get('users/{user}/addresses', [\App\Http\Controllers\Admin\UserManagementController::class, 'addresses'])->name('users.addresses')->middleware('can:View User Addresses');
+    Route::post('users/{user}/addresses', [\App\Http\Controllers\Admin\UserManagementController::class, 'storeAddress'])->name('users.addresses.store')->middleware('can:Manage User Addresses');
+    Route::put('users/{user}/addresses/{address}', [\App\Http\Controllers\Admin\UserManagementController::class, 'updateAddress'])->name('users.addresses.update')->middleware('can:Manage User Addresses');
+    Route::delete('users/{user}/addresses/{address}', [\App\Http\Controllers\Admin\UserManagementController::class, 'destroyAddress'])->name('users.addresses.destroy')->middleware('can:Manage User Addresses');
+    
+    // User Family Management
+    Route::get('users/{user}/family', [\App\Http\Controllers\Admin\UserManagementController::class, 'family'])->name('users.family')->middleware('can:View User Family Members');
+    Route::post('users/{user}/family', [\App\Http\Controllers\Admin\UserManagementController::class, 'storeFamilyMember'])->name('users.family.store')->middleware('can:Manage User Family Members');
+    Route::put('users/{user}/family/{familyMember}', [\App\Http\Controllers\Admin\UserManagementController::class, 'updateFamilyMember'])->name('users.family.update')->middleware('can:Manage User Family Members');
+    Route::delete('users/{user}/family/{familyMember}', [\App\Http\Controllers\Admin\UserManagementController::class, 'destroyFamilyMember'])->name('users.family.destroy')->middleware('can:Manage User Family Members');
+    
+    // User Social Media Management
+    Route::get('users/{user}/social-media', [\App\Http\Controllers\Admin\UserManagementController::class, 'socialMedia'])->name('users.social-media')->middleware('can:View User Social Media');
+    Route::post('users/{user}/social-media', [\App\Http\Controllers\Admin\UserManagementController::class, 'storeSocialMedia'])->name('users.social-media.store')->middleware('can:Manage User Social Media');
+    Route::put('users/{user}/social-media/{socialMedia}', [\App\Http\Controllers\Admin\UserManagementController::class, 'updateSocialMedia'])->name('users.social-media.update')->middleware('can:Manage User Social Media');
+    Route::delete('users/{user}/social-media/{socialMedia}', [\App\Http\Controllers\Admin\UserManagementController::class, 'destroySocialMedia'])->name('users.social-media.destroy')->middleware('can:Manage User Social Media');
     
     // Login Analytics
     Route::get('analytics', [\App\Http\Controllers\Admin\LoginAnalyticsController::class, 'index'])->name('analytics.index');

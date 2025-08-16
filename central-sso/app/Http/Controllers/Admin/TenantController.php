@@ -55,10 +55,10 @@ class TenantController extends Controller
         $stats = [
             'total_users' => $tenant->users->count(),
             'admin_users' => $tenant->users->filter(function($user) {
-                return $user->hasRole(['super-admin', 'admin']);
+                return $user->hasRole(['Super Admin', 'Admin']);
             })->count(),
             'regular_users' => $tenant->users->filter(function($user) {
-                return $user->hasRole('user');
+                return $user->hasRole('User');
             })->count(),
             'last_login' => $tenant->users->max('updated_at'),
         ];

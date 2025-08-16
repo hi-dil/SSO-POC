@@ -40,10 +40,10 @@ class RolesAndPermissionsSeeder extends Seeder
         $userRole = Role::create(['name' => 'user']);
         // Users don't get any special permissions by default
 
-        // Assign super-admin role to existing super admin users
+        // Assign Super Admin role to existing super admin users
         $superAdmins = User::where('email', 'superadmin@sso.com')->get();
         foreach ($superAdmins as $admin) {
-            $admin->assignRole('super-admin');
+            $admin->assignRole('Super Admin');
         }
 
         // Assign tenant-admin role to existing admin users

@@ -236,7 +236,7 @@ class RoleManagementController extends Controller
             $role = Role::where('slug', $validated['role_slug'])->firstOrFail();
             
             // Check if user already has this role in this scope
-            if ($user->hasRole($role->slug, $validated['tenant_id'])) {
+            if ($user->hasRole($role->name, $validated['tenant_id'])) {
                 return response()->json([
                     'success' => false,
                     'message' => 'User already has this role in the specified scope'
@@ -244,7 +244,7 @@ class RoleManagementController extends Controller
             }
             
             // Use the assignRole method which should handle tenant-specific assignments
-            $user->assignRole($role->slug, $validated['tenant_id']);
+            $user->assignRole($role->name, $validated['tenant_id']);
 
             return response()->json([
                 'success' => true,
@@ -283,7 +283,7 @@ class RoleManagementController extends Controller
             $role = Role::where('slug', $validated['role_slug'])->firstOrFail();
             
             // Use the removeRole method which should handle tenant-specific assignments
-            $user->removeRole($role->slug, $validated['tenant_id']);
+            $user->removeRole($role->name, $validated['tenant_id']);
 
             return response()->json([
                 'success' => true,
