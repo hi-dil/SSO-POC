@@ -223,7 +223,7 @@
 
     <!-- User Roles Modal -->
     <div x-show="showUserRolesModal" class="fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" x-transition>
-        <div class="fixed left-[50%] top-[50%] z-50 grid w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 border border-border bg-card p-6 shadow-lg duration-200 sm:rounded-lg">
+        <div class="fixed left-[50%] top-[50%] z-50 grid w-full max-w-2xl translate-x-[-50%] translate-y-[-50%] gap-4 border border-border bg-card p-6 shadow-lg duration-200 sm:rounded-lg">
             <div class="space-y-4">
                 <div class="space-y-2">
                     <h2 class="text-lg font-semibold leading-none tracking-tight">Manage User Roles</h2>
@@ -233,23 +233,66 @@
                         </p>
                     </div>
                 </div>
-                
-                <div class="space-y-3">
-                    <template x-for="role in roles" :key="role.id">
-                        <div class="flex items-center justify-between py-2 border-b border-border last:border-0">
-                            <div class="flex items-center space-x-2">
-                                <span class="text-sm font-medium" x-text="role.name"></span>
-                                <span x-show="role.is_system" class="inline-flex items-center rounded-full border px-1.5 py-0.5 text-xs font-semibold border-destructive/10 text-destructive">
-                                    System
-                                </span>
-                            </div>
-                            <button @click="toggleUserRole(role)" 
-                                    :class="userHasRole(role) ? 'bg-destructive text-destructive-foreground hover:bg-destructive/80' : 'bg-primary text-primary-foreground hover:bg-primary/80'"
-                                    class="inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-8 px-3">
-                                <span x-text="userHasRole(role) ? 'Remove' : 'Assign'"></span>
-                            </button>
+
+                <!-- Add Role Form -->
+                <div class="border rounded-lg p-4 space-y-4">
+                    <h3 class="text-md font-medium">Assign New Role</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">Role</label>
+                            <select x-model="newRoleAssignment.roleId" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                                <option value="">Select a role...</option>
+                                <template x-for="role in roles" :key="role.id">
+                                    <option :value="role.id" x-text="role.name"></option>
+                                </template>
+                            </select>
                         </div>
-                    </template>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">Scope</label>
+                            <select x-model="newRoleAssignment.tenantId" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                                <option value="">Global (all tenants)</option>
+                                <template x-for="tenant in tenants" :key="tenant.id">
+                                    <option :value="tenant.id" x-text="tenant.name + ' (' + tenant.slug + ')'"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+                    <button @click="assignRoleToUser()" 
+                            :disabled="!newRoleAssignment.roleId"
+                            class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4">
+                        <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Assign Role
+                    </button>
+                </div>
+
+                <!-- Current Roles -->
+                <div class="space-y-3">
+                    <h3 class="text-md font-medium">Current Role Assignments</h3>
+                    <div class="space-y-2 max-h-64 overflow-y-auto">
+                        <template x-for="userRole in selectedUser?.roles || []" :key="userRole.role.id + (userRole.tenant_id || 'global')">
+                            <div class="flex items-center justify-between py-2 px-3 border rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-sm font-medium" x-text="userRole.role.name"></span>
+                                    <span x-show="userRole.role.is_system" class="inline-flex items-center rounded-full border px-1.5 py-0.5 text-xs font-semibold border-destructive/10 text-destructive">
+                                        System
+                                    </span>
+                                    <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+                                        <span x-show="userRole.tenant_id" x-text="getTenantName(userRole.tenant_id)"></span>
+                                        <span x-show="!userRole.tenant_id">Global</span>
+                                    </span>
+                                </div>
+                                <button @click="removeRoleFromUser(userRole)" 
+                                        class="inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-destructive text-destructive-foreground hover:bg-destructive/80 h-8 px-3">
+                                    Remove
+                                </button>
+                            </div>
+                        </template>
+                        <div x-show="!selectedUser?.roles?.length" class="text-center py-4 text-sm text-muted-foreground">
+                            No roles assigned
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="flex justify-end">
@@ -269,6 +312,7 @@ function roleManagement() {
         roles: [],
         permissions: [],
         users: [],
+        tenants: [],
         showRoleModal: false,
         showUserRolesModal: false,
         editingRole: null,
@@ -277,6 +321,10 @@ function roleManagement() {
             name: '',
             description: '',
             permissions: []
+        },
+        newRoleAssignment: {
+            roleId: '',
+            tenantId: ''
         },
         
         get permissionCategories() {
@@ -287,6 +335,7 @@ function roleManagement() {
             this.roles = @json($roles ?? []);
             this.permissions = @json($permissions ?? []);
             this.users = @json($users ?? []);
+            this.tenants = @json($tenants ?? []);
             
             // Show a welcome toast
             setTimeout(() => {
@@ -375,7 +424,7 @@ function roleManagement() {
         
         async saveRole() {
             try {
-                const url = this.editingRole ? `/api/roles/${this.editingRole.id}` : '/api/roles';
+                const url = this.editingRole ? `/admin/roles/${this.editingRole.id}` : '/admin/roles';
                 const method = this.editingRole ? 'PUT' : 'POST';
                 
                 const response = await fetch(url, {
@@ -409,7 +458,7 @@ function roleManagement() {
             if (!confirmed) return;
             
             try {
-                const response = await fetch(`/api/roles/${role.id}`, {
+                const response = await fetch(`/admin/roles/${role.id}`, {
                     method: 'DELETE',
                     headers: { 
                         'Accept': 'application/json',
@@ -433,44 +482,87 @@ function roleManagement() {
         
         manageUserRoles(user) {
             this.selectedUser = user;
+            this.newRoleAssignment = { roleId: '', tenantId: '' };
             this.showUserRolesModal = true;
         },
         
         userHasRole(role) {
             return this.selectedUser?.roles?.some(ur => ur.role.id === role.id);
         },
-        
-        async toggleUserRole(role) {
-            if (!this.selectedUser) return;
+
+        getTenantName(tenantId) {
+            const tenant = this.tenants.find(t => t.id === tenantId);
+            return tenant ? tenant.name : tenantId;
+        },
+
+        async assignRoleToUser() {
+            if (!this.selectedUser || !this.newRoleAssignment.roleId) return;
             
-            const hasRole = this.userHasRole(role);
-            const action = hasRole ? 'DELETE' : 'POST';
-            
+            const role = this.roles.find(r => r.id == this.newRoleAssignment.roleId);
+            if (!role) return;
+
             try {
-                const response = await fetch(`/api/users/${this.selectedUser.id}/roles`, {
-                    method: action,
+                const response = await fetch(`/admin/users/${this.selectedUser.id}/roles`, {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': await this.getToken()
                     },
                     credentials: 'same-origin',
-                    body: JSON.stringify({ role_slug: role.slug })
+                    body: JSON.stringify({ 
+                        role_slug: role.slug,
+                        tenant_id: this.newRoleAssignment.tenantId || null
+                    })
                 });
                 
                 if (response.ok) {
                     await this.loadUsers();
                     this.selectedUser = this.users.find(u => u.id === this.selectedUser.id);
-                    this.showToast(hasRole ? 'Role removed successfully!' : 'Role assigned successfully!', 'success');
+                    this.newRoleAssignment = { roleId: '', tenantId: '' };
+                    this.showToast('Role assigned successfully!', 'success');
                 } else {
                     const error = await response.json();
-                    this.showToast('Error: ' + (error.message || 'Failed to update role'), 'error');
+                    this.showToast('Error: ' + (error.message || 'Failed to assign role'), 'error');
                 }
             } catch (error) {
-                console.error('Error toggling role:', error);
-                this.showToast('Error updating role', 'error');
+                console.error('Error assigning role:', error);
+                this.showToast('Error assigning role', 'error');
             }
         },
+
+        async removeRoleFromUser(userRole) {
+            if (!this.selectedUser) return;
+            
+            try {
+                const response = await fetch(`/admin/users/${this.selectedUser.id}/roles`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': await this.getToken()
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ 
+                        role_slug: userRole.role.slug,
+                        tenant_id: userRole.tenant_id
+                    })
+                });
+                
+                if (response.ok) {
+                    await this.loadUsers();
+                    this.selectedUser = this.users.find(u => u.id === this.selectedUser.id);
+                    this.showToast('Role removed successfully!', 'success');
+                } else {
+                    const error = await response.json();
+                    this.showToast('Error: ' + (error.message || 'Failed to remove role'), 'error');
+                }
+            } catch (error) {
+                console.error('Error removing role:', error);
+                this.showToast('Error removing role', 'error');
+            }
+        },
+        
         
         async getToken() {
             return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -500,7 +592,10 @@ function roleManagement() {
 // Global function for the create button
 window.addEventListener('show-create-role', function() {
     // Trigger Alpine.js event to show modal
-    document.querySelector('[x-data]').__x.$data.showCreateRoleModal();
+    const component = document.querySelector('[x-data*="roleManagement"]');
+    if (component && component._x_dataStack && component._x_dataStack[0]) {
+        component._x_dataStack[0].showCreateRoleModal();
+    }
 });
 </script>
 @endsection

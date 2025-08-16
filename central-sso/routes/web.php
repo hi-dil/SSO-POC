@@ -128,8 +128,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     // Role Management (Central SSO only)
     Route::get('roles', [\App\Http\Controllers\Admin\RoleManagementController::class, 'index'])->name('roles.index');
     Route::get('roles/data', [\App\Http\Controllers\Admin\RoleManagementController::class, 'getRoles'])->name('roles.data');
+    Route::post('roles', [\App\Http\Controllers\Admin\RoleManagementController::class, 'store'])->name('roles.store');
+    Route::put('roles/{role}', [\App\Http\Controllers\Admin\RoleManagementController::class, 'update'])->name('roles.update');
+    Route::delete('roles/{role}', [\App\Http\Controllers\Admin\RoleManagementController::class, 'destroy'])->name('roles.destroy');
     Route::get('permissions/data', [\App\Http\Controllers\Admin\RoleManagementController::class, 'getPermissions'])->name('permissions.data');
     Route::get('users/data', [\App\Http\Controllers\Admin\RoleManagementController::class, 'getUsers'])->name('users.data');
+    Route::post('users/{userId}/roles', [\App\Http\Controllers\Admin\RoleManagementController::class, 'assignUserRole'])->name('users.assign-role');
+    Route::delete('users/{userId}/roles', [\App\Http\Controllers\Admin\RoleManagementController::class, 'removeUserRole'])->name('users.remove-role');
 });
 
 // API-style routes for admin role management (web authenticated)
