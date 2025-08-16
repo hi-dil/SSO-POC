@@ -5,7 +5,7 @@ return [
     'documentations' => [
         'default' => [
             'api' => [
-                'title' => 'L5 Swagger UI',
+                'title' => 'SSO Authentication API Documentation',
             ],
 
             'routes' => [
@@ -13,6 +13,11 @@ return [
                  * Route for accessing api documentation interface
                  */
                 'api' => 'api/documentation',
+                
+                /*
+                 * Route for accessing parsed swagger annotations.
+                 */
+                'docs' => 'docs',
             ],
             'paths' => [
                 /*

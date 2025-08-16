@@ -86,3 +86,21 @@ if (app()->environment('local', 'testing')) {
         return redirect('/telescope/requests');
     });
 }
+
+// API Documentation (only in development)
+if (app()->environment('local', 'testing')) {
+    Route::get('/docs', function () {
+        return redirect('/api/documentation');
+    })->name('api.docs');
+    
+    // Manual route for swagger docs JSON (workaround for missing l5-swagger.default.docs route)
+    Route::get('/docs.json', function () {
+        $path = storage_path('api-docs/api-docs.json');
+        if (file_exists($path)) {
+            return response()->file($path, [
+                'Content-Type' => 'application/json'
+            ]);
+        }
+        return response()->json(['error' => 'Documentation not found'], 404);
+    })->name('l5-swagger.default.docs');
+}

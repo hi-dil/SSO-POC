@@ -87,6 +87,11 @@ docker exec central-sso php artisan test
 # Check application status
 curl http://localhost:8000/telescope
 curl http://localhost:8001
+
+# Test API endpoints
+curl -X POST "http://localhost:8000/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"email": "superadmin@sso.com", "password": "password", "tenant_slug": "tenant1"}'
 ```
 
 ## Test Credentials
@@ -128,6 +133,13 @@ All users use password: **password**
 - Token validation across tenant boundaries
 - Refresh token capability
 
+### API Architecture
+- **RESTful API**: All endpoints follow REST conventions
+- **DTO Pattern**: Request and response data transfer objects for type safety
+- **OpenAPI 3.0**: Complete API documentation with Swagger/OpenAPI
+- **Structured Responses**: Consistent JSON response format across all endpoints
+- **Error Handling**: Standardized error responses with proper HTTP status codes
+
 ## Security Considerations
 
 - JWT tokens signed with HMAC-SHA256
@@ -142,6 +154,14 @@ All users use password: **password**
 ### Laravel Telescope
 - **URL**: `http://localhost:8000/telescope`
 - Monitor requests, database queries, exceptions
+- Available only in development environment
+
+### API Documentation
+- **Swagger UI**: `http://localhost:8000/api/documentation`
+- **Quick Access**: `http://localhost:8000/docs` (redirects to Swagger UI)
+- **JSON Schema**: `http://localhost:8000/api/api-docs.json`
+- Interactive API documentation with request/response schemas
+- Test API endpoints directly from the browser
 - Available only in development environment
 
 ### Common Issues
