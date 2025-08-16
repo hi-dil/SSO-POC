@@ -12,7 +12,7 @@ This documentation covers the architecture, implementation, and usage of a compl
 - [Tenant Management](./tenant-management.md) - How tenancy works and tenant integration
 - [Role Management](./role-management.md) - Role-based access control system
 - [Database Schema](./database-schema.md) - Database structure for multi-tenancy
-- [Testing Guide](./testing-guide.md) - How to test the SSO integration
+- [Testing Guide](./testing-guide.md) - Comprehensive testing suite and audit system validation
 - [Deployment Guide](./deployment-guide.md) - Production deployment considerations
 - [Tenant Integration Guide](./tenant-integration.md) - How to create new tenant applications
 
@@ -64,12 +64,21 @@ This documentation covers the architecture, implementation, and usage of a compl
 - **Comprehensive testing suite** with example test cases
 - **Detailed integration guides** for new tenant applications
 
+### Login Audit System
+- **Comprehensive authentication tracking** across all applications (central SSO + tenants)
+- **Real-time analytics dashboard** with live statistics and auto-refresh
+- **Multi-method tracking** for direct logins, SSO authentication, and API access
+- **Failed attempt monitoring** with detailed failure reasons and analysis
+- **Session management** with active session tracking and automatic cleanup
+- **Cross-tenant visibility** providing centralized view of all user activity
+
 ### Security & Monitoring
 - **JWT tokens** with tenant-specific claims and secure validation
 - **Permission-based access control** for all admin functions
 - **CORS and CSRF protection** enabled across all applications
 - **Laravel Telescope** for monitoring and debugging (development only)
 - **Secure password hashing** with bcrypt and proper token management
+- **Login audit trails** with comprehensive authentication event logging
 
 ## Test Credentials
 

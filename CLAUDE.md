@@ -80,18 +80,42 @@ docker exec tenant1-app composer install
 ```
 
 ### Testing
+
+The system includes comprehensive test suites for all components:
+
+#### Quick Test (Recommended)
 ```bash
-# Run tests (if available)
+# Run all audit system tests
+./run_tests.sh
+```
+
+#### Individual Test Suites
+```bash
+# Central SSO audit system tests
+docker exec central-sso php artisan test:login-audit
+docker exec central-sso php artisan test:login-audit --comprehensive
+
+# Tenant application tests
+docker exec tenant1-app php artisan test:tenant-audit
+docker exec tenant2-app php artisan test:tenant-audit
+
+# Full system integration tests
+docker exec central-sso php artisan test:full-system --cleanup
+
+# Laravel feature tests
 docker exec central-sso php artisan test
+```
+
+#### Manual API Testing
+```bash
+# Test API authentication
+curl -X POST "http://localhost:8000/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"email": "superadmin@sso.com", "password": "password", "tenant_slug": "tenant1"}'
 
 # Check application status
 curl http://localhost:8000/telescope
 curl http://localhost:8001
-
-# Test API endpoints
-curl -X POST "http://localhost:8000/api/auth/login" \
-  -H "Content-Type: application/json" \
-  -d '{"email": "superadmin@sso.com", "password": "password", "tenant_slug": "tenant1"}'
 
 # Test role management (requires authentication token)
 TOKEN="your_jwt_token_here"
@@ -263,6 +287,68 @@ All users use password: **password**
 - **Visual Indicators**: Admin badges, tenant access tags, role assignments
 - **Safety Features**: Confirmation dialogs and self-deletion prevention
 - **Clean Interface**: No intrusive welcome messages or unnecessary notifications
+
+### Login Audit System - Comprehensive Authentication Tracking
+
+The system includes a comprehensive login audit system that tracks all authentication events across the entire SSO ecosystem in real-time.
+
+#### Audit System Features:
+- **Universal Tracking**: Records authentication events from all applications (central SSO + all tenants)
+- **Multi-Method Support**: Tracks direct logins, SSO logins, and API authentication
+- **Real-Time Analytics**: Live dashboard with auto-refresh capabilities
+- **Failed Attempt Monitoring**: Detailed tracking of unsuccessful login attempts
+- **Session Management**: Active session tracking with automatic cleanup
+- **Cross-Tenant Visibility**: Centralized view of user activity across all tenants
+
+#### What Gets Tracked:
+- **Central SSO Logins**: Direct authentication at the central server
+- **Tenant Direct Logins**: Users logging directly into tenant applications
+- **Tenant SSO Logins**: SSO authentication within tenant applications
+- **API Authentication**: Programmatic authentication via API endpoints
+- **Failed Login Attempts**: Invalid credentials, access denied, etc.
+- **Session Data**: Login/logout times, session duration, IP addresses, user agents
+
+#### Audit Dashboard Features:
+- **Live Statistics**: Active users, today's logins, session counts
+- **Tenant Breakdown**: Login activity per tenant in real-time
+- **Method Analysis**: Distribution across direct/SSO/API authentication
+- **User Activity**: Individual user login history and patterns
+- **Recent Activity**: Real-time feed of latest authentication events
+- **Performance Metrics**: Login trends and system usage patterns
+
+#### Testing the Audit System:
+```bash
+# Run comprehensive audit system tests
+./run_tests.sh
+
+# Test individual components
+docker exec central-sso php artisan test:login-audit --comprehensive
+docker exec tenant1-app php artisan test:tenant-audit
+docker exec tenant2-app php artisan test:tenant-audit
+
+# View recent audit records
+docker exec sso-mariadb mysql -u sso_user -psso_password sso_main -e "
+SELECT id, user_id, tenant_id, login_method, is_successful, login_at 
+FROM login_audits ORDER BY id DESC LIMIT 10;"
+```
+
+#### Accessing Analytics:
+- **Admin Dashboard**: `http://localhost:8000/admin/analytics`
+- **Login Required**: Admin users with analytics permissions
+- **Auto-Refresh**: Live data updates every 30 seconds
+- **Export Capability**: CSV export of audit data available
+
+#### Database Schema:
+- **login_audits**: Main audit log table with authentication events
+- **active_sessions**: Real-time session tracking table
+- **Retention**: Configurable cleanup (default 90 days)
+- **Performance**: Optimized indexes for fast querying
+
+#### API Endpoints for Audit:
+- `POST /api/audit/login` - Record login event (used by tenant apps)
+- `POST /api/audit/logout` - Record logout event
+- `GET /admin/analytics/statistics` - Get dashboard statistics
+- `GET /admin/analytics/recent-activity` - Get recent login activity
 
 ## Security Considerations
 

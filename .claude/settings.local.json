@@ -18,7 +18,10 @@
       "Bash(cat:*)",
       "Bash(docker restart:*)",
       "Bash(grep:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(chmod:*)",
+      "Bash(./run_tests.sh)",
+      "Bash(touch:*)"
     ],
     "deny": [],
     "ask": []
