@@ -154,6 +154,7 @@ The role management interface provides:
 - **Real-time Updates**: Live data refresh after changes
 - **Form Validation**: Client and server-side validation
 - **Loading States**: Visual feedback during operations
+- **Clean Interface**: No intrusive welcome messages or unnecessary notifications
 
 ## API Integration
 

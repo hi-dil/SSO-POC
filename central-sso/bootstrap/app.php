@@ -18,6 +18,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'super-admin' => \App\Http\Middleware\CheckSuperAdmin::class,
             'telescope.access' => \App\Http\Middleware\TelescopeAccessMiddleware::class,
             'swagger.access' => \App\Http\Middleware\SwaggerAccessMiddleware::class,
+            'track.activity' => \App\Http\Middleware\TrackUserActivity::class,
+        ]);
+        
+        // Add activity tracking to web middleware group
+        $middleware->web(append: [
+            \App\Http\Middleware\TrackUserActivity::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

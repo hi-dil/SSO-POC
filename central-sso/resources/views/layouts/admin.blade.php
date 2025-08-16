@@ -112,6 +112,14 @@
                         </svg>
                         Roles & Permissions
                     </a>
+                    
+                    <a href="{{ route('admin.analytics.index') }}" 
+                       class="@if(request()->routeIs('admin.analytics.*')) bg-accent text-accent-foreground @else text-muted-foreground hover:bg-accent hover:text-accent-foreground @endif group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                        <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        Login Analytics
+                    </a>
 
                     <div class="pt-4">
                         <p class="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Developer Tools</p>

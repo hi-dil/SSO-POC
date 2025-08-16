@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
+use App\Services\LoginAuditService;
 
 /**
  * @OA\Info(
@@ -42,6 +43,12 @@ use Tymon\JWTAuth\Exceptions\JWTException;
 
 class AuthController extends Controller
 {
+    private LoginAuditService $auditService;
+
+    public function __construct(LoginAuditService $auditService)
+    {
+        $this->auditService = $auditService;
+    }
     /**
      * @OA\Post(
      *     path="/auth/login",
@@ -97,11 +104,27 @@ class AuthController extends Controller
         $user = User::where('email', $loginDto->email)->with('tenants')->first();
 
         if (!$user || !Hash::check($loginDto->password, $user->password)) {
+            // Record failed API login attempt
+            $this->auditService->recordFailedLogin(
+                $loginDto->email,
+                $loginDto->tenant,
+                'api',
+                'Invalid credentials'
+            );
+            
             $errorResponse = ErrorResponseDTO::unauthorized('Invalid credentials');
             return response()->json($errorResponse->toArray(), $errorResponse->code);
         }
 
         if (!$user->hasAccessToTenant($loginDto->tenant)) {
+            // Record failed API login attempt (access denied)
+            $this->auditService->recordFailedLogin(
+                $loginDto->email,
+                $loginDto->tenant,
+                'api',
+                'Access denied to tenant'
+            );
+            
             $errorResponse = ErrorResponseDTO::forbidden('Access denied to tenant');
             return response()->json($errorResponse->toArray(), $errorResponse->code);
         }
@@ -117,6 +140,14 @@ class AuthController extends Controller
             $errorResponse = new ErrorResponseDTO('Could not create token', null, 500);
             return response()->json($errorResponse->toArray(), $errorResponse->code);
         }
+
+        // Record successful API login
+        $this->auditService->recordLogin(
+            $user,
+            $loginDto->tenant,
+            'api',
+            null // API doesn't have Laravel session ID
+        );
 
         $userDto = UserResponseDTO::fromUser($user, $loginDto->tenant);
         $loginResponse = LoginResponseDTO::success($token, $userDto);
@@ -377,7 +408,13 @@ class AuthController extends Controller
     public function logout()
     {
         try {
-            JWTAuth::invalidate(JWTAuth::getToken());
+            $token = JWTAuth::getToken();
+            $user = JWTAuth::parseToken()->authenticate();
+            
+            // Record logout for API (using token as session identifier)
+            $this->auditService->recordLogout($token->get());
+            
+            JWTAuth::invalidate($token);
             
             return response()->json([
                 'success' => true,

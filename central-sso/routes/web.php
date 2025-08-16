@@ -134,6 +134,17 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::post('users/{userId}/tenants', [\App\Http\Controllers\Admin\UserManagementController::class, 'assignTenant'])->name('users.assign-tenant');
     Route::delete('users/{userId}/tenants', [\App\Http\Controllers\Admin\UserManagementController::class, 'removeTenant'])->name('users.remove-tenant');
     
+    // Login Analytics
+    Route::get('analytics', [\App\Http\Controllers\Admin\LoginAnalyticsController::class, 'index'])->name('analytics.index');
+    Route::get('analytics/statistics', [\App\Http\Controllers\Admin\LoginAnalyticsController::class, 'getStatistics'])->name('analytics.statistics');
+    Route::get('analytics/recent-activity', [\App\Http\Controllers\Admin\LoginAnalyticsController::class, 'getRecentActivity'])->name('analytics.recent-activity');
+    Route::get('analytics/trends', [\App\Http\Controllers\Admin\LoginAnalyticsController::class, 'getLoginTrends'])->name('analytics.trends');
+    Route::get('analytics/user/{userId}', [\App\Http\Controllers\Admin\LoginAnalyticsController::class, 'getUserActivity'])->name('analytics.user');
+    Route::get('analytics/tenant/{tenantId}', [\App\Http\Controllers\Admin\LoginAnalyticsController::class, 'getTenantAnalytics'])->name('analytics.tenant');
+    Route::get('analytics/failed-attempts', [\App\Http\Controllers\Admin\LoginAnalyticsController::class, 'getFailedAttempts'])->name('analytics.failed-attempts');
+    Route::get('analytics/export', [\App\Http\Controllers\Admin\LoginAnalyticsController::class, 'export'])->name('analytics.export');
+    Route::post('analytics/cleanup', [\App\Http\Controllers\Admin\LoginAnalyticsController::class, 'cleanup'])->name('analytics.cleanup');
+    
     // Role Management (Central SSO only)
     Route::get('roles', [\App\Http\Controllers\Admin\RoleManagementController::class, 'index'])->name('roles.index');
     Route::get('roles/data', [\App\Http\Controllers\Admin\RoleManagementController::class, 'getRoles'])->name('roles.data');

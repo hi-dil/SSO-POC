@@ -8,6 +8,7 @@ This documentation covers the architecture, implementation, and usage of a compl
 - [Authentication Flow](./authentication-flow.md) - Detailed auth workflows and JWT handling
 - [API Documentation](./api-documentation.md) - Central SSO API endpoints and usage
 - [Setup Guide](./setup-guide.md) - Local development setup with Docker
+- [User Management](./user-management.md) - Central SSO user administration and tenant access
 - [Tenant Management](./tenant-management.md) - How tenancy works and tenant integration
 - [Role Management](./role-management.md) - Role-based access control system
 - [Database Schema](./database-schema.md) - Database structure for multi-tenancy
@@ -34,6 +35,13 @@ This documentation covers the architecture, implementation, and usage of a compl
 - **JWT-based authentication** for stateless auth
 - **Multi-tenant user access** with proper access control
 - **Session-based auth** for web interfaces
+
+### User & Access Management
+- **Complete user management** with CRUD operations and tenant access control
+- **Centralized user administration** for managing all SSO users
+- **Tenant access assignment** with granular control over user permissions
+- **Password management** with secure confirmation and hashing
+- **Admin flag management** for elevated privileges
 
 ### Role-Based Access Control (RBAC)
 - **Granular permissions** across 6 categories (Users, Roles, Tenants, System, API, Developer)

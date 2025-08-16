@@ -7,9 +7,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Services\LoginAuditService;
 
 class MainAuthController extends Controller
 {
+    private LoginAuditService $auditService;
+
+    public function __construct(LoginAuditService $auditService)
+    {
+        $this->auditService = $auditService;
+    }
+
     public function showLoginForm()
     {
         return view('auth.main-login');
@@ -25,6 +33,14 @@ class MainAuthController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
+            // Record failed login attempt
+            $this->auditService->recordFailedLogin(
+                $request->email,
+                null,
+                'direct',
+                'Invalid credentials'
+            );
+            
             return back()->withErrors(['email' => 'Invalid credentials'])->withInput();
         }
 
@@ -34,6 +50,9 @@ class MainAuthController extends Controller
 
         // Log the user in for Laravel session authentication
         Auth::login($user);
+
+        // Record successful login
+        $this->auditService->recordLogin($user, null, 'direct');
 
         // Redirect to dashboard after login
         return redirect()->route('dashboard');
@@ -135,6 +154,10 @@ class MainAuthController extends Controller
             ];
             
             $token = JWTAuth::customClaims($customClaims)->fromUser($user);
+            
+            // Record SSO login for this tenant
+            $this->auditService->recordLogin($user, $tenantSlug, 'sso');
+            
         } catch (\Exception $e) {
             return redirect()->route('login')->withErrors(['error' => 'Could not create authentication token']);
         }
@@ -165,6 +188,9 @@ class MainAuthController extends Controller
 
     public function logout()
     {
+        // Record logout before clearing session
+        $this->auditService->recordLogout();
+        
         // Logout from Laravel session
         Auth::logout();
         

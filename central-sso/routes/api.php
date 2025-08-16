@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\UserRoleController;
+use App\Http\Controllers\Api\LoginAuditController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
@@ -44,4 +45,10 @@ Route::middleware(['auth:api,web'])->group(function () {
         Route::delete('roles', [UserRoleController::class, 'removeRole']);
         Route::put('roles/sync', [UserRoleController::class, 'syncRoles']);
     });
+});
+
+// Audit routes for tenant applications (no authentication required for internal services)
+Route::prefix('audit')->group(function () {
+    Route::post('/login', [LoginAuditController::class, 'recordLogin']);
+    Route::post('/logout', [LoginAuditController::class, 'recordLogout']);
 });

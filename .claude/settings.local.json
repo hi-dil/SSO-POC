@@ -15,7 +15,10 @@
       "Bash(sqlite3:*)",
       "Bash(rm:*)",
       "Bash(docker logs:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(docker restart:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

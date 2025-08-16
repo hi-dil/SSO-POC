@@ -6,14 +6,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
 use App\Services\SSOService;
+use App\Services\LoginAuditService;
 
 class SSOCallbackController extends Controller
 {
     protected $ssoService;
+    protected $auditService;
 
-    public function __construct(SSOService $ssoService)
+    public function __construct(SSOService $ssoService, LoginAuditService $auditService)
     {
         $this->ssoService = $ssoService;
+        $this->auditService = $auditService;
     }
 
     public function callback(Request $request)
@@ -75,6 +78,14 @@ class SSOCallbackController extends Controller
             
             // Store JWT token for API calls to central SSO
             Session::put('jwt_token', $token);
+            
+            // Record SSO login to central audit system
+            $this->auditService->recordLogin(
+                $userData['id'], // Use central SSO user ID
+                $userData['email'],
+                'sso', // SSO method
+                true // Successful
+            );
             
             Log::info('SSO Callback: User authenticated successfully', [
                 'user_id' => $localUser->id,

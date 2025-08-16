@@ -4,14 +4,17 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\SSOService;
+use App\Services\LoginAuditService;
 
 class AuthController extends Controller
 {
     protected $ssoService;
+    protected $auditService;
 
-    public function __construct(SSOService $ssoService)
+    public function __construct(SSOService $ssoService, LoginAuditService $auditService)
     {
         $this->ssoService = $ssoService;
+        $this->auditService = $auditService;
     }
 
     public function showLoginForm()
@@ -30,9 +33,29 @@ class AuthController extends Controller
         $credentials = $request->only('email', 'password');
         
         if (auth()->attempt($credentials)) {
+            $user = auth()->user();
             $request->session()->regenerate();
+            
+            // Record direct login to central audit system
+            // Note: We need to map local user to central SSO user by email
+            $this->auditService->recordLogin(
+                $user->id, // Local user ID (will be mapped by email in audit service)
+                $user->email,
+                'direct', // Direct login method
+                true // Successful
+            );
+            
             return redirect()->intended('/dashboard')->with('success', 'Welcome back!');
         }
+
+        // Record failed login attempt
+        $this->auditService->recordLogin(
+            0, // No user ID for failed attempt
+            $request->email,
+            'direct',
+            false, // Failed
+            'Invalid credentials'
+        );
 
         return back()->withErrors(['email' => 'Invalid credentials'])->withInput();
     }
@@ -108,6 +131,14 @@ class AuthController extends Controller
             // Store JWT token for API calls to central SSO
             session(['jwt_token' => $token]);
             
+            // Record SSO login to central audit system
+            $this->auditService->recordLogin(
+                $ssoUser['id'], // Central SSO user ID
+                $ssoUser['email'],
+                'sso', // SSO method
+                true // Successful
+            );
+            
             return redirect('/dashboard')->with('success', 'Welcome!');
         }
 
@@ -118,6 +149,9 @@ class AuthController extends Controller
     {
         // Check if user wants to logout from all SSO sessions
         $logoutFromSSO = $request->get('sso_logout', false);
+        
+        // Record logout before clearing session
+        $this->auditService->recordLogout();
         
         // Logout from local session
         auth()->logout();

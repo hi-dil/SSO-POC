@@ -119,6 +119,10 @@ curl -X POST "http://localhost:8000/api/users/1/roles" \
 # Access Role Management UI
 # Login to central SSO at http://localhost:8000/login
 # Navigate to admin dashboard and click "Roles & Permissions" tab
+
+# Access User Management UI
+# Login to central SSO at http://localhost:8000/login
+# Navigate to admin dashboard and click "Users" tab (first item in sidebar)
 ```
 
 ## Test Credentials
@@ -174,6 +178,13 @@ All users use password: **password**
 - **Structured Responses**: Consistent JSON response format across all endpoints
 - **Error Handling**: Standardized error responses with proper HTTP status codes
 
+### Administration & Management
+- **User Management**: Complete user lifecycle management with tenant access control
+- **Role Management**: Granular role-based access control system
+- **Tenant Management**: Multi-tenant configuration and user assignment
+- **Admin Interface**: Modern, responsive admin panel with shadcn/ui design
+- **Real-time Updates**: Live data refresh without page reloads
+
 ### Role-Based Access Control (RBAC) - Central SSO Only
 - **Scope**: Roles and permissions apply **only to the central SSO server** for managing authentication and tenant access
 - **Tenant Applications**: Each tenant application manages its own separate role system and permissions
@@ -217,6 +228,41 @@ All users use password: **password**
 - `POST /api/users/{id}/roles` - Assign role to user
 - `DELETE /api/users/{id}/roles` - Remove role from user
 - `PUT /api/users/{id}/roles/sync` - Sync user roles
+
+### User Management - Central SSO Only
+- **Scope**: User management applies **only to the central SSO server** for managing authentication users
+- **Centralized Administration**: Complete user lifecycle management from a single interface
+- **Tenant Access Control**: Granular control over which tenants users can access
+- **Password Management**: Secure password creation, updates, and confirmation
+- **Admin Privileges**: Admin flag management for elevated system access
+- **Integration**: Seamlessly integrates with role management and tenant systems
+
+#### User Management Features:
+- **Complete CRUD Operations**: Create, read, update, and delete user accounts
+- **Tenant Access Assignment**: Control which tenants users can access
+- **Password Security**: Strong password requirements with confirmation
+- **Admin Flag Management**: Grant/revoke admin privileges
+- **Role Integration**: View and manage user roles alongside basic information
+- **Self-Protection**: Users cannot delete their own accounts
+- **Real-time Updates**: Live interface updates without page refresh
+- **Modern UI**: Consistent shadcn/ui design matching the admin interface
+
+#### User Management API Endpoints:
+- `GET /admin/users` - User management interface
+- `GET /admin/users/data` - JSON data for AJAX updates
+- `POST /admin/users` - Create new user
+- `PUT /admin/users/{id}` - Update existing user
+- `DELETE /admin/users/{id}` - Delete user
+- `POST /admin/users/{id}/tenants` - Assign tenant access
+- `DELETE /admin/users/{id}/tenants` - Remove tenant access
+
+#### User Management UI Features:
+- **User Overview**: List all users with avatars, contact info, and access details
+- **Creation/Editing**: Modal forms with comprehensive validation
+- **Tenant Management**: Separate modal for managing tenant access
+- **Visual Indicators**: Admin badges, tenant access tags, role assignments
+- **Safety Features**: Confirmation dialogs and self-deletion prevention
+- **Clean Interface**: No intrusive welcome messages or unnecessary notifications
 
 ## Security Considerations
 
