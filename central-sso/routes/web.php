@@ -5,7 +5,7 @@ use App\Http\Controllers\SSOController;
 use App\Http\Controllers\MainAuthController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('landing');
 });
 
 Route::get('/debug-session', function () {
@@ -78,6 +78,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::post('tenants/{tenant}/users', [\App\Http\Controllers\Admin\TenantController::class, 'assignUser'])->name('tenants.assign-user');
     Route::delete('tenants/{tenant}/users/{user}', [\App\Http\Controllers\Admin\TenantController::class, 'removeUser'])->name('tenants.remove-user');
     Route::patch('tenants/{tenant}/toggle', [\App\Http\Controllers\Admin\TenantController::class, 'toggle'])->name('tenants.toggle');
+    
+    // Role Management (Central SSO only)
+    Route::get('roles', [\App\Http\Controllers\Admin\RoleManagementController::class, 'index'])->name('roles.index');
+    Route::get('roles/data', [\App\Http\Controllers\Admin\RoleManagementController::class, 'getRoles'])->name('roles.data');
+    Route::get('permissions/data', [\App\Http\Controllers\Admin\RoleManagementController::class, 'getPermissions'])->name('permissions.data');
+    Route::get('users/data', [\App\Http\Controllers\Admin\RoleManagementController::class, 'getUsers'])->name('users.data');
 });
 
 // Telescope routes (only in development)

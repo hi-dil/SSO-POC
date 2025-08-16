@@ -15,10 +15,13 @@ class TenantSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create default tenants
+        // Create default tenants with specific IDs
         $tenant1 = Tenant::create([
+            'id' => 'tenant1',
             'name' => 'Tenant One',
             'slug' => 'tenant1',
+            'domain' => 'tenant1.localhost:8001',
+            'is_active' => true,
             'data' => [
                 'plan' => 'basic',
                 'features' => [
@@ -28,8 +31,11 @@ class TenantSeeder extends Seeder
         ]);
 
         $tenant2 = Tenant::create([
+            'id' => 'tenant2',
             'name' => 'Tenant Two', 
             'slug' => 'tenant2',
+            'domain' => 'tenant2.localhost:8002',
+            'is_active' => true,
             'data' => [
                 'plan' => 'premium',
                 'features' => [
@@ -38,10 +44,6 @@ class TenantSeeder extends Seeder
                 ]
             ]
         ]);
-
-        // Create domains for tenants
-        $tenant1->domains()->create(['domain' => 'tenant1.localhost:8001']);
-        $tenant2->domains()->create(['domain' => 'tenant2.localhost:8002']);
 
         // Create admin user
         $admin = User::create([

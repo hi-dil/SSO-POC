@@ -92,6 +92,33 @@ curl http://localhost:8001
 curl -X POST "http://localhost:8000/api/auth/login" \
   -H "Content-Type: application/json" \
   -d '{"email": "superadmin@sso.com", "password": "password", "tenant_slug": "tenant1"}'
+
+# Test role management (requires authentication token)
+TOKEN="your_jwt_token_here"
+
+# List all roles
+curl -X GET "http://localhost:8000/api/roles" \
+  -H "Authorization: Bearer $TOKEN"
+
+# List all permissions
+curl -X GET "http://localhost:8000/api/permissions" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Create new role
+curl -X POST "http://localhost:8000/api/roles" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Custom Manager", "description": "Custom role for managers", "permissions": ["users.view", "users.create"]}'
+
+# Assign role to user
+curl -X POST "http://localhost:8000/api/users/1/roles" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"role_slug": "manager", "tenant_id": 1}'
+
+# Access Role Management UI
+# Login to central SSO at http://localhost:8000/login
+# Navigate to admin dashboard and click "Roles & Permissions" tab
 ```
 
 ## Test Credentials
@@ -108,6 +135,13 @@ All users use password: **password**
 - `superadmin@sso.com` / `password` (Access to both tenants)
 
 ## Key Features
+
+### Modern Landing Page
+- **Professional UI**: Clean, modern landing page with gradient design and responsive layout
+- **Feature Showcase**: Highlights all SSO capabilities with interactive elements
+- **Live Statistics**: Real-time display of active tenants, users, roles, and permissions
+- **Quick Start Guide**: Step-by-step instructions for getting started
+- **Authentication State**: Dynamic navigation based on user login status
 
 ### Authentication Flows
 1. **Central SSO Login**: Users login at `localhost:8000/login` and access tenant dashboard
@@ -139,6 +173,38 @@ All users use password: **password**
 - **OpenAPI 3.0**: Complete API documentation with Swagger/OpenAPI
 - **Structured Responses**: Consistent JSON response format across all endpoints
 - **Error Handling**: Standardized error responses with proper HTTP status codes
+
+### Role-Based Access Control (RBAC) - Central SSO Only
+- **Scope**: Roles and permissions apply **only to the central SSO server** for managing authentication and tenant access
+- **Tenant Applications**: Each tenant application manages its own separate role system and permissions
+- **Multi-Tenant Roles**: Users can have different roles in different tenants within the central SSO system
+- **Granular Permissions**: 17 built-in permissions across 5 categories for SSO management
+- **System vs Custom**: System roles/permissions are protected from deletion
+- **Flexible Assignment**: Roles can be global or tenant-specific within the SSO system
+- **Default Roles**: Super Admin, Admin, Manager, User, Viewer with pre-configured permissions
+- **Permission Categories**: Users, Roles, Tenants, System, API
+- **Web UI**: Complete role management interface in the central SSO admin dashboard
+- **API Protection**: All role management endpoints available via REST API
+
+#### Built-in Permissions:
+- **Users**: view, create, edit, delete
+- **Roles**: view, create, edit, delete, assign
+- **Tenants**: view, create, edit, delete
+- **System**: settings, logs
+- **API**: manage
+
+#### Role Management API Endpoints:
+- `GET /api/roles` - List all roles
+- `POST /api/roles` - Create new role
+- `GET /api/roles/{id}` - Get role details
+- `PUT /api/roles/{id}` - Update role
+- `DELETE /api/roles/{id}` - Delete role
+- `GET /api/permissions` - List permissions
+- `GET /api/permissions/categories` - Get permission categories
+- `GET /api/users/{id}/roles` - Get user roles
+- `POST /api/users/{id}/roles` - Assign role to user
+- `DELETE /api/users/{id}/roles` - Remove role from user
+- `PUT /api/users/{id}/roles/sync` - Sync user roles
 
 ## Security Considerations
 
