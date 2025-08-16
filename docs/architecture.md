@@ -2,89 +2,135 @@
 
 ## System Components
 
-### Central SSO API (`sso.localhost:8000`)
+### Central SSO Server (`localhost:8000`)
 - **Framework**: Laravel 11
-- **Purpose**: Authentication provider, tenant management, admin dashboard
+- **Purpose**: Authentication provider, tenant management, role management, admin dashboard
 - **Features**:
   - JWT token generation and validation
-  - Multi-tenant user management with Stancl/tenancy
-  - Admin dashboard for tenant creation
+  - Multi-tenant user management with pivot table relationships
+  - Role-based access control (RBAC) with granular permissions
+  - Modern admin dashboard with shadcn/ui design
   - User registration with tenant selection
   - API endpoints for client authentication
+  - Laravel Telescope integration for debugging
+  - Swagger/OpenAPI documentation
+  - Toast notification system
 
-### Client Applications
-- **Tenant 1**: `tenant1.localhost:8001` (Laravel 11)
-- **Tenant 2**: `tenant2.localhost:8002` (Laravel 11)
+### Tenant Applications
+- **Tenant 1**: `localhost:8001` (Laravel 11)
+- **Tenant 2**: `localhost:8002` (Laravel 11)
 - **Features**:
   - Dual login methods (SSO redirect + local forms)
-  - JWT token validation
-  - Auto-tenant detection from subdomain
-  - User registration with auto-tenant assignment
+  - JWT token validation with tenant access control
+  - Seamless SSO processing with JavaScript-based authentication
+  - Local user synchronization from SSO
+  - Laravel authentication system for local sessions
+  - Support for both authenticated and guest users
 
 ### Database Layer
 - **Engine**: MariaDB
-- **Structure**: Separate databases per tenant
-  - `sso_main` - Central SSO data
-  - `tenant1_db` - Tenant 1 specific data
-  - `tenant2_db` - Tenant 2 specific data
+- **Structure**: Single database with proper tenant isolation
+  - `sso_main` - Central SSO data with all tenant relationships
+  - `tenant1_db` - Tenant 1 application data
+  - `tenant2_db` - Tenant 2 application data
 
 ## Service Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Client App 1  │    │   Client App 2  │    │   Central SSO   │
-│  (tenant1.*)    │    │  (tenant2.*)    │    │    (sso.*)      │
-│   Port: 8001    │    │   Port: 8002    │    │   Port: 8000    │
-└─────────┬───────┘    └─────────┬───────┘    └─────────┬───────┘
-          │                      │                      │
-          │              JWT Authentication              │
-          └──────────────────────┼──────────────────────┘
+│   Tenant App 1  │    │   Tenant App 2  │    │   Central SSO   │
+│  localhost:8001 │    │  localhost:8002 │    │  localhost:8000 │
+│                 │    │                 │    │                 │
+│ ┌─────────────┐ │    │ ┌─────────────┐ │    │ ┌─────────────┐ │
+│ │ SSO Service │ │    │ │ SSO Service │ │    │ │ Role Mgmt   │ │
+│ │ Controllers │ │    │ │ Controllers │ │    │ │ API Endpoints│ │
+│ │ Local Auth  │ │    │ │ Local Auth  │ │    │ │ Admin UI    │ │
+│ └─────────────┘ │    │ └─────────────┘ │    │ │ Telescope   │ │
+└─────────┬───────┘    └─────────┬───────┘    │ │ Swagger     │ │
+          │                      │            │ └─────────────┘ │
+          │              JWT Authentication & Session Management │
+          └──────────────────────┼──────────────────────────────┘
                                  │
                     ┌─────────────┴───────────┐
                     │      MariaDB           │
                     │   ┌─────────────────┐   │
-                    │   │   sso_main      │   │
-                    │   │   tenant1_db    │   │
-                    │   │   tenant2_db    │   │
+                    │   │   sso_main      │   │ ← Central auth, roles, tenants
+                    │   │   tenant1_db    │   │ ← Tenant 1 app data
+                    │   │   tenant2_db    │   │ ← Tenant 2 app data
                     │   └─────────────────┘   │
-                    │     Port: 3307         │
+                    │     Port: 3306         │
                     └─────────────────────────┘
 ```
 
 ## Multi-Tenancy Strategy
 
 ### Tenant Identification
-- **Method**: Subdomain-based routing
+- **Method**: Port-based routing with domain consistency
 - **Examples**: 
-  - `tenant1.localhost:8001` → Tenant 1
-  - `tenant2.localhost:8002` → Tenant 2
+  - `localhost:8001` → Tenant 1
+  - `localhost:8002` → Tenant 2
+  - `localhost:8000` → Central SSO
 
 ### Data Isolation
-- **Strategy**: Database-per-tenant using Stancl/tenancy package
+- **Strategy**: Database-per-application with central identity management
 - **Benefits**:
-  - Complete data isolation
-  - Scalable architecture
+  - Clear separation between SSO and tenant application data
+  - Scalable architecture for new tenant applications
   - Easy backup/restore per tenant
-  - Custom configurations per tenant
+  - Independent tenant application deployments
+  - Central user identity with local tenant user synchronization
 
 ### User Management
-- **Cross-tenant users**: Users can belong to multiple tenants
-- **Central identity**: User identity managed in central SSO
-- **Tenant-specific data**: User preferences/roles stored per tenant
+- **Central Identity**: User accounts managed in central SSO with roles and permissions
+- **Cross-tenant Access**: Users can have access to multiple tenants via `tenant_users` pivot table
+- **Local Synchronization**: Tenant apps maintain local user copies for Laravel authentication
+- **Role-based Access**: Fine-grained permissions control access to SSO management functions
+- **Tenant-specific Data**: Each tenant app manages its own user data and application-specific roles
+
+## Role-Based Access Control (RBAC)
+
+### Permission System
+- **19 Built-in Permissions** across 6 categories:
+  - **Users**: view, create, edit, delete (4 permissions)
+  - **Roles**: view, create, edit, delete, assign (5 permissions)
+  - **Tenants**: view, create, edit, delete (4 permissions)
+  - **System**: settings, logs (2 permissions)
+  - **API**: manage (1 permission)
+  - **Developer**: telescope.access, swagger.access (2 permissions)
+
+### Role Management
+- **5 Default Roles**: Super Admin, Admin, Manager, User, Viewer
+- **Custom Roles**: Create application-specific roles with custom permissions
+- **Multi-tenant Assignment**: Roles can be global or tenant-specific
+- **System Protection**: System roles and permissions cannot be deleted
+
+### Access Control Flow
+```
+User Request → Middleware → Permission Check → Role Validation → Resource Access
+```
 
 ## Security Considerations
 
 ### JWT Token Security
-- Stateless authentication
-- Configurable expiration times
-- Secure token generation with Laravel Sanctum/Passport
+- **HMAC-SHA256 signing** for secure token validation
+- **Tenant-specific claims** with current tenant information
+- **1-hour expiration** with refresh token capability
+- **Stateless authentication** for API endpoints
+
+### Role-Based Security
+- **Permission-based middleware** protecting admin functions
+- **Multi-tenant role isolation** preventing cross-tenant privilege escalation
+- **System permission protection** for critical functions
+- **API endpoint protection** with proper authorization
 
 ### Database Security
-- Isolated tenant databases
-- Connection-level tenant switching
-- No cross-tenant data leakage
+- **Isolated tenant databases** with separate connections
+- **Central identity management** with secure user relationships
+- **Secure password hashing** using bcrypt with 12 rounds
+- **No cross-tenant data leakage** through proper access controls
 
 ### Authentication Security
-- Secure password hashing
-- Rate limiting on auth endpoints
-- CSRF protection on forms
+- **Dual authentication support** (SSO + local)
+- **Session-based web authentication** with CSRF protection
+- **Rate limiting** on authentication endpoints
+- **Secure session management** with proper invalidation

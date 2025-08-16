@@ -4,30 +4,42 @@
 
 Base URL: `http://localhost:8000`
 
+### Interactive API Documentation
+
+- **Swagger UI**: `http://localhost:8000/api/documentation`
+- **Quick Access**: `http://localhost:8000/docs` (redirects to Swagger UI)
+- **JSON Schema**: `http://localhost:8000/api/api-docs.json`
+
+*Note: API documentation access requires `swagger.access` permission*
+
 ## Test Users
 
-The following test users are available in the MariaDB database:
+The following test users are available with password: **password**
 
-| Email | Password | Tenant | Role | Description |
-|-------|----------|--------|------|-------------|
-| user@tenant1.com | password | tenant1 | User | Regular user for Tenant 1 |
-| admin@tenant1.com | password | tenant1 | Admin | Administrator for Tenant 1 |
-| user@tenant2.com | password | tenant2 | User | Regular user for Tenant 2 |
-| admin@tenant2.com | password | tenant2 | Admin | Administrator for Tenant 2 |
-| superadmin@sso.com | password | tenant1, tenant2 | Admin | Super admin with access to both tenants |
+| Email | Tenant Access | Role in Central SSO | Description |
+|-------|---------------|---------------------|-------------|
+| superadmin@sso.com | tenant1, tenant2 | Super Admin | Full system access with all permissions |
+| admin@tenant1.com | tenant1 | Admin | Tenant 1 administrator |
+| user@tenant1.com | tenant1 | User | Regular user for Tenant 1 |
+| admin@tenant2.com | tenant2 | Admin | Tenant 2 administrator |
+| user@tenant2.com | tenant2 | User | Regular user for Tenant 2 |
 
-### Legacy Users (unknown passwords)
-| Email | Description |
-|-------|-------------|
-| admin@example.com | Legacy admin user |
-| multi@example.com | Legacy multi-tenant user |
+### Central SSO Roles and Permissions
+
+| Role | Permissions | Description |
+|------|-------------|-------------|
+| Super Admin | All 19 permissions | Complete system access |
+| Admin | All except system.* | General administration |
+| Manager | users.*, roles.view, tenants.view | User and basic tenant management |
+| User | Limited view permissions | Standard user access |
+| Viewer | Read-only permissions | Monitoring and reporting |
 
 ## Available Tenants
 
 | Tenant ID | Slug | Name | Domain |
 |-----------|------|------|--------|
-| tenant1 | tenant1 | Tenant 1 | tenant1.local |
-| tenant2 | tenant2 | Tenant 2 | tenant2.local |
+| tenant1 | tenant1 | Tenant 1 Application | localhost:8001 |
+| tenant2 | tenant2 | Tenant 2 Application | localhost:8002 |
 
 ### Authentication Endpoints
 
@@ -192,14 +204,193 @@ Authorization: Bearer {jwt_token}
 }
 ```
 
-### Tenant Management Endpoints
+### Role Management Endpoints
 
-#### GET `/api/tenants`
-Get list of available tenants (admin only).
+*Requires appropriate permissions for each endpoint*
+
+#### GET `/api/roles`
+List all roles with their permissions.
+
+**Required Permission:** `roles.view`
 
 **Headers:**
 ```
-Authorization: Bearer {admin_jwt_token}
+Authorization: Bearer {jwt_token}
+```
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Super Admin",
+      "slug": "super-admin",
+      "description": "Complete system access",
+      "is_system": true,
+      "permissions": [
+        {
+          "id": 1,
+          "name": "View Users",
+          "slug": "users.view",
+          "category": "users"
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### POST `/api/roles`
+Create a new custom role.
+
+**Required Permission:** `roles.create`
+
+**Request:**
+```json
+{
+  "name": "Content Manager",
+  "description": "Manages content and users",
+  "permissions": ["users.view", "users.edit", "tenants.view"]
+}
+```
+
+**Response:**
+```json
+{
+  "data": {
+    "id": 6,
+    "name": "Content Manager",
+    "slug": "content-manager",
+    "description": "Manages content and users",
+    "is_system": false,
+    "permissions": [...]
+  }
+}
+```
+
+#### PUT `/api/roles/{id}`
+Update an existing role.
+
+**Required Permission:** `roles.edit`
+
+**Request:**
+```json
+{
+  "name": "Updated Role Name",
+  "description": "Updated description",
+  "permissions": ["users.view", "roles.view"]
+}
+```
+
+#### DELETE `/api/roles/{id}`
+Delete a custom role (system roles protected).
+
+**Required Permission:** `roles.delete`
+
+**Response:**
+```json
+{
+  "message": "Role deleted successfully"
+}
+```
+
+#### GET `/api/permissions`
+List all available permissions.
+
+**Required Permission:** `roles.view`
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "View Users",
+      "slug": "users.view",
+      "category": "users",
+      "description": "Can view user lists and details",
+      "is_system": true
+    }
+  ]
+}
+```
+
+#### GET `/api/permissions/categories`
+Get permission categories.
+
+**Response:**
+```json
+{
+  "data": ["users", "roles", "tenants", "system", "api", "developer"]
+}
+```
+
+#### GET `/api/users/{id}/roles`
+Get roles assigned to a user.
+
+**Required Permission:** `roles.view`
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "role": {
+        "id": 1,
+        "name": "Admin",
+        "slug": "admin"
+      },
+      "tenant_id": null,
+      "assigned_at": "2024-01-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+#### POST `/api/users/{id}/roles`
+Assign a role to a user.
+
+**Required Permission:** `roles.assign`
+
+**Request:**
+```json
+{
+  "role_slug": "manager",
+  "tenant_id": 1  // Optional: for tenant-specific assignment
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Role assigned successfully"
+}
+```
+
+#### DELETE `/api/users/{id}/roles`
+Remove a role from a user.
+
+**Required Permission:** `roles.assign`
+
+**Request:**
+```json
+{
+  "role_slug": "manager",
+  "tenant_id": 1  // Optional: for tenant-specific removal
+}
+```
+
+### Tenant Management Endpoints
+
+#### GET `/api/tenants`
+Get list of available tenants.
+
+**Required Permission:** `tenants.view`
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
 ```
 
 **Response:**
@@ -211,7 +402,9 @@ Authorization: Bearer {admin_jwt_token}
       "id": 1,
       "name": "Tenant One",
       "slug": "tenant1",
-      "domain": "tenant1.localhost",
+      "domain": "localhost:8001",
+      "is_active": true,
+      "users_count": 5,
       "created_at": "2024-01-01T00:00:00Z"
     }
   ]
@@ -219,48 +412,36 @@ Authorization: Bearer {admin_jwt_token}
 ```
 
 #### POST `/api/tenants`
-Create new tenant (admin only).
+Create new tenant.
+
+**Required Permission:** `tenants.create`
 
 **Request:**
 ```json
 {
   "name": "New Tenant",
   "slug": "new-tenant",
-  "domain": "new-tenant.localhost"
+  "domain": "localhost:8003",
+  "description": "Description of the new tenant",
+  "max_users": 100,
+  "is_active": true
 }
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "tenant": {
-    "id": 2,
-    "name": "New Tenant",
-    "slug": "new-tenant",
-    "domain": "new-tenant.localhost",
-    "created_at": "2024-01-01T00:00:00Z"
-  }
-}
-```
+#### PUT `/api/tenants/{id}`
+Update tenant information.
 
-#### GET `/api/tenants/{slug}/users`
-Get users for specific tenant (admin only).
+**Required Permission:** `tenants.edit`
 
-**Response:**
-```json
-{
-  "success": true,
-  "users": [
-    {
-      "id": 1,
-      "name": "John Doe",
-      "email": "user@example.com",
-      "joined_at": "2024-01-01T00:00:00Z"
-    }
-  ]
-}
-```
+#### DELETE `/api/tenants/{id}`
+Delete a tenant (only if no users assigned).
+
+**Required Permission:** `tenants.delete`
+
+#### GET `/api/tenants/{id}/users`
+Get users for specific tenant.
+
+**Required Permission:** `tenants.view`
 
 ### Web Routes (SSO Flow)
 
@@ -315,6 +496,7 @@ Admin dashboard for tenant management (admin only).
 Laravel Telescope is available for debugging and monitoring in the development environment.
 
 **Access URL:** `http://localhost:8000/telescope`
+**Required Permission:** `telescope.access`
 
 **Features:**
 - Request monitoring
@@ -323,6 +505,24 @@ Laravel Telescope is available for debugging and monitoring in the development e
 - Job monitoring
 - Cache operations
 - Mail preview
+
+### API Documentation (Swagger/OpenAPI)
+
+Interactive API documentation powered by Swagger/OpenAPI 3.0.
+
+**Access URLs:**
+- **Swagger UI**: `http://localhost:8000/api/documentation`
+- **Quick Access**: `http://localhost:8000/docs`
+- **JSON Schema**: `http://localhost:8000/api/api-docs.json`
+
+**Required Permission:** `swagger.access`
+
+**Features:**
+- Interactive API testing
+- Request/response schemas
+- Authentication examples
+- Rate limiting information
+- Error code documentation
 
 ### Docker Environment
 

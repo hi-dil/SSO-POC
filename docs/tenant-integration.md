@@ -1,287 +1,21 @@
-# CLAUDE.md
+# Tenant Integration Guide
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This guide provides step-by-step instructions for integrating a new Laravel application with the Central SSO system.
 
-## Project Overview
+## Overview
 
-This is a complete SSO (Single Sign-On) proof of concept project built with Laravel and Docker. The system consists of a central SSO server and multiple tenant applications that authenticate through the central server using JWT tokens.
+The integration process involves setting up your Laravel application to communicate with the Central SSO server for authentication while maintaining local user management and application-specific features.
 
-## Project Structure
-
-```
-sso-poc-claude3/
-├── central-sso/          # Main SSO authentication server (Laravel)
-├── tenant1-app/          # Tenant 1 application (Laravel)
-├── tenant2-app/          # Tenant 2 application (Laravel)
-├── docs/                 # Documentation
-├── docker-compose.yml    # Docker services configuration
-└── CLAUDE.md            # This file
-```
-
-## Development Setup
-
-### Prerequisites
-- Docker and Docker Compose
-- Git
-
-### Quick Start
-```bash
-# Start all services
-docker compose up -d
-
-# Run database migrations
-docker exec central-sso php artisan migrate
-
-# Seed test users
-docker exec central-sso php artisan db:seed --class=AddTestUsersSeeder
-
-# Access applications
-# Central SSO: http://localhost:8000
-# Tenant 1: http://localhost:8001
-# Tenant 2: http://localhost:8002
-```
-
-## Architecture
-
-- **Central SSO Server** (`localhost:8000`): Laravel application handling authentication
-- **Tenant Applications** (`localhost:8001`, `localhost:8002`): Laravel applications that authenticate via SSO
-- **MariaDB Database**: Stores users, tenants, and relationships
-- **Docker Network**: All services communicate via Docker network
-
-## Common Commands
-
-### Database Operations
-```bash
-# Run migrations
-docker exec central-sso php artisan migrate
-
-# Seed test data
-docker exec central-sso php artisan db:seed --class=AddTestUsersSeeder
-
-# Connect to database
-docker exec -it mariadb mysql -u sso_user -psso_password sso_main
-
-# Clear cache
-docker exec central-sso php artisan cache:clear
-```
-
-### Development Commands
-```bash
-# View logs
-docker compose logs central-sso
-docker compose logs tenant1-app
-
-# Restart services
-docker compose restart
-
-# Run commands in containers
-docker exec central-sso php artisan tinker
-docker exec tenant1-app composer install
-```
-
-### Testing
-```bash
-# Run tests (if available)
-docker exec central-sso php artisan test
-
-# Check application status
-curl http://localhost:8000/telescope
-curl http://localhost:8001
-
-# Test API endpoints
-curl -X POST "http://localhost:8000/api/auth/login" \
-  -H "Content-Type: application/json" \
-  -d '{"email": "superadmin@sso.com", "password": "password", "tenant_slug": "tenant1"}'
-
-# Test role management (requires authentication token)
-TOKEN="your_jwt_token_here"
-
-# List all roles
-curl -X GET "http://localhost:8000/api/roles" \
-  -H "Authorization: Bearer $TOKEN"
-
-# List all permissions
-curl -X GET "http://localhost:8000/api/permissions" \
-  -H "Authorization: Bearer $TOKEN"
-
-# Create new role
-curl -X POST "http://localhost:8000/api/roles" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Custom Manager", "description": "Custom role for managers", "permissions": ["users.view", "users.create"]}'
-
-# Assign role to user
-curl -X POST "http://localhost:8000/api/users/1/roles" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"role_slug": "manager", "tenant_id": 1}'
-
-# Access Role Management UI
-# Login to central SSO at http://localhost:8000/login
-# Navigate to admin dashboard and click "Roles & Permissions" tab
-```
-
-## Test Credentials
-
-All users use password: **password**
-
-### Single Tenant Users
-- `user@tenant1.com` / `password` (Tenant 1 User)
-- `admin@tenant1.com` / `password` (Tenant 1 Admin)
-- `user@tenant2.com` / `password` (Tenant 2 User)
-- `admin@tenant2.com` / `password` (Tenant 2 Admin)
-
-### Multi-Tenant User
-- `superadmin@sso.com` / `password` (Access to both tenants)
-
-## Key Features
-
-### Modern Landing Page
-- **Professional UI**: Clean, modern landing page with gradient design and responsive layout
-- **Feature Showcase**: Highlights all SSO capabilities with interactive elements
-- **Live Statistics**: Real-time display of active tenants, users, roles, and permissions
-- **Quick Start Guide**: Step-by-step instructions for getting started
-- **Authentication State**: Dynamic navigation based on user login status
-
-### Authentication Flows
-1. **Central SSO Login**: Users login at `localhost:8000/login` and access tenant dashboard
-2. **Seamless SSO Button**: Users click "Login with SSO" in tenant apps for automatic authentication
-3. **Tenant Selection**: Multi-tenant users can select which tenant to access from central dashboard
-4. **Direct Tenant Login**: Users can login directly within tenant applications
-5. **API Authentication**: Direct API calls for programmatic access
-6. **Multi-Tenant Support**: Users can have access to multiple tenants with proper access control
-
-### Seamless SSO Process
-1. **SSO Button Click**: Tenant app redirects to central SSO processing page
-2. **Processing Page**: Shows loading spinner while checking authentication status
-3. **Authentication Check**: JavaScript makes API call to verify if user is logged in
-4. **Auto-Redirect**: If authenticated and has access, automatically redirects back to tenant
-5. **Access Control**: Shows error message if user doesn't have permission for the tenant
-6. **Login Form**: Shows login form only if user is not authenticated
-7. **Local User Sync**: Creates/updates local tenant users based on SSO user data
-8. **Laravel Authentication**: Uses Laravel's built-in auth system for local sessions
-
-### Token Management
-- JWT tokens with tenant-specific claims
-- 1-hour token expiration
-- Token validation across tenant boundaries
-- Refresh token capability
-
-### API Architecture
-- **RESTful API**: All endpoints follow REST conventions
-- **DTO Pattern**: Request and response data transfer objects for type safety
-- **OpenAPI 3.0**: Complete API documentation with Swagger/OpenAPI
-- **Structured Responses**: Consistent JSON response format across all endpoints
-- **Error Handling**: Standardized error responses with proper HTTP status codes
-
-### Role-Based Access Control (RBAC) - Central SSO Only
-- **Scope**: Roles and permissions apply **only to the central SSO server** for managing authentication and tenant access
-- **Tenant Applications**: Each tenant application manages its own separate role system and permissions
-- **Multi-Tenant Roles**: Users can have different roles in different tenants within the central SSO system
-- **Granular Permissions**: 19 built-in permissions across 6 categories for SSO management
-- **System vs Custom**: System roles/permissions are protected from deletion
-- **Flexible Assignment**: Roles can be global or tenant-specific within the SSO system
-- **Default Roles**: Super Admin, Admin, Manager, User, Viewer with pre-configured permissions
-- **Permission Categories**: Users, Roles, Tenants, System, API, Developer
-- **Web UI**: Complete role management interface with modern shadcn/ui design
-- **Toast Notifications**: User-friendly success/error messages throughout the interface
-- **API Protection**: All role management endpoints available via REST API
-- **Developer Tools**: Permission-controlled access to Telescope and Swagger documentation
-
-#### Built-in Permissions:
-- **Users**: view, create, edit, delete
-- **Roles**: view, create, edit, delete, assign
-- **Tenants**: view, create, edit, delete
-- **System**: settings, logs
-- **API**: manage
-- **Developer**: telescope.access, swagger.access
-
-#### Role Management Features:
-- **Interactive UI**: Create, edit, and delete roles with full permission management
-- **User Role Assignment**: Assign/remove roles from users with tenant-specific control
-- **Permission Visualization**: Organized by category with clear descriptions
-- **Real-time Updates**: Live data refresh after role changes
-- **Access Control**: Protected routes based on user permissions
-- **Confirmation Dialogs**: Safe deletion with user confirmation
-- **Responsive Design**: Works on desktop and mobile devices
-
-#### Role Management API Endpoints:
-- `GET /api/roles` - List all roles
-- `POST /api/roles` - Create new role
-- `GET /api/roles/{id}` - Get role details
-- `PUT /api/roles/{id}` - Update role
-- `DELETE /api/roles/{id}` - Delete role
-- `GET /api/permissions` - List permissions
-- `GET /api/permissions/categories` - Get permission categories
-- `GET /api/users/{id}/roles` - Get user roles
-- `POST /api/users/{id}/roles` - Assign role to user
-- `DELETE /api/users/{id}/roles` - Remove role from user
-- `PUT /api/users/{id}/roles/sync` - Sync user roles
-
-## Security Considerations
-
-- JWT tokens signed with HMAC-SHA256
-- Bcrypt password hashing with 12 rounds
-- Tenant isolation enforced at token level
-- No secrets committed to repository
-- CORS and CSRF protection enabled
-- Laravel Telescope for debugging (development only)
-
-## Debugging
-
-### Laravel Telescope
-- **URL**: `http://localhost:8000/telescope`
-- Monitor requests, database queries, exceptions
-- Available only in development environment
-
-### API Documentation
-- **Swagger UI**: `http://localhost:8000/api/documentation`
-- **Quick Access**: `http://localhost:8000/docs` (redirects to Swagger UI)
-- **JSON Schema**: `http://localhost:8000/api/api-docs.json`
-- Interactive API documentation with request/response schemas
-- Test API endpoints directly from the browser
-- Available only in development environment
-
-### Common Issues
-- **Invalid credentials**: Ensure using MariaDB, not SQLite
-- **Database connection**: Check Docker containers are running
-- **Token validation**: Verify tenant associations in database
-- **CORS issues**: Check tenant app configurations
-- **Domain consistency**: All apps must use `localhost` domain for session sharing
-- **SSO authentication not working**: Check that Laravel Telescope is installed in all apps
-- **"Please login to continue"**: Verify SSOCallbackController calls auth()->login() for local users
-- **Access denied errors**: Check user-tenant relationships in database
-
-## Important Notes
-
-- Database is MariaDB running in Docker, not SQLite
-- All services must be running via Docker Compose
-- Test users are seeded via `AddTestUsersSeeder`
-- Tenant relationships are stored in `tenant_users` pivot table
-- JWT claims include `tenants` array and `current_tenant`
-- **Domain Consistency**: All apps use `localhost` domain to ensure proper session sharing
-- **Processing Page**: SSO authentication uses JavaScript-based checking for seamless UX
-- **Laravel Authentication**: Tenant apps use Laravel's built-in auth system with local user accounts
-- **User Synchronization**: SSO users are automatically created/updated as local users in tenant apps
-- **Dual Authentication**: Supports both local login and SSO authentication in tenant applications
-- **Laravel Telescope**: Required dependency for all applications to function properly
-
----
-
-# New Tenant Application Integration Guide
-
-This guide shows how to integrate a new Laravel application with the Central SSO system, following the same pattern as the existing tenant applications.
-
-## 1. Prerequisites
+## Prerequisites
 
 - Laravel 11 application
 - Docker and Docker Compose
 - Access to the Central SSO server
-- MariaDB database for the tenant
+- MariaDB database for the tenant application
 
-## 2. Required Dependencies
+## Step-by-Step Integration
 
-Add these packages to your Laravel application:
+### 1. Install Required Dependencies
 
 ```bash
 composer require tymon/jwt-auth
@@ -289,9 +23,9 @@ composer require laravel/telescope
 composer require guzzlehttp/guzzle
 ```
 
-## 3. Environment Configuration
+### 2. Environment Configuration
 
-Add these environment variables to your `.env` file:
+Add these variables to your `.env` file:
 
 ```env
 # Database Configuration
@@ -317,9 +51,9 @@ SESSION_DOMAIN=localhost
 SANCTUM_STATEFUL_DOMAINS=localhost:8003,localhost:8000
 ```
 
-## 4. Database Setup
+### 3. Database Migration
 
-Create database migration for users table:
+Create a users table with SSO integration:
 
 ```php
 <?php
@@ -339,7 +73,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->boolean('is_admin')->default(false);
-            $table->string('sso_user_id')->nullable(); // For SSO user mapping
+            $table->string('sso_user_id')->nullable(); // SSO user mapping
             $table->rememberToken();
             $table->timestamps();
         });
@@ -352,7 +86,7 @@ return new class extends Migration
 };
 ```
 
-## 5. User Model Configuration
+### 4. User Model Configuration
 
 Update your User model:
 
@@ -393,9 +127,9 @@ class User extends Authenticatable
 }
 ```
 
-## 6. SSO Service Class
+### 5. SSO Service Implementation
 
-Create an SSO service to handle authentication:
+Create a service to handle SSO authentication:
 
 ```php
 <?php
@@ -444,7 +178,7 @@ class SSOService
                 'name' => $userData['name'],
                 'email' => $userData['email'],
                 'is_admin' => $userData['is_admin'] ?? false,
-                'password' => Hash::make('sso_user_' . $userData['id']), // Random password
+                'password' => Hash::make('sso_user_' . $userData['id']),
             ]
         );
 
@@ -459,9 +193,9 @@ class SSOService
 }
 ```
 
-## 7. SSO Authentication Controller
+### 6. SSO Controller
 
-Create a controller to handle SSO callbacks:
+Create a controller to handle SSO authentication flow:
 
 ```php
 <?php
@@ -504,16 +238,16 @@ class SSOController extends Controller
             return response()->json(['error' => 'Invalid token'], 401);
         }
 
-        // Check if user has access to this tenant
+        // Check tenant access
         $tenantSlug = config('app.tenant_slug');
         if (!in_array($tenantSlug, $userData['tenants'] ?? [])) {
             return response()->json(['error' => 'Access denied to this tenant'], 403);
         }
 
-        // Create or update local user
+        // Create/update local user
         $user = $this->ssoService->createOrUpdateUser($userData);
         
-        // Authenticate user locally
+        // Authenticate locally
         $this->ssoService->authenticateUser($user);
 
         return response()->json(['success' => true, 'redirect' => route('dashboard')]);
@@ -530,9 +264,9 @@ class SSOController extends Controller
 }
 ```
 
-## 8. SSO Processing View
+### 7. SSO Processing View
 
-Create the SSO processing page:
+Create the SSO processing page with JavaScript authentication:
 
 ```blade
 {{-- resources/views/auth/sso-process.blade.php --}}
@@ -570,7 +304,7 @@ Create the SSO processing page:
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Check if user is already authenticated via SSO
+            // Check SSO authentication status
             fetch('{{ $centralSSOUrl }}/api/auth/check', {
                 method: 'GET',
                 credentials: 'include',
@@ -582,7 +316,7 @@ Create the SSO processing page:
             .then(response => response.json())
             .then(data => {
                 if (data.authenticated) {
-                    // User is authenticated, verify access and log them in
+                    // Process authentication
                     fetch('{{ route('sso.callback') }}', {
                         method: 'POST',
                         headers: {
@@ -602,8 +336,9 @@ Create the SSO processing page:
                     })
                     .catch(() => showError('Network error occurred'));
                 } else {
-                    // User is not authenticated, redirect to central SSO
-                    window.location.href = '{{ $centralSSOUrl }}/login?redirect=' + encodeURIComponent(window.location.origin + '/sso/process');
+                    // Redirect to central SSO
+                    window.location.href = '{{ $centralSSOUrl }}/login?redirect=' + 
+                        encodeURIComponent(window.location.origin + '/sso/process');
                 }
             })
             .catch(() => showError('Unable to connect to authentication server'));
@@ -619,9 +354,9 @@ Create the SSO processing page:
 </html>
 ```
 
-## 9. Authentication Views
+### 8. Login View with SSO Integration
 
-Create login view with SSO integration:
+Create a dual-authentication login page:
 
 ```blade
 {{-- resources/views/auth/login.blade.php --}}
@@ -656,7 +391,7 @@ Create login view with SSO integration:
             </div>
         </div>
 
-        <!-- Regular Login Form -->
+        <!-- Local Login Form -->
         <form class="mt-8 space-y-6" action="{{ route('login') }}" method="POST">
             @csrf
             <div class="rounded-md shadow-sm -space-y-px">
@@ -690,9 +425,9 @@ Create login view with SSO integration:
 @endsection
 ```
 
-## 10. Routes Configuration
+### 9. Routes Configuration
 
-Add these routes to your `web.php`:
+Add SSO routes to your application:
 
 ```php
 <?php
@@ -723,12 +458,12 @@ Route::middleware('auth')->group(function () {
 });
 ```
 
-## 11. Docker Configuration
+### 10. Docker Configuration
 
-Add your tenant app to the main `docker-compose.yml`:
+Add your tenant application to the main `docker-compose.yml`:
 
 ```yaml
-# Add this service to docker-compose.yml
+# Add this service to the existing docker-compose.yml
 your-tenant-app:
   build:
     context: ./your-tenant-app
@@ -748,9 +483,9 @@ your-tenant-app:
     - CENTRAL_SSO_URL=http://central-sso:8000
 ```
 
-## 12. Register Tenant in Central SSO
+### 11. Database Registration
 
-Add your tenant to the central SSO database:
+Register your tenant in the Central SSO system:
 
 ```sql
 -- Connect to central SSO database
@@ -758,7 +493,7 @@ docker exec -it mariadb mysql -u sso_user -psso_password sso_main
 
 -- Insert new tenant
 INSERT INTO tenants (id, slug, name, domain, description, is_active, created_at, updated_at) 
-VALUES ('your-tenant-slug', 'your-tenant-slug', 'Your Tenant Name', 'localhost:8003', 'Description of your tenant', 1, NOW(), NOW());
+VALUES ('your-tenant-slug', 'your-tenant-slug', 'Your Tenant Name', 'localhost:8003', 'Description of your tenant application', 1, NOW(), NOW());
 
 -- Grant access to test users (optional)
 INSERT INTO tenant_users (user_id, tenant_id, created_at, updated_at)
@@ -767,51 +502,32 @@ FROM users
 WHERE email IN ('superadmin@sso.com', 'admin@tenant1.com');
 ```
 
-## 13. Testing the Integration
+## Testing Your Integration
 
-1. **Start all services**:
-   ```bash
-   docker compose up -d
-   ```
-
-2. **Run migrations**:
-   ```bash
-   docker exec your-tenant-app php artisan migrate
-   ```
-
-3. **Test SSO flow**:
-   - Visit `http://localhost:8003/login`
-   - Click "Login with SSO"
-   - Should redirect to central SSO and back
-
-4. **Test direct login**:
-   - Create a local user in your tenant database
-   - Login using the direct login form
-
-## 14. Customization Options
-
-### Custom User Roles
-Implement your own role system within the tenant app:
-
-```php
-// Create roles migration
-Schema::create('roles', function (Blueprint $table) {
-    $table->id();
-    $table->string('name');
-    $table->string('slug')->unique();
-    $table->text('description')->nullable();
-    $table->timestamps();
-});
-
-Schema::create('user_roles', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('user_id')->constrained()->onDelete('cascade');
-    $table->foreignId('role_id')->constrained()->onDelete('cascade');
-    $table->timestamps();
-});
+### 1. Start Services
+```bash
+docker compose up -d
 ```
 
-### Additional SSO Claims
+### 2. Run Migrations
+```bash
+docker exec your-tenant-app php artisan migrate
+```
+
+### 3. Test SSO Flow
+1. Visit `http://localhost:8003/login`
+2. Click "Login with SSO"
+3. Should redirect to central SSO and back automatically
+
+### 4. Test Local Authentication
+1. Create a local user in your tenant database
+2. Use the direct login form
+3. Verify local authentication works independently
+
+## Advanced Features
+
+### Custom User Synchronization
+
 Handle additional user data from SSO:
 
 ```php
@@ -831,7 +547,8 @@ $user = User::updateOrCreate(
 ```
 
 ### Custom Middleware
-Create middleware for SSO token validation:
+
+Create middleware for automatic SSO token validation:
 
 ```php
 <?php
@@ -868,4 +585,87 @@ class VerifySSOToken
 }
 ```
 
-This integration guide provides everything needed to create a new tenant application that seamlessly integrates with the Central SSO system, following the same patterns as the existing tenant apps.
+### Local Role System
+
+Implement tenant-specific roles:
+
+```php
+// Create roles migration for tenant app
+Schema::create('roles', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->string('slug')->unique();
+    $table->text('description')->nullable();
+    $table->timestamps();
+});
+
+Schema::create('user_roles', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('user_id')->constrained()->onDelete('cascade');
+    $table->foreignId('role_id')->constrained()->onDelete('cascade');
+    $table->timestamps();
+});
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### 1. Authentication Failures
+- **Check**: SSO server accessibility
+- **Verify**: Environment variables are correct
+- **Debug**: Network connectivity between containers
+
+#### 2. Token Validation Errors
+- **Check**: JWT secret configuration
+- **Verify**: Token expiration settings
+- **Debug**: API response from central SSO
+
+#### 3. User Synchronization Issues
+- **Check**: Database migrations are run
+- **Verify**: User model fillable attributes
+- **Debug**: SSO user data structure
+
+#### 4. Access Denied Errors
+- **Check**: Tenant registration in central SSO
+- **Verify**: User has access to the tenant
+- **Debug**: JWT token claims
+
+### Debug Commands
+
+```bash
+# Check container logs
+docker compose logs your-tenant-app
+
+# Test SSO connectivity
+docker exec your-tenant-app curl -I http://central-sso:8000
+
+# Check database connection
+docker exec your-tenant-app php artisan tinker
+>>> DB::connection()->getPdo()
+
+# Test user creation
+>>> User::create(['name' => 'Test', 'email' => 'test@example.com', 'password' => bcrypt('password')])
+```
+
+## Best Practices
+
+### Security
+1. **Validate Tokens**: Always verify JWT tokens from central SSO
+2. **Secure Communications**: Use HTTPS in production
+3. **Input Validation**: Validate all user data from SSO
+4. **Session Management**: Properly handle session lifecycle
+
+### Performance
+1. **Cache Tokens**: Cache valid tokens to reduce SSO calls
+2. **Async Operations**: Use queues for user synchronization
+3. **Database Indexing**: Index SSO user ID fields
+4. **Connection Pooling**: Use connection pooling for database
+
+### Maintenance
+1. **Monitor Integration**: Log SSO authentication events
+2. **Update Dependencies**: Keep JWT and HTTP libraries updated
+3. **Test Regularly**: Verify SSO integration after updates
+4. **Document Changes**: Keep integration documentation current
+
+This integration guide provides a complete foundation for connecting any Laravel application to the Central SSO system while maintaining flexibility for custom requirements.

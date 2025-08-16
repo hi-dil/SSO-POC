@@ -64,7 +64,7 @@
 <body class="bg-background text-foreground min-h-screen">
     <div class="flex min-h-screen">
         <!-- Sidebar -->
-        <div class="hidden w-64 bg-card border-r border-border lg:block">
+        <div class="hidden w-64 bg-card border-r border-border lg:block fixed h-screen">
             <div class="flex h-full flex-col">
                 <!-- Logo -->
                 <div class="flex h-16 items-center border-b border-border px-6">
@@ -79,7 +79,7 @@
                 </div>
 
                 <!-- Navigation -->
-                <nav class="flex-1 space-y-1 px-3 py-4">
+                <nav class="flex-1 overflow-y-auto space-y-1 px-3 py-4">
                     <a href="{{ route('dashboard') }}" 
                        class="@if(request()->routeIs('dashboard')) bg-accent text-accent-foreground @else text-muted-foreground hover:bg-accent hover:text-accent-foreground @endif group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
                         <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,8 +134,8 @@
                     </div>
                 </nav>
 
-                <!-- User Profile -->
-                <div class="border-t border-border p-3">
+                <!-- User Profile - Fixed to bottom -->
+                <div class="mt-auto border-t border-border p-3">
                     <div x-data="{ open: false }" class="relative">
                         <button @click="open = !open" class="w-full flex items-center px-3 py-2 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors">
                             <div class="h-8 w-8 rounded-full bg-muted flex items-center justify-center mr-3">
@@ -167,7 +167,7 @@
         </div>
 
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col">
+        <div class="flex-1 flex flex-col lg:ml-64">
             <!-- Top Header -->
             <header class="h-16 border-b border-border bg-card px-6 flex items-center justify-between lg:px-8">
                 <div class="flex items-center">
