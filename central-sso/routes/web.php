@@ -125,6 +125,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::delete('tenants/{tenant}/users/{user}', [\App\Http\Controllers\Admin\TenantController::class, 'removeUser'])->name('tenants.remove-user');
     Route::patch('tenants/{tenant}/toggle', [\App\Http\Controllers\Admin\TenantController::class, 'toggle'])->name('tenants.toggle');
     
+    // User Management
+    Route::get('users', [\App\Http\Controllers\Admin\UserManagementController::class, 'index'])->name('users.index');
+    Route::get('users/data', [\App\Http\Controllers\Admin\UserManagementController::class, 'getUsers'])->name('users.data');
+    Route::post('users', [\App\Http\Controllers\Admin\UserManagementController::class, 'store'])->name('users.store');
+    Route::put('users/{user}', [\App\Http\Controllers\Admin\UserManagementController::class, 'update'])->name('users.update');
+    Route::delete('users/{user}', [\App\Http\Controllers\Admin\UserManagementController::class, 'destroy'])->name('users.destroy');
+    Route::post('users/{userId}/tenants', [\App\Http\Controllers\Admin\UserManagementController::class, 'assignTenant'])->name('users.assign-tenant');
+    Route::delete('users/{userId}/tenants', [\App\Http\Controllers\Admin\UserManagementController::class, 'removeTenant'])->name('users.remove-tenant');
+    
     // Role Management (Central SSO only)
     Route::get('roles', [\App\Http\Controllers\Admin\RoleManagementController::class, 'index'])->name('roles.index');
     Route::get('roles/data', [\App\Http\Controllers\Admin\RoleManagementController::class, 'getRoles'])->name('roles.data');

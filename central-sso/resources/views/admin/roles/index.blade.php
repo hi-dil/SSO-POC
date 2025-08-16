@@ -336,11 +336,6 @@ function roleManagement() {
             this.permissions = @json($permissions ?? []);
             this.users = @json($users ?? []);
             this.tenants = @json($tenants ?? []);
-            
-            // Show a welcome toast
-            setTimeout(() => {
-                this.showToast('Role management interface loaded successfully', 'success');
-            }, 500);
         },
         
         async loadData() {
