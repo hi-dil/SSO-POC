@@ -4,8 +4,8 @@
 
 @section('header')
     <div>
-        <h1 class="text-2xl font-semibold text-card-foreground">Tenant Management</h1>
-        <p class="text-sm text-muted-foreground mt-1">
+        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Tenant Management</h1>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
             Manage all tenants in the central SSO system
         </p>
     </div>
@@ -14,13 +14,13 @@
 @section('actions')
     <div class="flex space-x-3">
         @can('tenants.create')
-            <button onclick="showBulkCreateModal()" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+            <button onclick="showBulkCreateModal()" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-10 px-4 py-2">
                 <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                 </svg>
                 Bulk Create 50 Tenants
             </button>
-            <a href="{{ route('admin.tenants.create') }}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+            <a href="{{ route('admin.tenants.create') }}" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 h-10 px-4 py-2">
                 <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                 </svg>
@@ -38,7 +38,7 @@
             <form method="GET" action="{{ route('admin.tenants.index') }}" class="relative">
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </div>
@@ -46,17 +46,17 @@
                            name="search" 
                            value="{{ request('search') }}"
                            placeholder="Search tenants by name, domain, plan, or industry..."
-                           class="block w-full pl-10 pr-24 py-2 border border-input bg-background rounded-md text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring">
+                           class="block w-full pl-10 pr-24 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-md text-sm text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <div class="absolute inset-y-0 right-0 flex items-center">
                         @if(request('search'))
                             <a href="{{ route('admin.tenants.index') }}" 
-                               class="pr-2 flex items-center text-muted-foreground hover:text-foreground">
+                               class="pr-2 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
                             </a>
                         @endif
-                        <button type="submit" class="pr-3 flex items-center text-muted-foreground hover:text-primary">
+                        <button type="submit" class="pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
@@ -75,7 +75,7 @@
         </div>
         
         @if(request('search'))
-            <div class="text-sm text-muted-foreground ml-4">
+            <div class="text-sm text-gray-600 dark:text-gray-400 ml-4">
                 {{ $tenants->total() }} result(s) for "{{ request('search') }}"
             </div>
         @endif
@@ -90,13 +90,13 @@
 
     @if($tenants->count() > 0)
         <!-- Tenants Table -->
-        <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm">
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
             <div class="overflow-hidden">
                 <table class="w-full caption-bottom text-sm">
-                    <thead class="[&_tr]:border-b border-border">
-                        <tr class="border-b border-border transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
-                                <button onclick="sortTable('name')" class="flex items-center space-x-1 hover:text-foreground">
+                    <thead class="[&_tr]:border-b border-gray-200 dark:border-gray-700">
+                        <tr class="border-b border-gray-200 dark:border-gray-700 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 ">
+                            <th class="h-12 px-4 text-left align-middle font-medium text-gray-600 dark:text-gray-400 [&:has([role=checkbox])]:pr-0">
+                                <button onclick="sortTable('name')" class="flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white">
                                     <span>Tenant</span>
                                     @if(request('sort') === 'name')
                                         @if(request('direction') === 'asc')
@@ -115,8 +115,8 @@
                                     @endif
                                 </button>
                             </th>
-                            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
-                                <button onclick="sortTable('domain')" class="flex items-center space-x-1 hover:text-foreground">
+                            <th class="h-12 px-4 text-left align-middle font-medium text-gray-600 dark:text-gray-400 [&:has([role=checkbox])]:pr-0">
+                                <button onclick="sortTable('domain')" class="flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white">
                                     <span>Domain</span>
                                     @if(request('sort') === 'domain')
                                         @if(request('direction') === 'asc')
@@ -135,11 +135,11 @@
                                     @endif
                                 </button>
                             </th>
-                            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
+                            <th class="h-12 px-4 text-left align-middle font-medium text-gray-600 dark:text-gray-400 [&:has([role=checkbox])]:pr-0">
                                 Users
                             </th>
-                            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
-                                <button onclick="sortTable('is_active')" class="flex items-center space-x-1 hover:text-foreground">
+                            <th class="h-12 px-4 text-left align-middle font-medium text-gray-600 dark:text-gray-400 [&:has([role=checkbox])]:pr-0">
+                                <button onclick="sortTable('is_active')" class="flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white">
                                     <span>Status</span>
                                     @if(request('sort') === 'is_active')
                                         @if(request('direction') === 'asc')
@@ -158,8 +158,8 @@
                                     @endif
                                 </button>
                             </th>
-                            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
-                                <button onclick="sortTable('updated_at')" class="flex items-center space-x-1 hover:text-foreground">
+                            <th class="h-12 px-4 text-left align-middle font-medium text-gray-600 dark:text-gray-400 [&:has([role=checkbox])]:pr-0">
+                                <button onclick="sortTable('updated_at')" class="flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white">
                                     <span>Last Updated</span>
                                     @if(request('sort') === 'updated_at' || !request('sort'))
                                         @if(request('direction') === 'asc')
@@ -178,36 +178,36 @@
                                     @endif
                                 </button>
                             </th>
-                            <th class="h-12 px-4 text-right align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
+                            <th class="h-12 px-4 text-right align-middle font-medium text-gray-600 dark:text-gray-400 [&:has([role=checkbox])]:pr-0">
                                 <span class="sr-only">Actions</span>
                             </th>
                         </tr>
                     </thead>
                     <tbody class="[&_tr:last-child]:border-0">
                         @foreach($tenants as $tenant)
-                            <tr class="border-b border-border transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                            <tr class="border-b border-gray-200 dark:border-gray-700 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 ">
                                 <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">
                                     <div class="flex items-center gap-3">
-                                        <div class="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                                            <span class="text-sm font-medium text-muted-foreground">
+                                        <div class="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                                            <span class="text-sm font-medium text-gray-600 dark:text-gray-400">
                                                 {{ substr($tenant->name, 0, 2) }}
                                             </span>
                                         </div>
                                         <div>
-                                            <div class="font-medium text-card-foreground">
+                                            <div class="font-medium text-gray-900 dark:text-white">
                                                 {{ $tenant->name }}
                                             </div>
-                                            <div class="text-sm text-muted-foreground">
+                                            <div class="text-sm text-gray-600 dark:text-gray-400">
                                                 {{ $tenant->slug }}
                                             </div>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0 text-card-foreground">
+                                <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0 text-gray-900 dark:text-white">
                                     {{ $tenant->domain ?? 'Not set' }}
                                 </td>
                                 <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">
-                                    <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
+                                    <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500">
                                         {{ $tenant->users_count }} users
                                     </span>
                                 </td>
@@ -217,17 +217,17 @@
                                         {{ $tenant->is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
-                                <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0 text-muted-foreground">
+                                <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0 text-gray-600 dark:text-gray-400">
                                     <div class="text-sm">
                                         <div>{{ $tenant->updated_at->format('M d, Y') }}</div>
-                                        <div class="text-xs text-muted-foreground/70">{{ $tenant->updated_at->format('g:i A') }}</div>
+                                        <div class="text-xs text-gray-600 dark:text-gray-400/70">{{ $tenant->updated_at->format('g:i A') }}</div>
                                     </div>
                                 </td>
                                 <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">
                                     <div class="flex justify-end">
                                         <div class="relative inline-block text-left">
                                             <button type="button" onclick="toggleDropdown('dropdown-{{ $tenant->id }}')" 
-                                                    class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8">
+                                                    class="inline-flex items-center justify-center rounded-md text-sm font-medium  transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-8 w-8">
                                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
                                                 </svg>
@@ -250,7 +250,7 @@
                                                         <a href="{{ route('admin.tenants.users', $tenant) }}" 
                                                            class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                                             <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                                             </svg>
                                                             Manage Users
                                                         </a>
@@ -318,32 +318,32 @@
         @endif
     @else
         <!-- Empty State -->
-        <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm">
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
             <div class="flex flex-col items-center justify-center py-12 px-6">
                 @if(request('search'))
                     <!-- No Search Results -->
-                    <svg class="mx-auto h-12 w-12 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="mx-auto h-12 w-12 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
-                    <h3 class="mt-4 text-lg font-semibold text-card-foreground">No search results</h3>
-                    <p class="mt-2 text-sm text-muted-foreground text-center">
+                    <h3 class="mt-4 text-lg font-semibold text-gray-900 dark:text-white">No search results</h3>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
                         No tenants found for "{{ request('search') }}". Try adjusting your search terms.
                     </p>
                     <div class="mt-6">
-                        <a href="{{ route('admin.tenants.index') }}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                        <a href="{{ route('admin.tenants.index') }}" class="inline-flex items-center justify-center rounded-md text-sm font-medium  transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-10 px-4 py-2">
                             Clear Search
                         </a>
                     </div>
                 @else
                     <!-- No Tenants -->
-                    <svg class="mx-auto h-12 w-12 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="mx-auto h-12 w-12 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m14 0v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5m-4 0h4"></path>
                     </svg>
-                    <h3 class="mt-4 text-lg font-semibold text-card-foreground">No tenants</h3>
-                    <p class="mt-2 text-sm text-muted-foreground text-center">Get started by creating a new tenant application.</p>
+                    <h3 class="mt-4 text-lg font-semibold text-gray-900 dark:text-white">No tenants</h3>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">Get started by creating a new tenant application.</p>
                     @can('tenants.create')
                         <div class="mt-6">
-                            <a href="{{ route('admin.tenants.create') }}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                            <a href="{{ route('admin.tenants.create') }}" class="inline-flex items-center justify-center rounded-md text-sm font-medium  transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 h-10 px-4 py-2">
                                 <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                 </svg>
@@ -365,14 +365,14 @@
 
 <!-- Bulk Create Modal -->
 <div id="bulkCreateModal" class="fixed inset-0 bg-black/80 z-50 hidden">
-    <div class="fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] grid w-full max-w-lg gap-4 border border-border bg-background p-6 shadow-lg duration-200 rounded-lg">
+    <div class="fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] grid w-full max-w-lg gap-4 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-lg duration-200 rounded-lg">
         <div class="flex flex-col space-y-1.5 text-center sm:text-left">
             <h2 class="text-lg font-semibold leading-none tracking-tight">Bulk Create Tenants</h2>
-            <p class="text-sm text-muted-foreground">This will create 50 realistic tenants for testing purposes.</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">This will create 50 realistic tenants for testing purposes.</p>
         </div>
         
         <div class="space-y-3">
-            <div class="text-sm text-muted-foreground">
+            <div class="text-sm text-gray-600 dark:text-gray-400">
                 <p class="mb-2">This will create tenants with:</p>
                 <ul class="list-disc list-inside space-y-1">
                     <li>Various plans (starter, basic, premium, pro, enterprise)</li>
@@ -385,10 +385,10 @@
         </div>
         
         <div class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
-            <button onclick="hideBulkCreateModal()" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 mt-2 sm:mt-0">
+            <button onclick="hideBulkCreateModal()" class="inline-flex items-center justify-center rounded-md text-sm font-medium  transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-10 px-4 py-2 mt-2 sm:mt-0">
                 Cancel
             </button>
-            <button onclick="bulkCreateTenants()" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+            <button onclick="bulkCreateTenants()" class="inline-flex items-center justify-center rounded-md text-sm font-medium  transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 h-10 px-4 py-2">
                 Create 50 Tenants
             </button>
         </div>

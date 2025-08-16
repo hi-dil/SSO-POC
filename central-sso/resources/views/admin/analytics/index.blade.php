@@ -4,8 +4,8 @@
 
 @section('header')
     <div>
-        <h1 class="text-2xl font-semibold text-card-foreground">Login Analytics</h1>
-        <p class="text-sm text-muted-foreground mt-1">
+        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Login Analytics</h1>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
             Monitor user authentication activity and system usage
         </p>
     </div>
@@ -13,13 +13,13 @@
 
 @section('actions')
     <div class="flex items-center space-x-2">
-        <button onclick="refreshData()" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+        <button onclick="refreshData()" class="inline-flex items-center justify-center rounded-md text-sm font-medium  transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-10 px-4 py-2">
             <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
             </svg>
             Refresh
         </button>
-        <button onclick="exportData()" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+        <button onclick="exportData()" class="inline-flex items-center justify-center rounded-md text-sm font-medium  transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 h-10 px-4 py-2">
             <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
@@ -33,33 +33,33 @@
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Active Users -->
-        <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm p-6">
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-muted-foreground">Active Users</p>
-                    <p class="text-3xl font-bold text-card-foreground" x-text="stats.active_users || 0"></p>
-                    <p class="text-xs text-muted-foreground mt-1">Currently online</p>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Active Users</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white" x-text="stats.active_users || 0"></p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Currently online</p>
                 </div>
-                <div class="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                    <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                <div class="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                    <svg class="h-6 w-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                     </svg>
                 </div>
             </div>
         </div>
 
         <!-- Today's Logins -->
-        <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm p-6">
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-muted-foreground">Today's Logins</p>
-                    <p class="text-3xl font-bold text-card-foreground" x-text="stats.today_logins || 0"></p>
-                    <p class="text-xs text-muted-foreground mt-1" x-show="stats.login_trend !== undefined">
-                        <span :class="stats.login_trend >= 0 ? 'text-green-600' : 'text-red-600'" x-text="(stats.login_trend >= 0 ? '+' : '') + stats.login_trend + ' from yesterday'"></span>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Today's Logins</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white" x-text="stats.today_logins || 0"></p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1" x-show="stats.login_trend !== undefined">
+                        <span :class="stats.login_trend >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600'" x-text="(stats.login_trend >= 0 ? '+' : '') + stats.login_trend + ' from yesterday'"></span>
                     </p>
                 </div>
-                <div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                    <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                    <svg class="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
                     </svg>
                 </div>
@@ -67,15 +67,15 @@
         </div>
 
         <!-- Total Sessions -->
-        <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm p-6">
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-muted-foreground">Total Sessions</p>
-                    <p class="text-3xl font-bold text-card-foreground" x-text="stats.total_sessions || 0"></p>
-                    <p class="text-xs text-muted-foreground mt-1">Active sessions</p>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Sessions</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white" x-text="stats.total_sessions || 0"></p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Active sessions</p>
                 </div>
-                <div class="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center">
-                    <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                    <svg class="h-6 w-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                     </svg>
                 </div>
@@ -83,15 +83,15 @@
         </div>
 
         <!-- Unique Users (30 days) -->
-        <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm p-6">
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-muted-foreground">Unique Users</p>
-                    <p class="text-3xl font-bold text-card-foreground" x-text="stats.unique_users_30_days || 0"></p>
-                    <p class="text-xs text-muted-foreground mt-1">Last 30 days</p>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Unique Users</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white" x-text="stats.unique_users_30_days || 0"></p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Last 30 days</p>
                 </div>
-                <div class="h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center">
-                    <svg class="h-6 w-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="h-12 w-12 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
+                    <svg class="h-6 w-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                     </svg>
                 </div>
@@ -102,7 +102,7 @@
     <!-- Charts and Analytics -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Active Users by Tenant -->
-        <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm p-6">
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm p-6">
             <h3 class="text-lg font-semibold mb-4">Active Users by Tenant</h3>
             <div class="space-y-3">
                 <template x-for="(data, tenantId) in stats.active_by_tenant" :key="tenantId">
@@ -111,17 +111,17 @@
                             <div class="h-3 w-3 rounded-full bg-blue-500"></div>
                             <span class="text-sm font-medium" x-text="data.tenant?.name || tenantId"></span>
                         </div>
-                        <span class="text-sm text-muted-foreground" x-text="data.count + ' users'"></span>
+                        <span class="text-sm text-gray-600 dark:text-gray-400" x-text="data.count + ' users'"></span>
                     </div>
                 </template>
-                <div x-show="Object.keys(stats.active_by_tenant || {}).length === 0" class="text-center py-4 text-sm text-muted-foreground">
+                <div x-show="Object.keys(stats.active_by_tenant || {}).length === 0" class="text-center py-4 text-sm text-gray-600 dark:text-gray-400">
                     No active tenant sessions
                 </div>
             </div>
         </div>
 
         <!-- Login Methods Distribution -->
-        <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm p-6">
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm p-6">
             <h3 class="text-lg font-semibold mb-4">Login Methods</h3>
             <div class="space-y-3">
                 <template x-for="(count, method) in stats.active_by_method" :key="method">
@@ -130,10 +130,10 @@
                             <div class="h-3 w-3 rounded-full" :class="getMethodColor(method)"></div>
                             <span class="text-sm font-medium capitalize" x-text="method"></span>
                         </div>
-                        <span class="text-sm text-muted-foreground" x-text="count + ' sessions'"></span>
+                        <span class="text-sm text-gray-600 dark:text-gray-400" x-text="count + ' sessions'"></span>
                     </div>
                 </template>
-                <div x-show="Object.keys(stats.active_by_method || {}).length === 0" class="text-center py-4 text-sm text-muted-foreground">
+                <div x-show="Object.keys(stats.active_by_method || {}).length === 0" class="text-center py-4 text-sm text-gray-600 dark:text-gray-400">
                     No active sessions
                 </div>
             </div>
@@ -143,10 +143,10 @@
     <!-- Recent Activity Tables -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Recent Logins -->
-        <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm">
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm">
             <div class="p-6 border-b border-border">
                 <h3 class="text-lg font-semibold">Recent Logins</h3>
-                <p class="text-sm text-muted-foreground">Latest authentication activities</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Latest authentication activities</p>
             </div>
             <div class="p-6">
                 <div class="space-y-3">
@@ -154,22 +154,22 @@
                         <div class="flex items-center justify-between py-2 border-b border-border last:border-0">
                             <div class="flex items-center space-x-3">
                                 <div class="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                                    <span class="text-xs font-medium text-muted-foreground" x-text="login.user?.name?.charAt(0)?.toUpperCase()"></span>
+                                    <span class="text-xs font-medium text-gray-600 dark:text-gray-400" x-text="login.user?.name?.charAt(0)?.toUpperCase()"></span>
                                 </div>
                                 <div>
                                     <p class="text-sm font-medium" x-text="login.user?.name"></p>
-                                    <p class="text-xs text-muted-foreground" x-text="login.tenant?.name || 'Direct Login'"></p>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400" x-text="login.tenant?.name || 'Direct Login'"></p>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="text-xs text-muted-foreground" x-text="formatTime(login.login_at)"></p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400" x-text="formatTime(login.login_at)"></p>
                                 <span class="inline-flex items-center rounded-md px-1.5 py-0.5 text-xs font-medium" 
                                       :class="getMethodBadgeClass(login.login_method)" 
                                       x-text="login.login_method?.toUpperCase()"></span>
                             </div>
                         </div>
                     </template>
-                    <div x-show="!stats.recent_logins?.length" class="text-center py-8 text-sm text-muted-foreground">
+                    <div x-show="!stats.recent_logins?.length" class="text-center py-8 text-sm text-gray-600 dark:text-gray-400">
                         No recent login activity
                     </div>
                 </div>
@@ -177,10 +177,10 @@
         </div>
 
         <!-- Active Sessions -->
-        <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm">
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm">
             <div class="p-6 border-b border-border">
                 <h3 class="text-lg font-semibold">Active Sessions</h3>
-                <p class="text-sm text-muted-foreground">Currently active user sessions</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Currently active user sessions</p>
             </div>
             <div class="p-6">
                 <div class="space-y-3">
@@ -190,16 +190,16 @@
                                 <div class="h-2 w-2 rounded-full bg-green-500"></div>
                                 <div>
                                     <p class="text-sm font-medium" x-text="session.user?.name"></p>
-                                    <p class="text-xs text-muted-foreground" x-text="session.tenant?.name || 'Global Session'"></p>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400" x-text="session.tenant?.name || 'Global Session'"></p>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="text-xs text-muted-foreground" x-text="'Active for ' + getDuration(session.created_at, session.last_activity)"></p>
-                                <p class="text-xs text-muted-foreground" x-text="'Last: ' + formatTime(session.last_activity)"></p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400" x-text="'Active for ' + getDuration(session.created_at, session.last_activity)"></p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400" x-text="'Last: ' + formatTime(session.last_activity)"></p>
                             </div>
                         </div>
                     </template>
-                    <div x-show="!stats.active_sessions?.length" class="text-center py-8 text-sm text-muted-foreground">
+                    <div x-show="!stats.active_sessions?.length" class="text-center py-8 text-sm text-gray-600 dark:text-gray-400">
                         No active sessions
                     </div>
                 </div>
@@ -258,11 +258,11 @@ function analyticsPage() {
         
         getMethodBadgeClass(method) {
             const classes = {
-                'sso': 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20',
-                'direct': 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20',
-                'api': 'bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20'
+                'sso': 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 ring-1 ring-inset ring-blue-200 dark:ring-blue-700',
+                'direct': 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 ring-1 ring-inset ring-green-200 dark:ring-green-700',
+                'api': 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 ring-1 ring-inset ring-purple-200 dark:ring-purple-700'
             };
-            return classes[method] || 'bg-gray-50 text-gray-700 ring-1 ring-inset ring-gray-600/20';
+            return classes[method] || 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 ring-1 ring-inset ring-gray-200 dark:ring-gray-600';
         },
         
         formatTime(timestamp) {

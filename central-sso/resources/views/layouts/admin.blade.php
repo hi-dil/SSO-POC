@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" x-data="{ darkMode: $persist(false) }" :class="{ 'dark': darkMode }">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +13,7 @@
     </style>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -64,28 +65,66 @@
             --radius: 0.5rem;
         }
     </style>
+    <script>
+        // Alpine.js persist plugin for theme persistence
+        document.addEventListener('alpine:init', () => {
+            Alpine.magic('persist', (el, { interceptor }) => {
+                return interceptor((initialValue, getter, setter, path, key) => {
+                    let lookup = key.replace(/\./g, '__')
+                    let initial = localStorage.getItem(lookup)
+                    
+                    if (initial !== null) {
+                        setter(JSON.parse(initial))
+                    } else {
+                        setter(initialValue)
+                    }
+                    
+                    Alpine.effect(() => {
+                        localStorage.setItem(lookup, JSON.stringify(getter()))
+                    })
+                    
+                    return getter()
+                })
+            })
+        })
+
+        // Initialize theme based on system preference or saved preference
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode')
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+            
+            if (savedTheme !== null) {
+                if (JSON.parse(savedTheme)) {
+                    document.documentElement.classList.add('dark')
+                }
+            } else if (systemPrefersDark) {
+                document.documentElement.classList.add('dark')
+                localStorage.setItem('darkMode', 'true')
+            }
+        })()
+    </script>
 </head>
-<body class="bg-background text-foreground min-h-screen">
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
     <div class="flex min-h-screen">
         <!-- Sidebar -->
-        <div class="hidden w-64 bg-card border-r border-border lg:block fixed h-screen">
+        <div class="hidden w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 lg:block fixed h-screen transition-colors duration-300">
             <div class="flex h-full flex-col">
                 <!-- Logo -->
-                <div class="flex h-16 items-center border-b border-border px-6">
+                <div class="flex h-16 items-center border-b border-gray-200 dark:border-gray-700 px-6 transition-colors duration-300">
                     <a href="/" class="flex items-center space-x-2">
-                        <div class="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                            <svg class="h-5 w-5 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="h-8 w-8 rounded-lg bg-blue-600 dark:bg-blue-500 flex items-center justify-center">
+                            <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                             </svg>
                         </div>
-                        <span class="text-lg font-semibold">Central SSO</span>
+                        <span class="text-lg font-semibold text-gray-900 dark:text-white">Central SSO</span>
                     </a>
                 </div>
 
                 <!-- Navigation -->
                 <nav class="flex-1 overflow-y-auto space-y-1 px-3 py-4">
                     <a href="{{ route('dashboard') }}" 
-                       class="@if(request()->routeIs('dashboard')) bg-accent text-accent-foreground @else text-muted-foreground hover:bg-accent hover:text-accent-foreground @endif group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                       class="@if(request()->routeIs('dashboard')) bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 @else text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 @endif group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200">
                         <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"></path>
@@ -94,7 +133,7 @@
                     </a>
                     
                     <a href="{{ route('admin.users.index') }}" 
-                       class="@if(request()->routeIs('admin.users.*')) bg-accent text-accent-foreground @else text-muted-foreground hover:bg-accent hover:text-accent-foreground @endif group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                       class="@if(request()->routeIs('admin.users.*')) bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 @else text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 @endif group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200">
                         <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
                         </svg>
@@ -102,7 +141,7 @@
                     </a>
                     
                     <a href="{{ route('admin.tenants.index') }}" 
-                       class="@if(request()->routeIs('admin.tenants.*')) bg-accent text-accent-foreground @else text-muted-foreground hover:bg-accent hover:text-accent-foreground @endif group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                       class="@if(request()->routeIs('admin.tenants.*')) bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 @else text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 @endif group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200">
                         <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m14 0v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5"></path>
                         </svg>
@@ -110,7 +149,7 @@
                     </a>
                     
                     <a href="{{ route('admin.roles.index') }}" 
-                       class="@if(request()->routeIs('admin.roles.*')) bg-accent text-accent-foreground @else text-muted-foreground hover:bg-accent hover:text-accent-foreground @endif group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                       class="@if(request()->routeIs('admin.roles.*')) bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 @else text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 @endif group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200">
                         <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                         </svg>
@@ -118,7 +157,7 @@
                     </a>
                     
                     <a href="{{ route('admin.analytics.index') }}" 
-                       class="@if(request()->routeIs('admin.analytics.*')) bg-accent text-accent-foreground @else text-muted-foreground hover:bg-accent hover:text-accent-foreground @endif group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                       class="@if(request()->routeIs('admin.analytics.*')) bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 @else text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 @endif group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200">
                         <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                         </svg>
@@ -126,10 +165,10 @@
                     </a>
 
                     <div class="pt-4">
-                        <p class="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Personal</p>
+                        <p class="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider transition-colors duration-200">Personal</p>
                         <div class="mt-2 space-y-1">
                             <a href="{{ route('profile.show') }}" 
-                               class="@if(request()->routeIs('profile.*')) bg-accent text-accent-foreground @else text-muted-foreground hover:bg-accent hover:text-accent-foreground @endif group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                               class="@if(request()->routeIs('profile.*')) bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 @else text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 @endif group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200">
                                 <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                 </svg>
@@ -139,10 +178,10 @@
                     </div>
 
                     <div class="pt-4">
-                        <p class="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Developer Tools</p>
+                        <p class="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider transition-colors duration-200">Developer Tools</p>
                         <div class="mt-2 space-y-1">
                             @can('swagger.access')
-                                <a href="/docs" target="_blank" class="text-muted-foreground hover:bg-accent hover:text-accent-foreground group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                                <a href="/docs" target="_blank" class="text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200">
                                     <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                     </svg>
@@ -153,7 +192,7 @@
                                 </a>
                             @endcan
                             @can('telescope.access')
-                                <a href="/telescope" target="_blank" class="text-muted-foreground hover:bg-accent hover:text-accent-foreground group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                                <a href="/telescope" target="_blank" class="text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200">
                                     <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                                     </svg>
@@ -168,29 +207,29 @@
                 </nav>
 
                 <!-- User Profile - Fixed to bottom -->
-                <div class="mt-auto border-t border-border p-3">
+                <div class="mt-auto border-t border-gray-200 dark:border-gray-700 p-3 transition-colors duration-200">
                     <div x-data="{ open: false }" class="relative">
-                        <button @click="open = !open" class="w-full flex items-center px-3 py-2 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors">
-                            <div class="h-8 w-8 rounded-full bg-muted flex items-center justify-center mr-3">
-                                <span class="text-sm font-medium text-muted-foreground">
+                        <button @click="open = !open" class="w-full flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
+                            <div class="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center mr-3">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
                                     {{ substr(auth()->user()->name, 0, 1) }}
                                 </span>
                             </div>
                             <div class="flex-1 text-left">
-                                <p class="text-sm font-medium">{{ auth()->user()->name }}</p>
-                                <p class="text-xs text-muted-foreground">{{ auth()->user()->email }}</p>
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ auth()->user()->name }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ auth()->user()->email }}</p>
                             </div>
-                            <svg class="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="h-4 w-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
                         
-                        <div x-show="open" @click.away="open = false" x-transition class="absolute bottom-full left-0 w-full mb-2 bg-popover border border-border rounded-md shadow-md py-1">
-                            <a href="{{ route('login') }}" class="block px-3 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors">
+                        <div x-show="open" @click.away="open = false" x-transition class="absolute bottom-full left-0 w-full mb-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-md py-1 transition-colors duration-200">
+                            <a href="{{ route('login') }}" class="block px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
                                 Back to Login
                             </a>
-                            <div class="border-t border-border my-1"></div>
-                            <a href="{{ route('main.logout') }}" class="block px-3 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors">
+                            <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                            <a href="{{ route('main.logout') }}" class="block px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
                                 Sign out
                             </a>
                         </div>
@@ -202,10 +241,10 @@
         <!-- Main Content -->
         <div class="flex-1 flex flex-col lg:ml-64">
             <!-- Top Header -->
-            <header class="h-16 border-b border-border bg-card px-6 flex items-center justify-between lg:px-8">
+            <header class="h-16 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-6 flex items-center justify-between lg:px-8 transition-colors duration-300">
                 <div class="flex items-center">
                     <!-- Mobile menu button -->
-                    <button class="lg:hidden p-2 rounded-md hover:bg-accent hover:text-accent-foreground">
+                    <button class="lg:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors duration-200">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
@@ -217,19 +256,31 @@
                         </div>
                     @endif
                 </div>
-                
-                @hasSection('actions')
-                    <div class="flex items-center space-x-2">
+
+                <!-- Theme Toggle -->
+                <div class="flex items-center space-x-4">
+                    <button @click="darkMode = !darkMode" 
+                            class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200"
+                            :title="darkMode ? 'Switch to light mode' : 'Switch to dark mode'">
+                        <svg x-show="!darkMode" class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+                        </svg>
+                        <svg x-show="darkMode" x-cloak class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                        </svg>
+                    </button>
+                    
+                    @hasSection('actions')
                         @yield('actions')
-                    </div>
-                @endif
+                    @endif
+                </div>
             </header>
 
             <!-- Page Content -->
-            <main class="flex-1 overflow-y-auto bg-muted/30 p-6">
+            <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6 transition-colors duration-300">
                 <!-- Flash Messages -->
                 @if(session('success'))
-                    <div class="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg" x-data="{ show: true }" x-show="show">
+                    <div class="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-500 text-green-800 dark:text-green-400 px-4 py-3 rounded-lg transition-colors duration-200" x-data="{ show: true }" x-show="show">
                         <div class="flex justify-between items-center">
                             <div class="flex items-center">
                                 <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -237,7 +288,7 @@
                                 </svg>
                                 <span class="text-sm font-medium">{{ session('success') }}</span>
                             </div>
-                            <button @click="show = false" class="text-green-600 hover:text-green-800">
+                            <button @click="show = false" class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300">
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
@@ -247,7 +298,7 @@
                 @endif
 
                 @if(session('error'))
-                    <div class="mb-6 bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg" x-data="{ show: true }" x-show="show">
+                    <div class="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500 text-red-800 dark:text-red-400 px-4 py-3 rounded-lg transition-colors duration-200" x-data="{ show: true }" x-show="show">
                         <div class="flex justify-between items-center">
                             <div class="flex items-center">
                                 <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -255,7 +306,7 @@
                                 </svg>
                                 <span class="text-sm font-medium">{{ session('error') }}</span>
                             </div>
-                            <button @click="show = false" class="text-destructive hover:text-destructive/80">
+                            <button @click="show = false" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300">
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
@@ -265,7 +316,7 @@
                 @endif
 
                 @if(session('warning'))
-                    <div class="mb-6 bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg" x-data="{ show: true }" x-show="show">
+                    <div class="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-500 text-yellow-800 dark:text-yellow-400 px-4 py-3 rounded-lg transition-colors duration-200" x-data="{ show: true }" x-show="show">
                         <div class="flex justify-between items-center">
                             <div class="flex items-center">
                                 <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -273,7 +324,7 @@
                                 </svg>
                                 <span class="text-sm font-medium">{{ session('warning') }}</span>
                             </div>
-                            <button @click="show = false" class="text-yellow-600 hover:text-yellow-800">
+                            <button @click="show = false" class="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300">
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
