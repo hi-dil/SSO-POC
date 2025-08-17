@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Permission;
+use App\DTOs\Request\CreatePermissionRequestDTO;
 use App\DTOs\Response\PermissionResponseDTO;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -100,14 +101,7 @@ class PermissionController extends Controller
      *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             type="object",
-     *             required={"name"},
-     *             @OA\Property(property="name", type="string", example="Create Reports"),
-     *             @OA\Property(property="slug", type="string", example="reports.create"),
-     *             @OA\Property(property="description", type="string", example="Can create new reports"),
-     *             @OA\Property(property="category", type="string", example="reports")
-     *         )
+     *         @OA\JsonContent(ref="#/components/schemas/CreatePermissionRequestDTO")
      *     ),
      *     @OA\Response(
      *         response=201,
@@ -135,11 +129,13 @@ class PermissionController extends Controller
                 'category' => 'nullable|string|max:100'
             ]);
 
+            $dto = CreatePermissionRequestDTO::fromArray($validatedData);
+
             $permission = Permission::create([
-                'name' => $validatedData['name'],
-                'slug' => $validatedData['slug'] ?: \Str::slug($validatedData['name']),
-                'description' => $validatedData['description'] ?? null,
-                'category' => $validatedData['category'] ?? 'custom',
+                'name' => $dto->name,
+                'slug' => $dto->slug ?: \Str::slug($dto->name),
+                'description' => $dto->description,
+                'category' => $dto->category ?? 'custom',
                 'guard_name' => 'web',
                 'is_system' => false
             ]);
@@ -220,14 +216,7 @@ class PermissionController extends Controller
      *     ),
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             type="object",
-     *             required={"name"},
-     *             @OA\Property(property="name", type="string", example="Create Reports"),
-     *             @OA\Property(property="slug", type="string", example="reports.create"),
-     *             @OA\Property(property="description", type="string", example="Can create new reports"),
-     *             @OA\Property(property="category", type="string", example="reports")
-     *         )
+     *         @OA\JsonContent(ref="#/components/schemas/CreatePermissionRequestDTO")
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -268,11 +257,13 @@ class PermissionController extends Controller
                 'category' => 'nullable|string|max:100'
             ]);
 
+            $dto = CreatePermissionRequestDTO::fromArray($validatedData);
+
             $permission->update([
-                'name' => $validatedData['name'],
-                'slug' => $validatedData['slug'] ?: \Str::slug($validatedData['name']),
-                'description' => $validatedData['description'],
-                'category' => $validatedData['category']
+                'name' => $dto->name,
+                'slug' => $dto->slug ?: \Str::slug($dto->name),
+                'description' => $dto->description,
+                'category' => $dto->category
             ]);
 
             return response()->json([

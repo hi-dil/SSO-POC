@@ -1,0 +1,100 @@
+# Cloudflare Tunnel Configuration for SSO POC
+# Domain: hi-dil.com
+# Tunnel: sso-poc-tunnel
+
+tunnel: sso-poc-tunnel
+credentials-file: /etc/cloudflared/tunnel-credentials.json
+
+# Logging configuration
+log-level: info
+log-format: json
+
+# Metrics endpoint for monitoring
+metrics: 0.0.0.0:9090
+
+# Transport settings for improved performance
+warp-routing:
+  enabled: false
+
+# Ingress rules define how traffic is routed to your services
+# Order matters - first match wins!
+ingress:
+  # Central SSO Server
+  # Handles authentication, user management, and API endpoints
+  - hostname: sso.poc.hi-dil.com
+    service: http://central-sso:8000
+    originRequest:
+      # Forward the correct host header
+      httpHostHeader: sso.poc.hi-dil.com
+      # Optimize connection settings
+      noHappyEyeballs: true
+      keepAliveTimeout: 30s
+      tcpKeepAlive: 30s
+      # Disable HTTP/2 if experiencing issues (uncomment if needed)
+      # disableChunkedEncoding: true
+      # h2cUpgrade: false
+      # Connection pooling
+      keepAliveConnections: 10
+      # Timeout settings
+      connectTimeout: 30s
+      tlsTimeout: 30s
+      # Headers to preserve
+      preserveHeaders:
+        - Authorization
+        - X-Requested-With
+        - X-CSRF-Token
+        - X-XSRF-Token
+
+  # Tenant 1 Application
+  # Handles tenant-specific functionality and local authentication
+  - hostname: tenant-one.poc.hi-dil.com
+    service: http://tenant1-app:8000
+    originRequest:
+      httpHostHeader: tenant-one.poc.hi-dil.com
+      noHappyEyeballs: true
+      keepAliveTimeout: 30s
+      tcpKeepAlive: 30s
+      keepAliveConnections: 10
+      connectTimeout: 30s
+      tlsTimeout: 30s
+      preserveHeaders:
+        - Authorization
+        - X-Requested-With
+        - X-CSRF-Token
+        - X-XSRF-Token
+
+  # Tenant 2 Application
+  # Handles tenant-specific functionality and local authentication
+  - hostname: tenant-two.poc.hi-dil.com
+    service: http://tenant2-app:8000
+    originRequest:
+      httpHostHeader: tenant-two.poc.hi-dil.com
+      noHappyEyeballs: true
+      keepAliveTimeout: 30s
+      tcpKeepAlive: 30s
+      keepAliveConnections: 10
+      connectTimeout: 30s
+      tlsTimeout: 30s
+      preserveHeaders:
+        - Authorization
+        - X-Requested-With
+        - X-CSRF-Token
+        - X-XSRF-Token
+
+  # Catch-all rule - MUST BE LAST
+  # Returns 404 for any unmatched hostnames
+  - service: http_status:404
+    originRequest:
+      httpStatusCode: 404
+
+# Optional: Protocol configuration
+protocol: auto
+
+# Optional: Grace period for graceful shutdown
+grace-period: 30s
+
+# Optional: Retries configuration
+retries: 3
+
+# Optional: Compression (handled by Cloudflare edge)
+no-autoupdate: false

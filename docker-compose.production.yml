@@ -1,0 +1,609 @@
+version: '3.8'
+
+# Production Environment Configuration
+# This file extends the base docker-compose.yml for production deployments
+# Includes blue-green deployment support and production optimizations
+
+services:
+  # Cloudflare Tunnel for Production
+  cloudflared-production:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared-production-tunnel
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./cloudflare/config.yml:/etc/cloudflared/config.yml:ro
+      - ./cloudflare/tunnel-credentials.json:/etc/cloudflared/tunnel-credentials.json:ro
+      - ./logs/cloudflared-production:/var/log/cloudflared
+    networks:
+      - sso-network
+    restart: unless-stopped
+    depends_on:
+      - central-sso-blue
+      - tenant1-app-blue
+      - tenant2-app-blue
+    environment:
+      - TUNNEL_METRICS=0.0.0.0:9090
+      - TUNNEL_LOGFILE=/var/log/cloudflared/cloudflared.log
+    ports:
+      - "9090:9090"  # Production metrics endpoint
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9090/metrics || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # Central SSO - Blue Deployment
+  central-sso-blue:
+    build:
+      context: ./central-sso
+      dockerfile: Dockerfile.prod
+      args:
+        BUILD_DATE: ${BUILD_DATE:-2024-01-01}
+        VCS_REF: ${GITHUB_SHA:-unknown}
+        VERSION: ${VERSION:-latest}
+    image: ${CENTRAL_SSO_IMAGE:-ghcr.io/sso-poc/central-sso:latest}
+    container_name: central-sso-blue
+    environment:
+      # Application Configuration
+      - APP_NAME=Central SSO (Production)
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_URL=https://sso.poc.hi-dil.com
+      - ASSET_URL=https://sso.poc.hi-dil.com
+      
+      # Database Configuration
+      - DB_CONNECTION=mysql
+      - DB_HOST=mariadb-production
+      - DB_PORT=3306
+      - DB_DATABASE=sso_main
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      
+      # Redis Configuration
+      - REDIS_HOST=redis-production
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      
+      # Session Configuration
+      - SESSION_DOMAIN=.poc.hi-dil.com
+      - SESSION_DRIVER=redis
+      - SESSION_SECURE_COOKIE=true
+      - SESSION_SAME_SITE=lax
+      - SESSION_LIFETIME=120
+      - SESSION_ENCRYPT=true
+      
+      # Cache Configuration
+      - CACHE_DRIVER=redis
+      - QUEUE_CONNECTION=redis
+      - BROADCAST_DRIVER=redis
+      
+      # Security Configuration
+      - SANCTUM_STATEFUL_DOMAINS=sso.poc.hi-dil.com,tenant-one.poc.hi-dil.com,tenant-two.poc.hi-dil.com
+      - CORS_ALLOWED_ORIGINS=https://sso.poc.hi-dil.com,https://tenant-one.poc.hi-dil.com,https://tenant-two.poc.hi-dil.com
+      - TRUSTED_PROXIES=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22
+      
+      # JWT Configuration
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_TTL=3600
+      - JWT_REFRESH_TTL=20160
+      - JWT_ALGO=HS256
+      
+      # Mail Configuration
+      - MAIL_MAILER=smtp
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_PORT=${MAIL_PORT:-587}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_ENCRYPTION=tls
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS}
+      - MAIL_FROM_NAME="SSO Production System"
+      
+      # Logging and Monitoring
+      - LOG_CHANNEL=stack
+      - LOG_LEVEL=warning
+      - LOG_STDERR_FORMATTER=Monolog\\Formatter\\JsonFormatter
+      - TELESCOPE_ENABLED=false
+      - SENTRY_LARAVEL_DSN=${SENTRY_DSN}
+      
+      # Performance Optimization
+      - OPCACHE_ENABLE=1
+      - OPCACHE_MEMORY_CONSUMPTION=256
+      - OPCACHE_MAX_ACCELERATED_FILES=20000
+      
+      # Backup Configuration
+      - BACKUP_ENABLED=true
+      - BACKUP_RETENTION_DAYS=30
+    volumes:
+      - ./logs/central-sso-production:/var/www/storage/logs
+      - production_storage_central:/var/www/storage/app
+      - ./backups/central-sso:/var/www/storage/backups
+    networks:
+      - sso-network
+    restart: unless-stopped
+    depends_on:
+      - mariadb-production
+      - redis-production
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/health-check.sh"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 90s
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+
+  # Central SSO - Green Deployment (for blue-green deployments)
+  central-sso-green:
+    build:
+      context: ./central-sso
+      dockerfile: Dockerfile.prod
+      args:
+        BUILD_DATE: ${BUILD_DATE:-2024-01-01}
+        VCS_REF: ${GITHUB_SHA:-unknown}
+        VERSION: ${VERSION:-latest}
+    image: ${CENTRAL_SSO_IMAGE:-ghcr.io/sso-poc/central-sso:latest}
+    container_name: central-sso-green
+    environment:
+      # Same configuration as blue deployment
+      - APP_NAME=Central SSO (Production-Green)
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_URL=https://sso.poc.hi-dil.com
+      - ASSET_URL=https://sso.poc.hi-dil.com
+      - DB_CONNECTION=mysql
+      - DB_HOST=mariadb-production
+      - DB_PORT=3306
+      - DB_DATABASE=sso_main
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis-production
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - SESSION_DOMAIN=.poc.hi-dil.com
+      - SESSION_DRIVER=redis
+      - SESSION_SECURE_COOKIE=true
+      - SESSION_SAME_SITE=lax
+      - CACHE_DRIVER=redis
+      - QUEUE_CONNECTION=redis
+      - SANCTUM_STATEFUL_DOMAINS=sso.poc.hi-dil.com,tenant-one.poc.hi-dil.com,tenant-two.poc.hi-dil.com
+      - CORS_ALLOWED_ORIGINS=https://sso.poc.hi-dil.com,https://tenant-one.poc.hi-dil.com,https://tenant-two.poc.hi-dil.com
+      - TRUSTED_PROXIES=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_TTL=3600
+      - LOG_CHANNEL=stack
+      - LOG_LEVEL=warning
+      - TELESCOPE_ENABLED=false
+    volumes:
+      - ./logs/central-sso-production:/var/www/storage/logs
+      - production_storage_central:/var/www/storage/app
+    networks:
+      - sso-network
+    restart: unless-stopped
+    depends_on:
+      - mariadb-production
+      - redis-production
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/health-check.sh"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 90s
+    deploy:
+      replicas: 0  # Initially scaled to 0 for blue-green deployments
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+
+  # Tenant 1 App - Blue Deployment
+  tenant1-app-blue:
+    build:
+      context: ./tenant1-app
+      dockerfile: Dockerfile.prod
+      args:
+        BUILD_DATE: ${BUILD_DATE:-2024-01-01}
+        VCS_REF: ${GITHUB_SHA:-unknown}
+        VERSION: ${VERSION:-latest}
+    image: ${TENANT1_APP_IMAGE:-ghcr.io/sso-poc/tenant1-app:latest}
+    container_name: tenant1-app-blue
+    environment:
+      # Application Configuration
+      - APP_NAME=Tenant 1 App (Production)
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_URL=https://tenant-one.poc.hi-dil.com
+      - ASSET_URL=https://tenant-one.poc.hi-dil.com
+      
+      # SSO Configuration
+      - CENTRAL_SSO_URL=https://sso.poc.hi-dil.com
+      - CENTRAL_SSO_API=http://central-sso-blue:8000/api
+      - TENANT_SLUG=tenant1
+      - TENANT_API_KEY=${TENANT1_API_KEY}
+      - HMAC_SECRET=${TENANT1_HMAC_SECRET}
+      
+      # Database Configuration
+      - DB_CONNECTION=mysql
+      - DB_HOST=mariadb-production
+      - DB_PORT=3306
+      - DB_DATABASE=tenant1_db
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      
+      # Redis Configuration
+      - REDIS_HOST=redis-production
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PORT=6379
+      - REDIS_DB=1
+      
+      # Session Configuration
+      - SESSION_DOMAIN=.poc.hi-dil.com
+      - SESSION_DRIVER=redis
+      - SESSION_SECURE_COOKIE=true
+      - SESSION_SAME_SITE=lax
+      
+      # Security Configuration
+      - CORS_ALLOWED_ORIGINS=https://sso.poc.hi-dil.com,https://tenant-one.poc.hi-dil.com
+      - TRUSTED_PROXIES=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22
+      
+      # Logging
+      - LOG_CHANNEL=stack
+      - LOG_LEVEL=warning
+      - SENTRY_LARAVEL_DSN=${SENTRY_DSN}
+    volumes:
+      - ./logs/tenant1-app-production:/var/www/storage/logs
+      - production_storage_tenant1:/var/www/storage/app
+    networks:
+      - sso-network
+    restart: unless-stopped
+    depends_on:
+      - mariadb-production
+      - redis-production
+      - central-sso-blue
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/health-check.sh"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 90s
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 3G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+  # Tenant 1 App - Green Deployment
+  tenant1-app-green:
+    build:
+      context: ./tenant1-app
+      dockerfile: Dockerfile.prod
+    image: ${TENANT1_APP_IMAGE:-ghcr.io/sso-poc/tenant1-app:latest}
+    container_name: tenant1-app-green
+    environment:
+      # Same configuration as blue deployment
+      - APP_NAME=Tenant 1 App (Production-Green)
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_URL=https://tenant-one.poc.hi-dil.com
+      - CENTRAL_SSO_URL=https://sso.poc.hi-dil.com
+      - CENTRAL_SSO_API=http://central-sso-green:8000/api
+      - TENANT_SLUG=tenant1
+      - DB_CONNECTION=mysql
+      - DB_HOST=mariadb-production
+      - DB_DATABASE=tenant1_db
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis-production
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SESSION_DOMAIN=.poc.hi-dil.com
+      - SESSION_DRIVER=redis
+      - LOG_LEVEL=warning
+    volumes:
+      - ./logs/tenant1-app-production:/var/www/storage/logs
+      - production_storage_tenant1:/var/www/storage/app
+    networks:
+      - sso-network
+    restart: unless-stopped
+    depends_on:
+      - mariadb-production
+      - redis-production
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/health-check.sh"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 90s
+    deploy:
+      replicas: 0  # Initially scaled to 0
+
+  # Tenant 2 App - Blue Deployment
+  tenant2-app-blue:
+    build:
+      context: ./tenant2-app
+      dockerfile: Dockerfile.prod
+      args:
+        BUILD_DATE: ${BUILD_DATE:-2024-01-01}
+        VCS_REF: ${GITHUB_SHA:-unknown}
+        VERSION: ${VERSION:-latest}
+    image: ${TENANT2_APP_IMAGE:-ghcr.io/sso-poc/tenant2-app:latest}
+    container_name: tenant2-app-blue
+    environment:
+      # Application Configuration
+      - APP_NAME=Tenant 2 App (Production)
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_URL=https://tenant-two.poc.hi-dil.com
+      - ASSET_URL=https://tenant-two.poc.hi-dil.com
+      
+      # SSO Configuration
+      - CENTRAL_SSO_URL=https://sso.poc.hi-dil.com
+      - CENTRAL_SSO_API=http://central-sso-blue:8000/api
+      - TENANT_SLUG=tenant2
+      - TENANT_API_KEY=${TENANT2_API_KEY}
+      - HMAC_SECRET=${TENANT2_HMAC_SECRET}
+      
+      # Database Configuration
+      - DB_CONNECTION=mysql
+      - DB_HOST=mariadb-production
+      - DB_PORT=3306
+      - DB_DATABASE=tenant2_db
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      
+      # Redis Configuration
+      - REDIS_HOST=redis-production
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PORT=6379
+      - REDIS_DB=2
+      
+      # Session Configuration
+      - SESSION_DOMAIN=.poc.hi-dil.com
+      - SESSION_DRIVER=redis
+      - SESSION_SECURE_COOKIE=true
+      - SESSION_SAME_SITE=lax
+      
+      # Security Configuration
+      - CORS_ALLOWED_ORIGINS=https://sso.poc.hi-dil.com,https://tenant-two.poc.hi-dil.com
+      - TRUSTED_PROXIES=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22
+      
+      # Logging
+      - LOG_CHANNEL=stack
+      - LOG_LEVEL=warning
+      - SENTRY_LARAVEL_DSN=${SENTRY_DSN}
+    volumes:
+      - ./logs/tenant2-app-production:/var/www/storage/logs
+      - production_storage_tenant2:/var/www/storage/app
+    networks:
+      - sso-network
+    restart: unless-stopped
+    depends_on:
+      - mariadb-production
+      - redis-production
+      - central-sso-blue
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/health-check.sh"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 90s
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 3G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+  # Tenant 2 App - Green Deployment
+  tenant2-app-green:
+    build:
+      context: ./tenant2-app
+      dockerfile: Dockerfile.prod
+    image: ${TENANT2_APP_IMAGE:-ghcr.io/sso-poc/tenant2-app:latest}
+    container_name: tenant2-app-green
+    environment:
+      # Same configuration as blue deployment
+      - APP_NAME=Tenant 2 App (Production-Green)
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_URL=https://tenant-two.poc.hi-dil.com
+      - CENTRAL_SSO_URL=https://sso.poc.hi-dil.com
+      - CENTRAL_SSO_API=http://central-sso-green:8000/api
+      - TENANT_SLUG=tenant2
+      - DB_CONNECTION=mysql
+      - DB_HOST=mariadb-production
+      - DB_DATABASE=tenant2_db
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis-production
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SESSION_DOMAIN=.poc.hi-dil.com
+      - SESSION_DRIVER=redis
+      - LOG_LEVEL=warning
+    volumes:
+      - ./logs/tenant2-app-production:/var/www/storage/logs
+      - production_storage_tenant2:/var/www/storage/app
+    networks:
+      - sso-network
+    restart: unless-stopped
+    depends_on:
+      - mariadb-production
+      - redis-production
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/health-check.sh"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 90s
+    deploy:
+      replicas: 0  # Initially scaled to 0
+
+  # MariaDB for Production
+  mariadb-production:
+    image: mariadb:10.11
+    container_name: sso-mariadb-production
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=sso_main
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - production_mariadb_data:/var/lib/mysql
+      - ./docker/production/mariadb/init:/docker-entrypoint-initdb.d
+      - ./backups/mysql-production:/backups
+    networks:
+      - sso-network
+    restart: unless-stopped
+    command: >
+      --innodb-buffer-pool-size=4G
+      --innodb-log-file-size=512M
+      --max-connections=500
+      --query-cache-size=256M
+      --slow-query-log=1
+      --slow-query-log-file=/var/log/mysql/slow.log
+      --long-query-time=2
+      --log-queries-not-using-indexes=1
+      --binlog-format=ROW
+      --log-bin=/var/log/mysql/mysql-bin.log
+      --expire-logs-days=7
+      --max-binlog-size=100M
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+        reservations:
+          cpus: '2.0'
+          memory: 4G
+
+  # Redis for Production
+  redis-production:
+    image: redis:7-alpine
+    container_name: sso-redis-production
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    volumes:
+      - production_redis_data:/data
+      - ./redis/production.conf:/usr/local/etc/redis/redis.conf:ro
+    networks:
+      - sso-network
+    restart: unless-stopped
+    command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Load Balancer (HAProxy for blue-green switching)
+  haproxy:
+    image: haproxy:2.8-alpine
+    container_name: sso-haproxy
+    volumes:
+      - ./haproxy/production.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./logs/haproxy:/var/log/haproxy
+    networks:
+      - sso-network
+    restart: unless-stopped
+    depends_on:
+      - central-sso-blue
+      - tenant1-app-blue
+      - tenant2-app-blue
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8404/stats"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Monitoring and logging
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sso-prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - production_prometheus_data:/prometheus
+    networks:
+      - sso-network
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: sso-grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    volumes:
+      - production_grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - sso-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+volumes:
+  production_mariadb_data:
+    driver: local
+  production_redis_data:
+    driver: local
+  production_storage_central:
+    driver: local
+  production_storage_tenant1:
+    driver: local
+  production_storage_tenant2:
+    driver: local
+  production_prometheus_data:
+    driver: local
+  production_grafana_data:
+    driver: local
+
+networks:
+  sso-network:
+    external: true

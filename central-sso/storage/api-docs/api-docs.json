@@ -335,6 +335,138 @@
                 ]
             }
         },
+        "/api/audit/login": {
+            "post": {
+                "tags": [
+                    "Audit"
+                ],
+                "summary": "Record a login audit event",
+                "description": "Record a login event from a tenant application",
+                "operationId": "recordLoginAudit",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginAuditRequestDTO"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login audit recorded successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuditResponseDTO"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found in central SSO",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuditResponseDTO"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuditResponseDTO"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/audit/logout": {
+            "post": {
+                "tags": [
+                    "Audit"
+                ],
+                "summary": "Record a logout audit event",
+                "description": "Record a logout event from a tenant application",
+                "operationId": "recordLogoutAudit",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LogoutAuditRequestDTO"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Logout audit recorded successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuditResponseDTO"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuditResponseDTO"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/permissions": {
             "get": {
                 "tags": [
@@ -414,28 +546,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "name"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": "Create Reports"
-                                    },
-                                    "slug": {
-                                        "type": "string",
-                                        "example": "reports.create"
-                                    },
-                                    "description": {
-                                        "type": "string",
-                                        "example": "Can create new reports"
-                                    },
-                                    "category": {
-                                        "type": "string",
-                                        "example": "reports"
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/CreatePermissionRequestDTO"
                             }
                         }
                     }
@@ -545,28 +656,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "name"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": "Create Reports"
-                                    },
-                                    "slug": {
-                                        "type": "string",
-                                        "example": "reports.create"
-                                    },
-                                    "description": {
-                                        "type": "string",
-                                        "example": "Can create new reports"
-                                    },
-                                    "category": {
-                                        "type": "string",
-                                        "example": "reports"
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/CreatePermissionRequestDTO"
                             }
                         }
                     }
@@ -1370,6 +1460,36 @@
                 },
                 "type": "object"
             },
+            "CreatePermissionRequestDTO": {
+                "title": "Create Permission Request DTO",
+                "description": "Request DTO for creating permissions",
+                "required": [
+                    "name"
+                ],
+                "properties": {
+                    "name": {
+                        "description": "Permission name",
+                        "type": "string",
+                        "example": "Create Reports"
+                    },
+                    "slug": {
+                        "description": "Permission slug (auto-generated if not provided)",
+                        "type": "string",
+                        "example": "reports.create"
+                    },
+                    "description": {
+                        "description": "Permission description",
+                        "type": "string",
+                        "example": "Can create new reports"
+                    },
+                    "category": {
+                        "description": "Permission category",
+                        "type": "string",
+                        "example": "reports"
+                    }
+                },
+                "type": "object"
+            },
             "CreateRoleRequestDTO": {
                 "required": [
                     "name"
@@ -1405,6 +1525,71 @@
                 },
                 "type": "object"
             },
+            "LoginAuditRequestDTO": {
+                "title": "Login Audit Request DTO",
+                "description": "Request DTO for recording login audit events",
+                "required": [
+                    "email",
+                    "tenant_id",
+                    "login_method",
+                    "is_successful"
+                ],
+                "properties": {
+                    "user_id": {
+                        "description": "User ID (optional)",
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "email": {
+                        "description": "User email address",
+                        "type": "string",
+                        "format": "email",
+                        "example": "user@example.com"
+                    },
+                    "tenant_id": {
+                        "description": "Tenant identifier",
+                        "type": "string",
+                        "example": "tenant1"
+                    },
+                    "login_method": {
+                        "description": "Login method used",
+                        "type": "string",
+                        "enum": [
+                            "sso",
+                            "direct",
+                            "api"
+                        ],
+                        "example": "direct"
+                    },
+                    "is_successful": {
+                        "description": "Whether the login was successful",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "failure_reason": {
+                        "description": "Reason for login failure (if applicable)",
+                        "type": "string",
+                        "example": "Invalid credentials"
+                    },
+                    "ip_address": {
+                        "description": "Client IP address",
+                        "type": "string",
+                        "format": "ip",
+                        "example": "192.168.1.1"
+                    },
+                    "user_agent": {
+                        "description": "Client user agent",
+                        "type": "string",
+                        "example": "Mozilla/5.0..."
+                    },
+                    "session_id": {
+                        "description": "Session identifier",
+                        "type": "string",
+                        "example": "sess_abc123"
+                    }
+                },
+                "type": "object"
+            },
             "LoginRequestDTO": {
                 "required": [
                     "email",
@@ -1426,6 +1611,27 @@
                     },
                     "tenant_slug": {
                         "description": "Tenant slug",
+                        "type": "string",
+                        "example": "tenant1"
+                    }
+                },
+                "type": "object"
+            },
+            "LogoutAuditRequestDTO": {
+                "title": "Logout Audit Request DTO",
+                "description": "Request DTO for recording logout audit events",
+                "required": [
+                    "session_id",
+                    "tenant_id"
+                ],
+                "properties": {
+                    "session_id": {
+                        "description": "Session identifier",
+                        "type": "string",
+                        "example": "sess_abc123"
+                    },
+                    "tenant_id": {
+                        "description": "Tenant identifier",
                         "type": "string",
                         "example": "tenant1"
                     }
@@ -1480,6 +1686,28 @@
                         "description": "JWT token to validate",
                         "type": "string",
                         "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+                    }
+                },
+                "type": "object"
+            },
+            "AuditResponseDTO": {
+                "title": "Audit Response DTO",
+                "description": "Response DTO for audit operations",
+                "properties": {
+                    "success": {
+                        "description": "Operation success status",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "audit_id": {
+                        "description": "Audit record ID",
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "message": {
+                        "description": "Response message",
+                        "type": "string",
+                        "example": "Audit recorded successfully"
                     }
                 },
                 "type": "object"
@@ -1739,6 +1967,10 @@
         }
     },
     "tags": [
+        {
+            "name": "Audit",
+            "description": "Login audit management endpoints"
+        },
         {
             "name": "Permissions",
             "description": "Permission management endpoints"

@@ -1,0 +1,630 @@
+name: Multi-Tenant SSO CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop, staging]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - '.gitignore'
+  pull_request:
+    branches: [main, develop]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - '.gitignore'
+  release:
+    types: [published]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}/sso-poc
+  
+  # Environment-specific configurations
+  STAGING_DOMAIN: staging.poc.hi-dil.com
+  PRODUCTION_DOMAIN: poc.hi-dil.com
+  
+  # Database configurations
+  DB_CONNECTION: mysql
+  DB_PORT: 3306
+  DB_DATABASE: sso_main
+  
+  # Test configurations
+  PARALLEL_JOBS: 3
+  
+jobs:
+  # ============================================================================
+  # SECURITY AND CODE QUALITY CHECKS
+  # ============================================================================
+  
+  security-scan:
+    name: Security & Code Quality
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+      
+      - name: Setup PHP for security checks
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_mysql, dom, filter, gd, iconv, json, mbstring, pdo
+          tools: composer:v2
+      
+      - name: Security audit - Central SSO
+        working-directory: ./central-sso
+        run: |
+          composer install --no-dev --optimize-autoloader
+          composer audit
+      
+      - name: Security audit - Tenant Apps
+        run: |
+          cd tenant1-app && composer install --no-dev --optimize-autoloader && composer audit
+          cd ../tenant2-app && composer install --no-dev --optimize-autoloader && composer audit
+
+  # ============================================================================
+  # TESTING PHASE
+  # ============================================================================
+  
+  test-matrix:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    needs: [security-scan]
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: [8.1, 8.2]
+        application: [central-sso, tenant1-app, tenant2-app]
+        test-suite: [Unit, Feature, Integration]
+    
+    services:
+      mysql:
+        image: mariadb:10.11
+        env:
+          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: sso_test
+          MYSQL_USER: sso_user
+          MYSQL_PASSWORD: sso_password
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: --health-cmd="redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup PHP ${{ matrix.php-version }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_mysql, dom, filter, gd, iconv, json, mbstring, pdo
+          coverage: xdebug
+          tools: composer:v2
+      
+      - name: Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ matrix.application }}-${{ hashFiles(format('{0}/composer.lock', matrix.application)) }}
+          restore-keys: ${{ runner.os }}-composer-${{ matrix.application }}-
+      
+      - name: Install dependencies - ${{ matrix.application }}
+        working-directory: ./${{ matrix.application }}
+        run: composer install --prefer-dist --no-progress --no-suggest
+      
+      - name: Prepare environment - ${{ matrix.application }}
+        working-directory: ./${{ matrix.application }}
+        run: |
+          cp .env.testing .env
+          php artisan key:generate
+          php artisan config:clear
+          php artisan cache:clear
+      
+      - name: Run database migrations - ${{ matrix.application }}
+        working-directory: ./${{ matrix.application }}
+        run: |
+          php artisan migrate --force
+          php artisan db:seed --class=TestDataSeeder --force
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: sso_test
+          DB_USERNAME: sso_user
+          DB_PASSWORD: sso_password
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: 6379
+      
+      - name: Run ${{ matrix.test-suite }} tests - ${{ matrix.application }}
+        working-directory: ./${{ matrix.application }}
+        run: |
+          case "${{ matrix.test-suite }}" in
+            "Unit")
+              php artisan test --testsuite=Unit --coverage-clover=coverage-unit.xml
+              ;;
+            "Feature")
+              php artisan test --testsuite=Feature --coverage-clover=coverage-feature.xml
+              ;;
+            "Integration")
+              php artisan test --testsuite=Integration --coverage-clover=coverage-integration.xml
+              ;;
+          esac
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: sso_test
+          DB_USERNAME: sso_user
+          DB_PASSWORD: sso_password
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: 6379
+      
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./${{ matrix.application }}/coverage-${{ matrix.test-suite | lower }}.xml
+          flags: ${{ matrix.application }}-${{ matrix.test-suite | lower }}
+          name: ${{ matrix.application }}-${{ matrix.test-suite }}-php${{ matrix.php-version }}
+
+  # ============================================================================
+  # SSO INTEGRATION TESTS
+  # ============================================================================
+  
+  sso-integration-tests:
+    name: SSO Integration Tests
+    runs-on: ubuntu-latest
+    needs: [test-matrix]
+    
+    services:
+      mysql:
+        image: mariadb:10.11
+        env:
+          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: sso_test
+          MYSQL_USER: sso_user
+          MYSQL_PASSWORD: sso_password
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: --health-cmd="redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_mysql, dom, filter, gd, iconv, json, mbstring, pdo
+          tools: composer:v2
+      
+      - name: Build test environment with Docker
+        run: |
+          # Create test docker-compose configuration
+          cp docker-compose.yml docker-compose.test.yml
+          docker-compose -f docker-compose.test.yml up -d --build
+          
+          # Wait for services to be ready
+          sleep 30
+      
+      - name: Run cross-tenant SSO tests
+        run: |
+          # Run the SSO integration test suite
+          ./run_tests.sh --integration
+          
+          # Test authentication flows across all tenants
+          docker exec central-sso php artisan test:sso-integration
+          docker exec tenant1-app php artisan test:tenant-integration
+          docker exec tenant2-app php artisan test:tenant-integration
+      
+      - name: Test API authentication flows
+        run: |
+          # Test API endpoints across all services
+          docker exec central-sso php artisan test:api-integration
+          
+          # Test audit logging system
+          docker exec central-sso php artisan test:audit-integration
+      
+      - name: Cleanup test environment
+        if: always()
+        run: |
+          docker-compose -f docker-compose.test.yml down
+          docker system prune -f
+
+  # ============================================================================
+  # BUILD AND PUSH DOCKER IMAGES
+  # ============================================================================
+  
+  build-images:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+    needs: [sso-integration-tests]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' || github.event_name == 'release'
+    
+    strategy:
+      matrix:
+        application: [central-sso, tenant1-app, tenant2-app]
+    
+    outputs:
+      central-sso-image: ${{ steps.meta-central-sso.outputs.tags }}
+      tenant1-app-image: ${{ steps.meta-tenant1-app.outputs.tags }}
+      tenant2-app-image: ${{ steps.meta-tenant2-app.outputs.tags }}
+      central-sso-digest: ${{ steps.build-central-sso.outputs.digest }}
+      tenant1-app-digest: ${{ steps.build-tenant1-app.outputs.digest }}
+      tenant2-app-digest: ${{ steps.build-tenant2-app.outputs.digest }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract metadata for ${{ matrix.application }}
+        id: meta-${{ matrix.application }}
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.application }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+      
+      - name: Build and push ${{ matrix.application }}
+        id: build-${{ matrix.application }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ./${{ matrix.application }}
+          file: ./${{ matrix.application }}/Dockerfile.prod
+          push: true
+          tags: ${{ steps.meta-${{ matrix.application }}.outputs.tags }}
+          labels: ${{ steps.meta-${{ matrix.application }}.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.application }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.application }}
+          build-args: |
+            BUILD_DATE=${{ fromJSON(steps.meta-${{ matrix.application }}.outputs.json).labels['org.opencontainers.image.created'] }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ fromJSON(steps.meta-${{ matrix.application }}.outputs.json).labels['org.opencontainers.image.version'] }}
+
+  # ============================================================================
+  # DEPLOY TO STAGING
+  # ============================================================================
+  
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-images]
+    if: github.ref == 'refs/heads/staging'
+    environment: staging
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Cloudflare Tunnel for Staging
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
+        run: |
+          # Create staging-specific tunnel
+          export TUNNEL_NAME="sso-staging-tunnel"
+          export DOMAIN="hi-dil.com"
+          export SSO_SUBDOMAIN="staging-sso.poc"
+          export TENANT1_SUBDOMAIN="staging-tenant-one.poc"
+          export TENANT2_SUBDOMAIN="staging-tenant-two.poc"
+          
+          chmod +x scripts/setup-cloudflare-tunnel-docker.sh
+          ./scripts/setup-cloudflare-tunnel-docker.sh
+      
+      - name: Deploy to staging environment
+        run: |
+          # Create staging environment file
+          cp .env.cloudflare.example .env.staging
+          
+          # Update with staging-specific values
+          sed -i 's/poc\.hi-dil\.com/staging.poc.hi-dil.com/g' .env.staging
+          sed -i 's/sso-poc-tunnel/sso-staging-tunnel/g' .env.staging
+          
+          # Deploy with staging configuration
+          docker-compose -f docker-compose.yml -f docker-compose.staging.yml up -d
+        env:
+          CENTRAL_SSO_IMAGE: ${{ needs.build-images.outputs.central-sso-image }}
+          TENANT1_APP_IMAGE: ${{ needs.build-images.outputs.tenant1-app-image }}
+          TENANT2_APP_IMAGE: ${{ needs.build-images.outputs.tenant2-app-image }}
+      
+      - name: Run database migrations
+        run: |
+          # Wait for services to be ready
+          sleep 45
+          
+          # Run migrations for all applications
+          docker exec central-sso php artisan migrate --force
+          docker exec tenant1-app php artisan migrate --force
+          docker exec tenant2-app php artisan migrate --force
+          
+          # Seed staging data
+          docker exec central-sso php artisan db:seed --class=StagingDataSeeder --force
+      
+      - name: Run staging health checks
+        run: |
+          # Wait for application startup
+          sleep 30
+          
+          # Test staging endpoints
+          curl -f https://staging-sso.poc.hi-dil.com/health
+          curl -f https://staging-tenant-one.poc.hi-dil.com/health
+          curl -f https://staging-tenant-two.poc.hi-dil.com/health
+          
+          # Test SSO flow in staging
+          ./scripts/test-sso-flow.sh staging
+      
+      - name: Notify staging deployment
+        uses: 8398a7/action-slack@v3
+        if: always()
+        with:
+          status: ${{ job.status }}
+          text: |
+            Staging deployment ${{ job.status }}!
+            🚀 Staging URLs:
+            • SSO: https://staging-sso.poc.hi-dil.com
+            • Tenant 1: https://staging-tenant-one.poc.hi-dil.com
+            • Tenant 2: https://staging-tenant-two.poc.hi-dil.com
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ============================================================================
+  # DEPLOY TO PRODUCTION
+  # ============================================================================
+  
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-images]
+    if: github.ref == 'refs/heads/main' || github.event_name == 'release'
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Backup production database
+        run: |
+          # Create database backup before deployment
+          ./scripts/backup-production-db.sh
+        env:
+          DB_HOST: ${{ secrets.PROD_DB_HOST }}
+          DB_USERNAME: ${{ secrets.PROD_DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          S3_BACKUP_BUCKET: ${{ secrets.S3_BACKUP_BUCKET }}
+      
+      - name: Blue-Green Deployment Setup
+        run: |
+          # Determine current deployment color
+          CURRENT_COLOR=$(docker ps --filter "name=central-sso" --format "table {{.Names}}" | grep -E "(blue|green)" | head -1 | grep -oE "(blue|green)" || echo "blue")
+          NEW_COLOR=$([ "$CURRENT_COLOR" = "blue" ] && echo "green" || echo "blue")
+          
+          echo "CURRENT_COLOR=$CURRENT_COLOR" >> $GITHUB_ENV
+          echo "NEW_COLOR=$NEW_COLOR" >> $GITHUB_ENV
+          
+          echo "Deploying to $NEW_COLOR environment (current: $CURRENT_COLOR)"
+      
+      - name: Setup Cloudflare Tunnel for Production
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
+        run: |
+          chmod +x scripts/setup-cloudflare-tunnel-docker.sh
+          ./scripts/setup-cloudflare-tunnel-docker.sh
+      
+      - name: Deploy new version (${{ env.NEW_COLOR }})
+        run: |
+          # Create production environment file
+          cp .env.cloudflare.example .env.production
+          
+          # Deploy new version to alternate color
+          docker-compose -f docker-compose.yml -f docker-compose.production.yml up -d --scale central-sso=2 --scale tenant1-app=2 --scale tenant2-app=2
+        env:
+          DEPLOYMENT_COLOR: ${{ env.NEW_COLOR }}
+          CENTRAL_SSO_IMAGE: ${{ needs.build-images.outputs.central-sso-image }}
+          TENANT1_APP_IMAGE: ${{ needs.build-images.outputs.tenant1-app-image }}
+          TENANT2_APP_IMAGE: ${{ needs.build-images.outputs.tenant2-app-image }}
+      
+      - name: Run production database migrations
+        run: |
+          # Wait for new services to be ready
+          sleep 60
+          
+          # Run migrations cautiously
+          docker exec central-sso-${{ env.NEW_COLOR }} php artisan migrate --force
+          docker exec tenant1-app-${{ env.NEW_COLOR }} php artisan migrate --force
+          docker exec tenant2-app-${{ env.NEW_COLOR }} php artisan migrate --force
+          
+          # Clear caches
+          docker exec central-sso-${{ env.NEW_COLOR }} php artisan config:cache
+          docker exec central-sso-${{ env.NEW_COLOR }} php artisan route:cache
+          docker exec central-sso-${{ env.NEW_COLOR }} php artisan view:cache
+      
+      - name: Production health checks
+        run: |
+          # Comprehensive health checks
+          sleep 30
+          
+          # Test all production endpoints
+          curl -f https://sso.poc.hi-dil.com/health
+          curl -f https://tenant-one.poc.hi-dil.com/health
+          curl -f https://tenant-two.poc.hi-dil.com/health
+          
+          # Test SSO authentication flow
+          ./scripts/test-sso-flow.sh production
+          
+          # Test API endpoints
+          ./scripts/test-api-endpoints.sh production
+          
+          # Test cross-tenant functionality
+          ./scripts/test-cross-tenant.sh production
+      
+      - name: Switch traffic to new deployment
+        if: success()
+        run: |
+          # Update load balancer to point to new color
+          ./scripts/blue-green-switch.sh ${{ env.NEW_COLOR }}
+          
+          # Wait for traffic to switch
+          sleep 30
+          
+          # Verify new deployment is serving traffic
+          curl -f https://sso.poc.hi-dil.com/health
+      
+      - name: Scale down old deployment
+        if: success()
+        run: |
+          # Scale down old color deployment
+          docker-compose -f docker-compose.production.yml stop central-sso-${{ env.CURRENT_COLOR }} tenant1-app-${{ env.CURRENT_COLOR }} tenant2-app-${{ env.CURRENT_COLOR }}
+          
+          # Keep old deployment for potential rollback (don't remove)
+          echo "Old deployment (${{ env.CURRENT_COLOR }}) scaled down but kept for potential rollback"
+      
+      - name: Post-deployment verification
+        run: |
+          # Final verification after traffic switch
+          sleep 60
+          
+          # Test all functionality
+          ./scripts/comprehensive-health-check.sh
+          
+          # Monitor error rates
+          ./scripts/monitor-error-rates.sh 300  # Monitor for 5 minutes
+      
+      - name: Cleanup old deployment
+        if: success()
+        run: |
+          # Remove old deployment after successful verification
+          docker-compose -f docker-compose.production.yml rm -f central-sso-${{ env.CURRENT_COLOR }} tenant1-app-${{ env.CURRENT_COLOR }} tenant2-app-${{ env.CURRENT_COLOR }}
+      
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Deployment failed, initiating rollback..."
+          
+          # Switch traffic back to old deployment
+          ./scripts/blue-green-switch.sh ${{ env.CURRENT_COLOR }}
+          
+          # Scale up old deployment
+          docker-compose -f docker-compose.production.yml up -d central-sso-${{ env.CURRENT_COLOR }} tenant1-app-${{ env.CURRENT_COLOR }} tenant2-app-${{ env.CURRENT_COLOR }}
+          
+          # Remove failed deployment
+          docker-compose -f docker-compose.production.yml rm -f central-sso-${{ env.NEW_COLOR }} tenant1-app-${{ env.NEW_COLOR }} tenant2-app-${{ env.NEW_COLOR }}
+      
+      - name: Notify production deployment
+        uses: 8398a7/action-slack@v3
+        if: always()
+        with:
+          status: ${{ job.status }}
+          text: |
+            Production deployment ${{ job.status }}!
+            🚀 Production URLs:
+            • SSO: https://sso.poc.hi-dil.com
+            • Tenant 1: https://tenant-one.poc.hi-dil.com
+            • Tenant 2: https://tenant-two.poc.hi-dil.com
+            
+            📊 Deployment Details:
+            • Version: ${{ github.sha }}
+            • Deployed to: ${{ env.NEW_COLOR }} environment
+            • Database backup: ✅ Completed
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ============================================================================
+  # POST-DEPLOYMENT MONITORING
+  # ============================================================================
+  
+  post-deployment-monitoring:
+    name: Post-Deployment Monitoring
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: github.ref == 'refs/heads/main' && success()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Monitor application health
+        run: |
+          # Monitor for 15 minutes after deployment
+          ./scripts/monitor-post-deployment.sh 900
+      
+      - name: Check error rates and performance
+        run: |
+          # Analyze logs and metrics
+          ./scripts/analyze-deployment-metrics.sh
+      
+      - name: Update deployment status
+        run: |
+          # Mark deployment as successful in monitoring systems
+          ./scripts/update-deployment-status.sh success
+
+  # ============================================================================
+  # CLEANUP
+  # ============================================================================
+  
+  cleanup:
+    name: Cleanup Resources
+    runs-on: ubuntu-latest
+    needs: [deploy-production, deploy-staging]
+    if: always()
+    
+    steps:
+      - name: Cleanup Docker resources
+        run: |
+          # Remove unused images and containers
+          docker system prune -f
+          
+          # Remove old tagged images (keep last 5)
+          docker images --format "table {{.Repository}}:{{.Tag}}\t{{.CreatedAt}}" | grep "${{ env.IMAGE_PREFIX }}" | tail -n +6 | awk '{print $1}' | xargs -r docker rmi
+      
+      - name: Cleanup temporary files
+        run: |
+          # Remove temporary configuration files
+          rm -f .env.staging .env.production
+          rm -f docker-compose.test.yml

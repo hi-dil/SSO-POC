@@ -1,0 +1,333 @@
+version: '3.8'
+
+# Staging Environment Configuration
+# This file extends the base docker-compose.yml for staging deployments
+
+services:
+  # Cloudflare Tunnel for Staging
+  cloudflared-staging:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared-staging-tunnel
+    command: tunnel --config /etc/cloudflared/config.staging.yml run
+    volumes:
+      - ./cloudflare/config.staging.yml:/etc/cloudflared/config.staging.yml:ro
+      - ./cloudflare/staging-credentials.json:/etc/cloudflared/staging-credentials.json:ro
+      - ./logs/cloudflared-staging:/var/log/cloudflared
+    networks:
+      - sso-network
+    restart: unless-stopped
+    depends_on:
+      - central-sso-staging
+      - tenant1-app-staging
+      - tenant2-app-staging
+    environment:
+      - TUNNEL_METRICS=0.0.0.0:9091
+      - TUNNEL_LOGFILE=/var/log/cloudflared/cloudflared.log
+    ports:
+      - "9091:9091"  # Staging metrics endpoint
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9091/metrics || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Central SSO - Staging
+  central-sso-staging:
+    build:
+      context: ./central-sso
+      dockerfile: Dockerfile.prod
+      args:
+        BUILD_DATE: ${BUILD_DATE:-2024-01-01}
+        VCS_REF: ${GITHUB_SHA:-unknown}
+        VERSION: ${VERSION:-staging}
+    image: ${CENTRAL_SSO_IMAGE:-ghcr.io/sso-poc/central-sso:staging}
+    container_name: central-sso-staging
+    environment:
+      # Application Configuration
+      - APP_NAME=Central SSO (Staging)
+      - APP_ENV=staging
+      - APP_DEBUG=false
+      - APP_URL=https://staging-sso.poc.hi-dil.com
+      - ASSET_URL=https://staging-sso.poc.hi-dil.com
+      
+      # Database Configuration
+      - DB_CONNECTION=mysql
+      - DB_HOST=mariadb-staging
+      - DB_PORT=3306
+      - DB_DATABASE=sso_staging
+      - DB_USERNAME=${DB_USERNAME:-sso_user}
+      - DB_PASSWORD=${DB_PASSWORD:-staging_password}
+      
+      # Redis Configuration
+      - REDIS_HOST=redis-staging
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-staging_redis_password}
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      
+      # Session Configuration
+      - SESSION_DOMAIN=.staging.poc.hi-dil.com
+      - SESSION_DRIVER=redis
+      - SESSION_SECURE_COOKIE=true
+      - SESSION_SAME_SITE=lax
+      
+      # Cache Configuration
+      - CACHE_DRIVER=redis
+      - QUEUE_CONNECTION=redis
+      
+      # Security Configuration
+      - SANCTUM_STATEFUL_DOMAINS=staging-sso.poc.hi-dil.com,staging-tenant-one.poc.hi-dil.com,staging-tenant-two.poc.hi-dil.com
+      - CORS_ALLOWED_ORIGINS=https://staging-sso.poc.hi-dil.com,https://staging-tenant-one.poc.hi-dil.com,https://staging-tenant-two.poc.hi-dil.com
+      - TRUSTED_PROXIES=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22
+      
+      # JWT Configuration
+      - JWT_SECRET=${JWT_SECRET:-staging_jwt_secret_key}
+      - JWT_TTL=3600
+      
+      # Logging
+      - LOG_CHANNEL=stack
+      - LOG_LEVEL=info
+      - LOG_STDERR_FORMATTER=Monolog\\Formatter\\JsonFormatter
+      
+      # Features
+      - TELESCOPE_ENABLED=true
+    volumes:
+      - ./logs/central-sso-staging:/var/www/storage/logs
+      - staging_storage_central:/var/www/storage/app
+    networks:
+      - sso-network
+    restart: unless-stopped
+    depends_on:
+      - mariadb-staging
+      - redis-staging
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/health-check.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Tenant 1 App - Staging
+  tenant1-app-staging:
+    build:
+      context: ./tenant1-app
+      dockerfile: Dockerfile.prod
+      args:
+        BUILD_DATE: ${BUILD_DATE:-2024-01-01}
+        VCS_REF: ${GITHUB_SHA:-unknown}
+        VERSION: ${VERSION:-staging}
+    image: ${TENANT1_APP_IMAGE:-ghcr.io/sso-poc/tenant1-app:staging}
+    container_name: tenant1-app-staging
+    environment:
+      # Application Configuration
+      - APP_NAME=Tenant 1 App (Staging)
+      - APP_ENV=staging
+      - APP_DEBUG=false
+      - APP_URL=https://staging-tenant-one.poc.hi-dil.com
+      - ASSET_URL=https://staging-tenant-one.poc.hi-dil.com
+      
+      # SSO Configuration
+      - CENTRAL_SSO_URL=https://staging-sso.poc.hi-dil.com
+      - CENTRAL_SSO_API=http://central-sso-staging:8000/api
+      - TENANT_SLUG=tenant1
+      
+      # Database Configuration
+      - DB_CONNECTION=mysql
+      - DB_HOST=mariadb-staging
+      - DB_PORT=3306
+      - DB_DATABASE=tenant1_staging
+      - DB_USERNAME=${DB_USERNAME:-sso_user}
+      - DB_PASSWORD=${DB_PASSWORD:-staging_password}
+      
+      # Redis Configuration
+      - REDIS_HOST=redis-staging
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-staging_redis_password}
+      - REDIS_PORT=6379
+      - REDIS_DB=1
+      
+      # Session Configuration
+      - SESSION_DOMAIN=.staging.poc.hi-dil.com
+      - SESSION_DRIVER=redis
+      - SESSION_SECURE_COOKIE=true
+      - SESSION_SAME_SITE=lax
+      
+      # Cache Configuration
+      - CACHE_DRIVER=redis
+      - QUEUE_CONNECTION=redis
+      
+      # Security Configuration
+      - CORS_ALLOWED_ORIGINS=https://staging-sso.poc.hi-dil.com,https://staging-tenant-one.poc.hi-dil.com
+      - TRUSTED_PROXIES=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22
+      
+      # Logging
+      - LOG_CHANNEL=stack
+      - LOG_LEVEL=info
+    volumes:
+      - ./logs/tenant1-app-staging:/var/www/storage/logs
+      - staging_storage_tenant1:/var/www/storage/app
+    networks:
+      - sso-network
+    restart: unless-stopped
+    depends_on:
+      - mariadb-staging
+      - redis-staging
+      - central-sso-staging
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/health-check.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Tenant 2 App - Staging
+  tenant2-app-staging:
+    build:
+      context: ./tenant2-app
+      dockerfile: Dockerfile.prod
+      args:
+        BUILD_DATE: ${BUILD_DATE:-2024-01-01}
+        VCS_REF: ${GITHUB_SHA:-unknown}
+        VERSION: ${VERSION:-staging}
+    image: ${TENANT2_APP_IMAGE:-ghcr.io/sso-poc/tenant2-app:staging}
+    container_name: tenant2-app-staging
+    environment:
+      # Application Configuration
+      - APP_NAME=Tenant 2 App (Staging)
+      - APP_ENV=staging
+      - APP_DEBUG=false
+      - APP_URL=https://staging-tenant-two.poc.hi-dil.com
+      - ASSET_URL=https://staging-tenant-two.poc.hi-dil.com
+      
+      # SSO Configuration
+      - CENTRAL_SSO_URL=https://staging-sso.poc.hi-dil.com
+      - CENTRAL_SSO_API=http://central-sso-staging:8000/api
+      - TENANT_SLUG=tenant2
+      
+      # Database Configuration
+      - DB_CONNECTION=mysql
+      - DB_HOST=mariadb-staging
+      - DB_PORT=3306
+      - DB_DATABASE=tenant2_staging
+      - DB_USERNAME=${DB_USERNAME:-sso_user}
+      - DB_PASSWORD=${DB_PASSWORD:-staging_password}
+      
+      # Redis Configuration
+      - REDIS_HOST=redis-staging
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-staging_redis_password}
+      - REDIS_PORT=6379
+      - REDIS_DB=2
+      
+      # Session Configuration
+      - SESSION_DOMAIN=.staging.poc.hi-dil.com
+      - SESSION_DRIVER=redis
+      - SESSION_SECURE_COOKIE=true
+      - SESSION_SAME_SITE=lax
+      
+      # Cache Configuration
+      - CACHE_DRIVER=redis
+      - QUEUE_CONNECTION=redis
+      
+      # Security Configuration
+      - CORS_ALLOWED_ORIGINS=https://staging-sso.poc.hi-dil.com,https://staging-tenant-two.poc.hi-dil.com
+      - TRUSTED_PROXIES=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22
+      
+      # Logging
+      - LOG_CHANNEL=stack
+      - LOG_LEVEL=info
+    volumes:
+      - ./logs/tenant2-app-staging:/var/www/storage/logs
+      - staging_storage_tenant2:/var/www/storage/app
+    networks:
+      - sso-network
+    restart: unless-stopped
+    depends_on:
+      - mariadb-staging
+      - redis-staging
+      - central-sso-staging
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/health-check.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # MariaDB for Staging
+  mariadb-staging:
+    image: mariadb:10.11
+    container_name: sso-mariadb-staging
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-staging_root_password}
+      - MYSQL_DATABASE=sso_staging
+      - MYSQL_USER=${DB_USERNAME:-sso_user}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-staging_password}
+    volumes:
+      - staging_mariadb_data:/var/lib/mysql
+      - ./docker/staging/mariadb/init:/docker-entrypoint-initdb.d
+      - ./backups/mysql-staging:/backups
+    networks:
+      - sso-network
+    restart: unless-stopped
+    command: >
+      --innodb-buffer-pool-size=1G
+      --innodb-log-file-size=128M
+      --max-connections=100
+      --query-cache-size=64M
+      --slow-query-log=1
+      --slow-query-log-file=/var/log/mysql/slow.log
+      --long-query-time=2
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Redis for Staging
+  redis-staging:
+    image: redis:7-alpine
+    container_name: sso-redis-staging
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-staging_redis_password}
+    volumes:
+      - staging_redis_data:/data
+      - ./redis/staging.conf:/usr/local/etc/redis/redis.conf:ro
+    networks:
+      - sso-network
+    restart: unless-stopped
+    command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Log aggregation for staging
+  fluentd-staging:
+    image: fluent/fluentd:v1.16-debian
+    container_name: sso-fluentd-staging
+    volumes:
+      - ./fluentd/staging.conf:/fluentd/etc/fluent.conf:ro
+      - ./logs:/var/log/containers:ro
+    networks:
+      - sso-network
+    restart: unless-stopped
+    depends_on:
+      - central-sso-staging
+      - tenant1-app-staging
+      - tenant2-app-staging
+
+volumes:
+  staging_mariadb_data:
+    driver: local
+  staging_redis_data:
+    driver: local
+  staging_storage_central:
+    driver: local
+  staging_storage_tenant1:
+    driver: local
+  staging_storage_tenant2:
+    driver: local
+
+networks:
+  sso-network:
+    external: true
