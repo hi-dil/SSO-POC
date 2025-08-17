@@ -53,13 +53,13 @@
                                         </h3>
                                         <div class="flex items-center space-x-2 mt-1">
                                             @if($address->is_primary)
-                                                <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-blue-50 text-blue-700">
+                                                <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
                                                     Primary
                                                 </span>
                                             @endif
                                             
                                             @if($address->is_public)
-                                                <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-green-50 text-green-700">
+                                                <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300">
                                                     Public
                                                 </span>
                                             @endif

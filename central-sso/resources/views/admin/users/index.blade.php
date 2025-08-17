@@ -72,6 +72,20 @@
             </div>
         @endif
         
+        <!-- Bulk Actions -->
+        <div id="bulk-actions" class="hidden ml-4 flex items-center space-x-3">
+            <span class="text-sm text-gray-600 dark:text-gray-400">
+                <span id="selected-count">0</span> selected
+            </span>
+            <button onclick="showBulkTenantModal()" 
+                    class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-8 px-3 py-1">
+                <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m14 0v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5"></path>
+                </svg>
+                Bulk Assign Tenants
+            </button>
+        </div>
+        
         <!-- Debug sorting info -->
         @if(config('app.debug'))
             <div class="text-xs text-gray-500">
@@ -87,6 +101,12 @@
                 <table class="w-full caption-bottom text-sm">
                     <thead class="border-b border-gray-200 dark:border-gray-700">
                         <tr class="border-b border-gray-200 dark:border-gray-700 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                            <th class="h-12 px-4 text-left align-middle font-medium text-gray-600 dark:text-gray-400 w-12">
+                                <input type="checkbox" 
+                                       id="select-all" 
+                                       onchange="toggleSelectAll(this)"
+                                       class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                            </th>
                             <th class="h-12 px-4 text-left align-middle font-medium text-gray-600 dark:text-gray-400">
                                 <button onclick="sortTable('name')" class="flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white">
                                     <span>User</span>
@@ -198,6 +218,12 @@
                     <tbody>
                         @foreach($users as $user)
                             <tr class="border-b border-gray-200 dark:border-gray-700 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                                    <input type="checkbox" 
+                                           class="user-checkbox rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400" 
+                                           value="{{ $user->id }}"
+                                           onchange="updateBulkActions()">
+                                </td>
                                 <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">
                                     <div class="flex items-center gap-3">
                                         <div class="h-10 w-10 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
@@ -397,6 +423,409 @@
     @method('DELETE')
 </form>
 
+<!-- Tenant Management Modal -->
+<div id="tenant-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <!-- Background overlay -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onclick="closeTenantModal()"></div>
+    
+    <!-- Modal content -->
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative w-full max-w-4xl transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 shadow-xl transition-all">
+            <!-- Modal header -->
+            <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            Manage Tenant Access
+                        </h3>
+                        <div class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                            <span id="modal-user-name" class="font-medium"></span>
+                            <span class="text-gray-500">•</span>
+                            <span id="modal-user-email"></span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeTenantModal()" 
+                            class="rounded-md bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="sr-only">Close</span>
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Modal body -->
+            <div class="px-6 py-4">
+                <div class="space-y-4">
+                    <!-- Summary Information -->
+                    <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-600 dark:text-gray-400">Available Tenants:</span>
+                            <span class="font-medium text-gray-900 dark:text-white">{{ count($tenants) }}</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm mt-2">
+                            <span class="text-gray-600 dark:text-gray-400">Currently Selected:</span>
+                            <span id="selected-tenants-count" class="font-medium text-blue-600 dark:text-blue-400">0</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Search and Controls -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-sm font-medium text-gray-900 dark:text-white">
+                                Select Tenant Access
+                            </h4>
+                            <div class="flex items-center space-x-2">
+                                <button type="button" onclick="selectAllTenants()" 
+                                        class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
+                                    Select All
+                                </button>
+                                <span class="text-gray-300 dark:text-gray-600">|</span>
+                                <button type="button" onclick="selectNoneTenants()" 
+                                        class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
+                                    Select None
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Search Bar -->
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-4 w-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                            <input type="text" 
+                                   id="tenant-search" 
+                                   placeholder="Search tenants by name, slug, or domain..."
+                                   onkeyup="searchTenants()"
+                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                    
+                    <!-- Tenant Selection Table -->
+                    <div>
+                        
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                            <div class="max-h-80 overflow-y-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-gray-50 dark:bg-gray-800 sticky top-0">
+                                        <tr>
+                                            <th class="w-12 px-4 py-3 text-left">
+                                                <input type="checkbox" 
+                                                       id="select-all-tenants" 
+                                                       onchange="toggleAllTenants(this)"
+                                                       class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                            </th>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-900 dark:text-white">Tenant Name</th>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-900 dark:text-white">Slug</th>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-900 dark:text-white">Domain</th>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-900 dark:text-white">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tenant-table-body" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                        @foreach($tenants as $tenant)
+                                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors" 
+                                                onclick="toggleTenantRow(this, '{{ $tenant->id }}')"
+                                                data-tenant-id="{{ $tenant->id }}"
+                                                data-tenant-name="{{ strtolower($tenant->name) }}"
+                                                data-tenant-slug="{{ strtolower($tenant->slug) }}"
+                                                data-tenant-domain="{{ strtolower($tenant->domain) }}">
+                                                <td class="px-4 py-3" onclick="event.stopPropagation()">
+                                                    <input type="checkbox" 
+                                                           name="tenant_assignment" 
+                                                           value="{{ $tenant->id }}"
+                                                           onchange="updateSelectedCount()"
+                                                           class="tenant-checkbox rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    <div>
+                                                        <div class="font-medium text-gray-900 dark:text-white">
+                                                            {{ $tenant->name }}
+                                                        </div>
+                                                        @if($tenant->description)
+                                                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                                {{ Str::limit($tenant->description, 50) }}
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    <code class="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-gray-700 dark:text-gray-300">
+                                                        {{ $tenant->slug }}
+                                                    </code>
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    <span class="text-gray-600 dark:text-gray-400">
+                                                        {{ $tenant->domain }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    @if($tenant->is_active)
+                                                        <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                                                            <svg class="w-1.5 h-1.5 mr-1.5" fill="currentColor" viewBox="0 0 8 8">
+                                                                <circle cx="4" cy="4" r="3"/>
+                                                            </svg>
+                                                            Active
+                                                        </span>
+                                                    @else
+                                                        <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+                                                            <svg class="w-1.5 h-1.5 mr-1.5" fill="currentColor" viewBox="0 0 8 8">
+                                                                <circle cx="4" cy="4" r="3"/>
+                                                            </svg>
+                                                            Inactive
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Pagination Controls -->
+                        <div id="tenant-pagination" class="hidden border-t border-gray-200 dark:border-gray-700 px-4 py-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-sm text-gray-700 dark:text-gray-300">
+                                        Showing <span id="page-start">1</span> to <span id="page-end">10</span> of <span id="total-tenants">{{ count($tenants) }}</span> tenants
+                                    </span>
+                                </div>
+                                <div class="flex items-center space-x-1">
+                                    <button id="prev-page" onclick="changePage(-1)" 
+                                            class="inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                        </svg>
+                                    </button>
+                                    <span id="page-numbers" class="inline-flex"></span>
+                                    <button id="next-page" onclick="changePage(1)" 
+                                            class="inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Empty State -->
+                        <div id="no-tenants-message" class="hidden text-center py-8 text-gray-500 dark:text-gray-400">
+                            <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            <p class="text-sm">No tenants found</p>
+                            <p class="text-xs text-gray-400 mt-1">Try adjusting your search criteria</p>
+                        </div>
+                        
+                        @if(count($tenants) === 0)
+                            <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                                <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m14 0v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5"></path>
+                                </svg>
+                                <p class="text-sm">No tenants available</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal footer -->
+            <div class="border-t border-gray-200 dark:border-gray-700 px-6 py-4">
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeTenantModal()" 
+                            class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-10 px-4 py-2">
+                        Cancel
+                    </button>
+                    <button type="button" onclick="saveTenantAssignments()" 
+                            class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 h-10 px-4 py-2">
+                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Tenant Assignment Modal -->
+<div id="bulk-tenant-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <!-- Background overlay -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onclick="closeBulkTenantModal()"></div>
+    
+    <!-- Modal content -->
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative w-full max-w-4xl transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 shadow-xl transition-all">
+            <!-- Modal header -->
+            <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            Bulk Tenant Assignment
+                        </h3>
+                        <div class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                            Assign tenants to <span id="bulk-selected-count" class="font-medium">0</span> selected users
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeBulkTenantModal()" 
+                            class="rounded-md bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="sr-only">Close</span>
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Modal body -->
+            <div class="px-6 py-4">
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                            Assignment Type
+                        </h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center space-x-2">
+                                <input type="radio" name="bulk_assignment_type" value="add" checked
+                                       class="text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                <span class="text-sm text-gray-900 dark:text-white">Add to existing tenant assignments</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="radio" name="bulk_assignment_type" value="replace"
+                                       class="text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                <span class="text-sm text-gray-900 dark:text-white">Replace all tenant assignments</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="radio" name="bulk_assignment_type" value="remove"
+                                       class="text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                <span class="text-sm text-gray-900 dark:text-white">Remove selected tenant assignments</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-sm font-medium text-gray-900 dark:text-white">
+                                Select Tenants
+                            </h4>
+                            <div class="flex items-center space-x-2">
+                                <button type="button" onclick="selectAllBulkTenants()" 
+                                        class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
+                                    Select All
+                                </button>
+                                <span class="text-gray-300 dark:text-gray-600">|</span>
+                                <button type="button" onclick="selectNoneBulkTenants()" 
+                                        class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
+                                    Select None
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Search Bar -->
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-4 w-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                            <input type="text" 
+                                   id="bulk-tenant-search" 
+                                   placeholder="Search tenants by name or slug..."
+                                   onkeyup="searchBulkTenants()"
+                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                        
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                            <div class="max-h-64 overflow-y-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-gray-50 dark:bg-gray-800 sticky top-0">
+                                        <tr>
+                                            <th class="w-12 px-3 py-2 text-left">
+                                                <input type="checkbox" 
+                                                       id="select-all-bulk-tenants" 
+                                                       onchange="toggleAllBulkTenants(this)"
+                                                       class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                            </th>
+                                            <th class="px-3 py-2 text-left font-medium text-gray-900 dark:text-white">Tenant</th>
+                                            <th class="px-3 py-2 text-left font-medium text-gray-900 dark:text-white">Slug</th>
+                                            <th class="px-3 py-2 text-left font-medium text-gray-900 dark:text-white">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bulk-tenant-table-body" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                        @foreach($tenants as $tenant)
+                                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors" 
+                                                onclick="toggleBulkTenantRow(this, '{{ $tenant->id }}')"
+                                                data-tenant-id="{{ $tenant->id }}"
+                                                data-tenant-name="{{ strtolower($tenant->name) }}"
+                                                data-tenant-slug="{{ strtolower($tenant->slug) }}">
+                                                <td class="px-3 py-2" onclick="event.stopPropagation()">
+                                                    <input type="checkbox" 
+                                                           name="bulk_tenant_assignment" 
+                                                           value="{{ $tenant->id }}"
+                                                           onchange="updateBulkSelectedCount()"
+                                                           class="bulk-tenant-checkbox rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                                </td>
+                                                <td class="px-3 py-2">
+                                                    <div class="font-medium text-gray-900 dark:text-white">
+                                                        {{ $tenant->name }}
+                                                    </div>
+                                                </td>
+                                                <td class="px-3 py-2">
+                                                    <code class="text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-700 dark:text-gray-300">
+                                                        {{ $tenant->slug }}
+                                                    </code>
+                                                </td>
+                                                <td class="px-3 py-2">
+                                                    @if($tenant->is_active)
+                                                        <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                                                            <svg class="w-1.5 h-1.5 mr-1" fill="currentColor" viewBox="0 0 8 8">
+                                                                <circle cx="4" cy="4" r="3"/>
+                                                            </svg>
+                                                            Active
+                                                        </span>
+                                                    @else
+                                                        <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+                                                            <svg class="w-1.5 h-1.5 mr-1" fill="currentColor" viewBox="0 0 8 8">
+                                                                <circle cx="4" cy="4" r="3"/>
+                                                            </svg>
+                                                            Inactive
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal footer -->
+            <div class="border-t border-gray-200 dark:border-gray-700 px-6 py-4">
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeBulkTenantModal()" 
+                            class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-10 px-4 py-2">
+                        Cancel
+                    </button>
+                    <button type="button" onclick="saveBulkTenantAssignments()" 
+                            class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 h-10 px-4 py-2">
+                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Apply Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // Table sorting functionality
 function sortTable(field) {
@@ -469,10 +898,488 @@ function confirmDelete(url) {
     }
 }
 
-// Placeholder functions for tenant management
-function showTenantModal(userId) {
-    // This would open a modal to manage user's tenant access
-    alert('Tenant management modal for user ' + userId + ' - To be implemented');
+// Tenant management modal functionality
+let currentUserId = null;
+let userTenants = new Set();
+
+async function showTenantModal(userId) {
+    currentUserId = userId;
+    userTenants.clear();
+    
+    try {
+        const response = await fetch(`/api/admin/users/${userId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const user = data.data;
+            
+            // Store current user's tenants
+            if (user.tenants) {
+                user.tenants.forEach(tenant => userTenants.add(tenant.id));
+            }
+            
+            // Update modal content
+            document.getElementById('modal-user-name').textContent = user.name;
+            document.getElementById('modal-user-email').textContent = user.email;
+            
+            // Update tenant checkboxes
+            const checkboxes = document.querySelectorAll('input[name="tenant_assignment"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = userTenants.has(checkbox.value);
+            });
+            
+            // Update counts
+            updateSelectedCount();
+            updateSelectAllState();
+            
+            // Initialize pagination
+            currentPage = 1;
+            initializePagination();
+            
+            // Show the modal
+            document.getElementById('tenant-modal').classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('Error loading user data:', error);
+        if (window.showToast) {
+            window.showToast('Error loading user data', 'error');
+        }
+    }
+}
+
+function closeTenantModal() {
+    document.getElementById('tenant-modal').classList.add('hidden');
+    currentUserId = null;
+    userTenants.clear();
+}
+
+// Table-specific tenant management functions
+function updateSelectedCount() {
+    const selectedCheckboxes = document.querySelectorAll('input[name="tenant_assignment"]:checked');
+    const count = selectedCheckboxes.length;
+    document.getElementById('selected-tenants-count').textContent = count;
+    updateSelectAllState();
+}
+
+function updateSelectAllState() {
+    const allCheckboxes = document.querySelectorAll('.tenant-checkbox');
+    const selectedCheckboxes = document.querySelectorAll('.tenant-checkbox:checked');
+    const selectAllCheckbox = document.getElementById('select-all-tenants');
+    
+    if (selectedCheckboxes.length === 0) {
+        selectAllCheckbox.indeterminate = false;
+        selectAllCheckbox.checked = false;
+    } else if (selectedCheckboxes.length === allCheckboxes.length) {
+        selectAllCheckbox.indeterminate = false;
+        selectAllCheckbox.checked = true;
+    } else {
+        selectAllCheckbox.indeterminate = true;
+        selectAllCheckbox.checked = false;
+    }
+}
+
+function toggleAllTenants(selectAllCheckbox) {
+    const tenantCheckboxes = document.querySelectorAll('.tenant-checkbox');
+    tenantCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+    updateSelectedCount();
+}
+
+function selectAllTenants() {
+    const tenantCheckboxes = document.querySelectorAll('.tenant-checkbox');
+    const selectAllCheckbox = document.getElementById('select-all-tenants');
+    tenantCheckboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    selectAllCheckbox.checked = true;
+    selectAllCheckbox.indeterminate = false;
+    updateSelectedCount();
+}
+
+function selectNoneTenants() {
+    const tenantCheckboxes = document.querySelectorAll('.tenant-checkbox');
+    const selectAllCheckbox = document.getElementById('select-all-tenants');
+    tenantCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    selectAllCheckbox.checked = false;
+    selectAllCheckbox.indeterminate = false;
+    updateSelectedCount();
+}
+
+// Row click functionality for individual tenant modal
+function toggleTenantRow(row, tenantId) {
+    const checkbox = row.querySelector('input[name="tenant_assignment"]');
+    checkbox.checked = !checkbox.checked;
+    updateSelectedCount();
+}
+
+// Search functionality for individual tenant modal
+let searchTimer;
+function searchTenants() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+        const searchTerm = document.getElementById('tenant-search').value.toLowerCase();
+        const tableBody = document.getElementById('tenant-table-body');
+        const rows = tableBody.querySelectorAll('tr');
+        let visibleCount = 0;
+        
+        rows.forEach(row => {
+            const name = row.dataset.tenantName || '';
+            const slug = row.dataset.tenantSlug || '';
+            const domain = row.dataset.tenantDomain || '';
+            
+            const isVisible = name.includes(searchTerm) || 
+                            slug.includes(searchTerm) || 
+                            domain.includes(searchTerm);
+            
+            row.style.display = isVisible ? '' : 'none';
+            if (isVisible) visibleCount++;
+        });
+        
+        // Show/hide empty state
+        const noTenantsMessage = document.getElementById('no-tenants-message');
+        if (visibleCount === 0 && searchTerm !== '') {
+            noTenantsMessage.classList.remove('hidden');
+            tableBody.style.display = 'none';
+        } else {
+            noTenantsMessage.classList.add('hidden');
+            tableBody.style.display = '';
+        }
+    }, 300);
+}
+
+// Pagination functionality (client-side for simplicity)
+let currentPage = 1;
+const itemsPerPage = 15;
+let filteredRows = [];
+
+function initializePagination() {
+    const tableBody = document.getElementById('tenant-table-body');
+    const rows = Array.from(tableBody.querySelectorAll('tr'));
+    filteredRows = rows;
+    
+    if (rows.length > itemsPerPage) {
+        document.getElementById('tenant-pagination').classList.remove('hidden');
+        updatePagination();
+    } else {
+        document.getElementById('tenant-pagination').classList.add('hidden');
+    }
+}
+
+function updatePagination() {
+    const totalItems = filteredRows.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+    
+    // Update pagination info
+    document.getElementById('page-start').textContent = totalItems > 0 ? startIndex + 1 : 0;
+    document.getElementById('page-end').textContent = endIndex;
+    document.getElementById('total-tenants').textContent = totalItems;
+    
+    // Show/hide rows
+    filteredRows.forEach((row, index) => {
+        row.style.display = (index >= startIndex && index < endIndex) ? '' : 'none';
+    });
+    
+    // Update pagination buttons
+    document.getElementById('prev-page').disabled = currentPage === 1;
+    document.getElementById('next-page').disabled = currentPage === totalPages;
+    
+    // Update page numbers
+    updatePageNumbers(totalPages);
+}
+
+function updatePageNumbers(totalPages) {
+    const pageNumbers = document.getElementById('page-numbers');
+    pageNumbers.innerHTML = '';
+    
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+            const button = document.createElement('button');
+            button.textContent = i;
+            button.onclick = () => goToPage(i);
+            button.className = `px-3 py-2 text-sm font-medium leading-tight ${
+                i === currentPage 
+                    ? 'text-blue-600 bg-blue-50 border border-blue-300 dark:border-gray-700 dark:bg-gray-700 dark:text-white' 
+                    : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
+            }`;
+            pageNumbers.appendChild(button);
+        } else if (i === currentPage - 3 || i === currentPage + 3) {
+            const span = document.createElement('span');
+            span.textContent = '...';
+            span.className = 'px-3 py-2 text-sm font-medium text-gray-500';
+            pageNumbers.appendChild(span);
+        }
+    }
+}
+
+function changePage(direction) {
+    const totalPages = Math.ceil(filteredRows.length / itemsPerPage);
+    const newPage = currentPage + direction;
+    
+    if (newPage >= 1 && newPage <= totalPages) {
+        currentPage = newPage;
+        updatePagination();
+    }
+}
+
+function goToPage(page) {
+    currentPage = page;
+    updatePagination();
+}
+
+async function saveTenantAssignments() {
+    if (!currentUserId) return;
+    
+    const checkboxes = document.querySelectorAll('input[name="tenant_assignment"]:checked');
+    const selectedTenants = Array.from(checkboxes).map(cb => cb.value);
+    
+    try {
+        const response = await fetch(`/admin/users/${currentUserId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                tenant_ids: selectedTenants
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            if (window.showToast) {
+                window.showToast('Tenant assignments updated successfully', 'success');
+            }
+            closeTenantModal();
+            // Reload the page to reflect changes
+            window.location.reload();
+        } else {
+            throw new Error(data.message || 'Failed to update tenant assignments');
+        }
+    } catch (error) {
+        console.error('Error updating tenant assignments:', error);
+        if (window.showToast) {
+            window.showToast('Error updating tenant assignments: ' + error.message, 'error');
+        }
+    }
+}
+
+// Bulk selection functionality
+function toggleSelectAll(selectAllCheckbox) {
+    const userCheckboxes = document.querySelectorAll('.user-checkbox');
+    userCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+    updateBulkActions();
+}
+
+function updateBulkActions() {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    const selectedCount = selectedCheckboxes.length;
+    const bulkActions = document.getElementById('bulk-actions');
+    const selectedCountSpan = document.getElementById('selected-count');
+    
+    selectedCountSpan.textContent = selectedCount;
+    
+    if (selectedCount > 0) {
+        bulkActions.classList.remove('hidden');
+    } else {
+        bulkActions.classList.add('hidden');
+    }
+    
+    // Update select all checkbox state
+    const allCheckboxes = document.querySelectorAll('.user-checkbox');
+    const selectAllCheckbox = document.getElementById('select-all');
+    
+    if (selectedCount === 0) {
+        selectAllCheckbox.indeterminate = false;
+        selectAllCheckbox.checked = false;
+    } else if (selectedCount === allCheckboxes.length) {
+        selectAllCheckbox.indeterminate = false;
+        selectAllCheckbox.checked = true;
+    } else {
+        selectAllCheckbox.indeterminate = true;
+        selectAllCheckbox.checked = false;
+    }
+}
+
+// Bulk tenant assignment functionality
+function showBulkTenantModal() {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    const selectedCount = selectedCheckboxes.length;
+    
+    if (selectedCount === 0) {
+        if (window.showToast) {
+            window.showToast('Please select users first', 'warning');
+        }
+        return;
+    }
+    
+    document.getElementById('bulk-selected-count').textContent = selectedCount;
+    document.getElementById('bulk-tenant-modal').classList.remove('hidden');
+    
+    // Reset form
+    document.querySelectorAll('input[name="bulk_tenant_assignment"]').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    document.querySelector('input[name="bulk_assignment_type"][value="add"]').checked = true;
+    
+    // Reset bulk selection states
+    updateBulkSelectedCount();
+    updateBulkSelectAllState();
+}
+
+function closeBulkTenantModal() {
+    document.getElementById('bulk-tenant-modal').classList.add('hidden');
+}
+
+// Bulk tenant selection functions
+function updateBulkSelectedCount() {
+    const selectedCheckboxes = document.querySelectorAll('input[name="bulk_tenant_assignment"]:checked');
+    // You could add a count display here if needed
+    updateBulkSelectAllState();
+}
+
+function updateBulkSelectAllState() {
+    const allCheckboxes = document.querySelectorAll('.bulk-tenant-checkbox');
+    const selectedCheckboxes = document.querySelectorAll('.bulk-tenant-checkbox:checked');
+    const selectAllCheckbox = document.getElementById('select-all-bulk-tenants');
+    
+    if (selectedCheckboxes.length === 0) {
+        selectAllCheckbox.indeterminate = false;
+        selectAllCheckbox.checked = false;
+    } else if (selectedCheckboxes.length === allCheckboxes.length) {
+        selectAllCheckbox.indeterminate = false;
+        selectAllCheckbox.checked = true;
+    } else {
+        selectAllCheckbox.indeterminate = true;
+        selectAllCheckbox.checked = false;
+    }
+}
+
+function toggleAllBulkTenants(selectAllCheckbox) {
+    const tenantCheckboxes = document.querySelectorAll('.bulk-tenant-checkbox');
+    tenantCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+    updateBulkSelectedCount();
+}
+
+function selectAllBulkTenants() {
+    const tenantCheckboxes = document.querySelectorAll('.bulk-tenant-checkbox');
+    const selectAllCheckbox = document.getElementById('select-all-bulk-tenants');
+    tenantCheckboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    selectAllCheckbox.checked = true;
+    selectAllCheckbox.indeterminate = false;
+    updateBulkSelectedCount();
+}
+
+function selectNoneBulkTenants() {
+    const tenantCheckboxes = document.querySelectorAll('.bulk-tenant-checkbox');
+    const selectAllCheckbox = document.getElementById('select-all-bulk-tenants');
+    tenantCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    selectAllCheckbox.checked = false;
+    selectAllCheckbox.indeterminate = false;
+    updateBulkSelectedCount();
+}
+
+// Bulk tenant row click functionality
+function toggleBulkTenantRow(row, tenantId) {
+    const checkbox = row.querySelector('input[name="bulk_tenant_assignment"]');
+    checkbox.checked = !checkbox.checked;
+    updateBulkSelectedCount();
+}
+
+// Bulk tenant search functionality
+function searchBulkTenants() {
+    const searchTerm = document.getElementById('bulk-tenant-search').value.toLowerCase();
+    const tableBody = document.getElementById('bulk-tenant-table-body');
+    const rows = tableBody.querySelectorAll('tr');
+    
+    rows.forEach(row => {
+        const name = row.dataset.tenantName || '';
+        const slug = row.dataset.tenantSlug || '';
+        
+        const isVisible = name.includes(searchTerm) || slug.includes(searchTerm);
+        row.style.display = isVisible ? '' : 'none';
+    });
+}
+
+async function saveBulkTenantAssignments() {
+    const selectedUserCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    const selectedUserIds = Array.from(selectedUserCheckboxes).map(cb => cb.value);
+    
+    const selectedTenantCheckboxes = document.querySelectorAll('input[name="bulk_tenant_assignment"]:checked');
+    const selectedTenantIds = Array.from(selectedTenantCheckboxes).map(cb => cb.value);
+    
+    const assignmentType = document.querySelector('input[name="bulk_assignment_type"]:checked').value;
+    
+    if (selectedTenantIds.length === 0) {
+        if (window.showToast) {
+            window.showToast('Please select at least one tenant', 'warning');
+        }
+        return;
+    }
+    
+    try {
+        const promises = selectedUserIds.map(async (userId) => {
+            let tenantIds;
+            
+            if (assignmentType === 'add') {
+                // Get current user tenants and add new ones
+                const response = await fetch(`/api/admin/users/${userId}`);
+                const data = await response.json();
+                const currentTenantIds = data.data.tenants ? data.data.tenants.map(t => t.id) : [];
+                tenantIds = [...new Set([...currentTenantIds, ...selectedTenantIds])];
+            } else if (assignmentType === 'replace') {
+                // Replace with selected tenants
+                tenantIds = selectedTenantIds;
+            } else if (assignmentType === 'remove') {
+                // Get current user tenants and remove selected ones
+                const response = await fetch(`/api/admin/users/${userId}`);
+                const data = await response.json();
+                const currentTenantIds = data.data.tenants ? data.data.tenants.map(t => t.id) : [];
+                tenantIds = currentTenantIds.filter(id => !selectedTenantIds.includes(id));
+            }
+            
+            return fetch(`/admin/users/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    tenant_ids: tenantIds
+                })
+            });
+        });
+        
+        await Promise.all(promises);
+        
+        if (window.showToast) {
+            window.showToast(`Bulk tenant assignments updated for ${selectedUserIds.length} users`, 'success');
+        }
+        
+        closeBulkTenantModal();
+        window.location.reload();
+        
+    } catch (error) {
+        console.error('Error updating bulk tenant assignments:', error);
+        if (window.showToast) {
+            window.showToast('Error updating bulk tenant assignments: ' + error.message, 'error');
+        }
+    }
 }
 
 // Search functionality

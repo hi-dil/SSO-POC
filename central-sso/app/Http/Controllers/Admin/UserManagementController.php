@@ -199,6 +199,42 @@ class UserManagementController extends Controller
     public function update(Request $request, User $user)
     {
         try {
+            // Check if this is a tenant-only update (from modal)
+            // We detect this by checking if we only have tenant_ids and no other user fields
+            $isTenantOnlyUpdate = $request->has('tenant_ids') && 
+                                !$request->has('name') && 
+                                !$request->has('email') &&
+                                !$request->has('password');
+            
+            if ($isTenantOnlyUpdate) {
+                // Validate only tenant_ids for tenant-only updates
+                $validatedData = $request->validate([
+                    'tenant_ids' => 'nullable|array',
+                    'tenant_ids.*' => 'string|exists:tenants,id',
+                ]);
+                
+                // Update tenant associations only
+                $user->tenants()->sync($validatedData['tenant_ids'] ?? []);
+                $user->load(['tenants', 'roles']);
+                
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Tenant assignments updated successfully',
+                        'data' => [
+                            'id' => $user->id,
+                            'name' => $user->name,
+                            'email' => $user->email,
+                            'tenants' => $user->tenants,
+                        ]
+                    ]);
+                }
+                
+                return redirect()->route('admin.users.index')
+                    ->with('success', 'Tenant assignments updated successfully');
+            }
+            
+            // Full user update validation
             $validatedData = $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,

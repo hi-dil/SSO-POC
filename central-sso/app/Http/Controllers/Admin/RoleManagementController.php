@@ -45,6 +45,19 @@ class RoleManagementController extends Controller
         return view('admin.roles.index', compact('roles', 'permissions', 'users', 'tenants'));
     }
 
+    public function create()
+    {
+        $permissions = Permission::all();
+        return view('admin.roles.create', compact('permissions'));
+    }
+
+    public function edit(Role $role)
+    {
+        $role->load('permissions');
+        $permissions = Permission::all();
+        return view('admin.roles.edit', compact('role', 'permissions'));
+    }
+
     public function getRoles(): JsonResponse
     {
         $roles = Role::with('permissions')->get();
@@ -91,7 +104,7 @@ class RoleManagementController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request)
     {
         try {
             $validatedData = $request->validate([
@@ -119,36 +132,50 @@ class RoleManagementController extends Controller
 
             $role->load('permissions');
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Role created successfully',
-                'data' => RoleResponseDTO::fromModel($role, true)->toArray()
-            ], 201);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Role created successfully',
+                    'data' => RoleResponseDTO::fromModel($role, true)->toArray()
+                ], 201);
+            }
+
+            return redirect()->route('admin.roles.index')
+                ->with('success', 'Role created successfully');
 
         } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $e->errors()
-            ], 422);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+
+            return redirect()->back()
+                ->withErrors($e->errors())
+                ->withInput();
         }
     }
 
-    public function update(Request $request, string $id): JsonResponse
+    public function update(Request $request, Role $role)
     {
         try {
-            $role = Role::findOrFail($id);
-
             if ($role->is_system) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'System roles cannot be updated'
-                ], 403);
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'System roles cannot be updated'
+                    ], 403);
+                }
+
+                return redirect()->back()
+                    ->with('error', 'System roles cannot be updated');
             }
 
             $validatedData = $request->validate([
-                'name' => 'required|string|max:255|unique:roles,name,' . $id,
-                'slug' => 'nullable|string|max:255|unique:roles,slug,' . $id,
+                'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
+                'slug' => 'nullable|string|max:255|unique:roles,slug,' . $role->id,
                 'description' => 'nullable|string|max:500',
                 'permissions' => 'nullable|array',
                 'permissions.*' => 'string|exists:permissions,slug'
@@ -171,23 +198,29 @@ class RoleManagementController extends Controller
 
             $role->load('permissions');
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Role updated successfully',
-                'data' => RoleResponseDTO::fromModel($role, true)->toArray()
-            ]);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Role updated successfully',
+                    'data' => RoleResponseDTO::fromModel($role, true)->toArray()
+                ]);
+            }
 
-        } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Role not found'
-            ], 404);
+            return redirect()->route('admin.roles.index')
+                ->with('success', 'Role updated successfully');
+
         } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $e->errors()
-            ], 422);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+
+            return redirect()->back()
+                ->withErrors($e->errors())
+                ->withInput();
         }
     }
 

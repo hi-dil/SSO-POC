@@ -12,12 +12,12 @@
 @endsection
 
 @section('actions')
-    <button onclick="window.dispatchEvent(new CustomEvent('show-create-role'))" class="inline-flex items-center justify-center rounded-md text-sm font-medium  transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 h-10 px-4 py-2">
+    <a href="{{ route('admin.roles.create') }}" class="inline-flex items-center justify-center rounded-md text-sm font-medium  transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 h-10 px-4 py-2">
         <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
         </svg>
         New Role
-    </button>
+    </a>
 @endsection
 
 @section('content')
@@ -69,12 +69,12 @@
                             </div>
                             
                             <div class="flex items-center gap-2">
-                                <button @click="editRole(role)" class="inline-flex items-center justify-center rounded-md text-sm font-medium  transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-9 px-3">
+                                <a :href="`/admin/roles/${role.id}/edit`" class="inline-flex items-center justify-center rounded-md text-sm font-medium  transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-9 px-3">
                                     <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
                                     Edit
-                                </button>
+                                </a>
                                 <button x-show="!role.is_system" @click="deleteRole(role)" class="inline-flex items-center justify-center rounded-md text-sm font-medium  transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 hover:bg-red-600 hover:text-white dark:hover:bg-red-600 h-9 px-3">
                                     <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -162,64 +162,6 @@
         </div>
     </div>
 
-    <!-- Create/Edit Role Modal -->
-    <div x-show="showRoleModal" x-cloak class="fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" x-transition>
-        <div class="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
-            <form @submit.prevent="saveRole()">
-                <div class="space-y-4">
-                    <div class="space-y-2">
-                        <h2 class="text-lg font-semibold leading-none tracking-tight" x-text="editingRole ? 'Edit Role' : 'Create New Role'"></h2>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Configure role settings and permissions.</p>
-                    </div>
-                    
-                    <div class="space-y-4">
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Name</label>
-                            <input type="text" x-model="roleForm.name" required 
-                                   class="flex h-10 w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm  file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-600 dark:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                   placeholder="Enter role name">
-                        </div>
-                        
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Description</label>
-                            <textarea x-model="roleForm.description" rows="3"
-                                      class="flex min-h-[80px] w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm  placeholder:text-gray-600 dark:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                      placeholder="Enter role description"></textarea>
-                        </div>
-                        
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Permissions</label>
-                            <div class="space-y-3 max-h-64 overflow-y-auto rounded-md border border-gray-300 dark:border-gray-600 p-3">
-                                <template x-for="category in permissionCategories" :key="category">
-                                    <div>
-                                        <h4 class="text-sm font-medium capitalize mb-2" x-text="category"></h4>
-                                        <div class="space-y-2 ml-4">
-                                            <template x-for="permission in getPermissionsByCategory(category)" :key="permission.slug">
-                                                <div class="flex items-center space-x-2">
-                                                    <input type="checkbox" :value="permission.slug" x-model="roleForm.permissions" :id="'perm-' + permission.slug"
-                                                           class="peer h-4 w-4 shrink-0 rounded-sm border border-blue-600 dark:border-blue-400  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white dark:data-[state=checked]:bg-blue-500">
-                                                    <label :for="'perm-' + permission.slug" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" x-text="permission.name"></label>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="flex justify-end space-x-2">
-                        <button type="button" @click="showRoleModal = false" class="inline-flex items-center justify-center rounded-md text-sm font-medium  transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-10 px-4 py-2">
-                            Cancel
-                        </button>
-                        <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium  transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 h-10 px-4 py-2">
-                            <span x-text="editingRole ? 'Update' : 'Create'"></span> Role
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <!-- User Roles Modal -->
     <div x-show="showUserRolesModal" x-cloak class="fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" x-transition>
@@ -313,15 +255,8 @@ function roleManagement() {
         permissions: [],
         users: [],
         tenants: [],
-        showRoleModal: false,
         showUserRolesModal: false,
-        editingRole: null,
         selectedUser: null,
-        roleForm: {
-            name: '',
-            description: '',
-            permissions: []
-        },
         newRoleAssignment: {
             roleId: '',
             tenantId: ''
@@ -401,51 +336,6 @@ function roleManagement() {
             return this.permissions.filter(p => p.category === category);
         },
         
-        showCreateRoleModal() {
-            this.editingRole = null;
-            this.roleForm = { name: '', description: '', permissions: [] };
-            this.showRoleModal = true;
-        },
-        
-        editRole(role) {
-            this.editingRole = role;
-            this.roleForm = {
-                name: role.name,
-                description: role.description || '',
-                permissions: role.permissions?.map(p => p.slug) || []
-            };
-            this.showRoleModal = true;
-        },
-        
-        async saveRole() {
-            try {
-                const url = this.editingRole ? `/admin/roles/${this.editingRole.id}` : '/admin/roles';
-                const method = this.editingRole ? 'PUT' : 'POST';
-                
-                const response = await fetch(url, {
-                    method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': await this.getToken()
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify(this.roleForm)
-                });
-                
-                if (response.ok) {
-                    this.showRoleModal = false;
-                    await this.loadRoles();
-                    this.showToast(this.editingRole ? 'Role updated successfully!' : 'Role created successfully!', 'success');
-                } else {
-                    const error = await response.json();
-                    this.showToast('Error: ' + (error.message || 'Failed to save role'), 'error');
-                }
-            } catch (error) {
-                console.error('Error saving role:', error);
-                this.showToast('Error saving role', 'error');
-            }
-        },
         
         async deleteRole(role) {
             // Use a more elegant confirmation
@@ -584,13 +474,5 @@ function roleManagement() {
     };
 }
 
-// Global function for the create button
-window.addEventListener('show-create-role', function() {
-    // Trigger Alpine.js event to show modal
-    const component = document.querySelector('[x-data*="roleManagement"]');
-    if (component && component._x_dataStack && component._x_dataStack[0]) {
-        component._x_dataStack[0].showCreateRoleModal();
-    }
-});
 </script>
 @endsection

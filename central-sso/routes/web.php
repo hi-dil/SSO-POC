@@ -207,6 +207,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     
     // Role Management (Central SSO only)
     Route::get('roles', [\App\Http\Controllers\Admin\RoleManagementController::class, 'index'])->name('roles.index');
+    Route::get('roles/create', [\App\Http\Controllers\Admin\RoleManagementController::class, 'create'])->name('roles.create');
+    Route::get('roles/{role}/edit', [\App\Http\Controllers\Admin\RoleManagementController::class, 'edit'])->name('roles.edit');
     Route::get('roles/data', [\App\Http\Controllers\Admin\RoleManagementController::class, 'getRoles'])->name('roles.data');
     Route::post('roles', [\App\Http\Controllers\Admin\RoleManagementController::class, 'store'])->name('roles.store');
     Route::put('roles/{role}', [\App\Http\Controllers\Admin\RoleManagementController::class, 'update'])->name('roles.update');
@@ -228,6 +230,41 @@ Route::prefix('api')->middleware(['auth', 'web'])->group(function () {
     // User role assignment routes
     Route::post('users/{userId}/roles', [\App\Http\Controllers\Api\UserRoleController::class, 'assignRole']);
     Route::delete('users/{userId}/roles', [\App\Http\Controllers\Api\UserRoleController::class, 'removeRole']);
+    
+    // Admin user management API routes
+    Route::prefix('admin')->group(function () {
+        Route::get('users/{user}', function (\App\Models\User $user) {
+            $user->load(['tenants', 'roles']);
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'is_admin' => $user->is_admin,
+                    'created_at' => $user->created_at->format('Y-m-d H:i:s'),
+                    'tenants' => $user->tenants->map(function ($tenant) {
+                        return [
+                            'id' => $tenant->id,
+                            'name' => $tenant->name,
+                            'slug' => $tenant->slug
+                        ];
+                    }),
+                    'roles' => $user->roles->map(function ($role) {
+                        return [
+                            'role' => [
+                                'id' => $role->id,
+                                'name' => $role->name,
+                                'slug' => $role->slug,
+                                'is_system' => $role->is_system
+                            ],
+                            'tenant_id' => $role->pivot->tenant_id ?? null
+                        ];
+                    })
+                ]
+            ]);
+        });
+    });
 });
 
 // Telescope routes (only in development)

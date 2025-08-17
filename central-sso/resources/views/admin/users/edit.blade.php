@@ -342,23 +342,169 @@
         <!-- Tenant Access -->
         <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm">
             <div class="p-6">
-                <h3 class="text-lg font-semibold mb-4">Tenant Access</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    @foreach($tenants as $tenant)
-                        <div class="flex items-center space-x-2">
-                            <input type="checkbox" id="tenant_{{ $tenant->id }}" name="tenant_ids[]" value="{{ $tenant->id }}"
-                                   {{ in_array($tenant->id, old('tenant_ids', $user->tenants->pluck('id')->toArray())) ? 'checked' : '' }}
-                                   class="h-4 w-4 text-primary border-input rounded focus:ring-ring">
-                            <label for="tenant_{{ $tenant->id }}" class="text-sm font-medium text-card-foreground">
-                                {{ $tenant->name }}
-                                <span class="text-xs text-muted-foreground">({{ $tenant->slug }})</span>
-                            </label>
+                <div class="space-y-4">
+                    <!-- Header and Summary -->
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold">Tenant Access</h3>
+                        <div class="text-sm text-muted-foreground">
+                            <span id="edit-selected-count">{{ $user->tenants->count() }}</span> of {{ $tenants->count() }} tenants selected
                         </div>
-                    @endforeach
+                    </div>
+                    
+                    <!-- Search and Controls -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <span class="text-sm font-medium text-card-foreground">Select Tenant Access</span>
+                                <div class="flex items-center space-x-2">
+                                    <button type="button" onclick="selectAllEditTenants()" 
+                                            class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
+                                        Select All
+                                    </button>
+                                    <span class="text-gray-300 dark:text-gray-600">|</span>
+                                    <button type="button" onclick="selectNoneEditTenants()" 
+                                            class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
+                                        Select None
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Search Bar -->
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                            <input type="text" 
+                                   id="edit-tenant-search" 
+                                   placeholder="Search tenants by name, slug, or domain..."
+                                   onkeyup="searchEditTenants()"
+                                   class="block w-full pl-10 pr-3 py-2 border border-input bg-background text-card-foreground rounded-md text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring">
+                        </div>
+                    </div>
+                    
+                    <!-- Tenant Selection Table -->
+                    <div class="border border-border rounded-lg overflow-hidden">
+                        <div class="max-h-80 overflow-y-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-muted sticky top-0">
+                                    <tr>
+                                        <th class="w-12 px-4 py-3 text-left">
+                                            <input type="checkbox" 
+                                                   id="select-all-edit-tenants" 
+                                                   onchange="toggleAllEditTenants(this)"
+                                                   class="rounded border-input text-primary focus:ring-ring">
+                                        </th>
+                                        <th class="px-4 py-3 text-left font-medium text-card-foreground">Tenant Name</th>
+                                        <th class="px-4 py-3 text-left font-medium text-card-foreground">Slug</th>
+                                        <th class="px-4 py-3 text-left font-medium text-card-foreground">Domain</th>
+                                        <th class="px-4 py-3 text-left font-medium text-card-foreground">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="edit-tenant-table-body" class="divide-y divide-border">
+                                    @foreach($tenants as $tenant)
+                                        <tr class="hover:bg-muted/50 cursor-pointer transition-colors" 
+                                            onclick="toggleEditTenantRow(this, '{{ $tenant->id }}')"
+                                            data-tenant-id="{{ $tenant->id }}"
+                                            data-tenant-name="{{ strtolower($tenant->name) }}"
+                                            data-tenant-slug="{{ strtolower($tenant->slug) }}"
+                                            data-tenant-domain="{{ strtolower($tenant->domain) }}">
+                                            <td class="px-4 py-3" onclick="event.stopPropagation()">
+                                                <input type="checkbox" 
+                                                       id="tenant_{{ $tenant->id }}" 
+                                                       name="tenant_ids[]" 
+                                                       value="{{ $tenant->id }}"
+                                                       {{ in_array($tenant->id, old('tenant_ids', $user->tenants->pluck('id')->toArray())) ? 'checked' : '' }}
+                                                       onchange="updateEditSelectedCount()"
+                                                       class="edit-tenant-checkbox rounded border-input text-primary focus:ring-ring">
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                <div>
+                                                    <div class="font-medium text-card-foreground">
+                                                        {{ $tenant->name }}
+                                                    </div>
+                                                    @if($tenant->description)
+                                                        <div class="text-xs text-muted-foreground mt-1">
+                                                            {{ Str::limit($tenant->description, 50) }}
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                <code class="text-xs bg-muted px-2 py-1 rounded text-muted-foreground">
+                                                    {{ $tenant->slug }}
+                                                </code>
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                <span class="text-muted-foreground">
+                                                    {{ $tenant->domain }}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                @if($tenant->is_active)
+                                                    <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                                                        <svg class="w-1.5 h-1.5 mr-1.5" fill="currentColor" viewBox="0 0 8 8">
+                                                            <circle cx="4" cy="4" r="3"/>
+                                                        </svg>
+                                                        Active
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+                                                        <svg class="w-1.5 h-1.5 mr-1.5" fill="currentColor" viewBox="0 0 8 8">
+                                                            <circle cx="4" cy="4" r="3"/>
+                                                        </svg>
+                                                        Inactive
+                                                    </span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Pagination Controls -->
+                    <div id="edit-tenant-pagination" class="hidden border-t border-border px-4 py-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm text-muted-foreground">
+                                    Showing <span id="edit-page-start">1</span> to <span id="edit-page-end">15</span> of <span id="edit-total-tenants">{{ $tenants->count() }}</span> tenants
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <button type="button" id="edit-prev-page" onclick="changeEditPage(-1)" 
+                                        class="inline-flex items-center px-2 py-2 text-sm font-medium text-muted-foreground bg-background border border-input rounded-l-lg hover:bg-muted hover:text-card-foreground">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                    </svg>
+                                </button>
+                                <span id="edit-page-numbers" class="inline-flex"></span>
+                                <button type="button" id="edit-next-page" onclick="changeEditPage(1)" 
+                                        class="inline-flex items-center px-2 py-2 text-sm font-medium text-muted-foreground bg-background border border-input rounded-r-lg hover:bg-muted hover:text-card-foreground">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Empty State -->
+                    <div id="edit-no-tenants-message" class="hidden text-center py-8 text-muted-foreground">
+                        <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <p class="text-sm">No tenants found</p>
+                        <p class="text-xs text-muted-foreground mt-1">Try adjusting your search criteria</p>
+                    </div>
+                    
+                    @error('tenant_ids')
+                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
-                @error('tenant_ids')
-                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                @enderror
             </div>
         </div>
 
@@ -427,7 +573,206 @@
 </div>
 
 <script>
+// Edit form tenant management functions
+let editCurrentPage = 1;
+const editItemsPerPage = 15;
+let editFilteredRows = [];
+
+// Row click functionality
+function toggleEditTenantRow(row, tenantId) {
+    const checkbox = row.querySelector('input[name="tenant_ids[]"]');
+    checkbox.checked = !checkbox.checked;
+    updateEditSelectedCount();
+}
+
+// Search functionality
+let editSearchTimer;
+function searchEditTenants() {
+    clearTimeout(editSearchTimer);
+    editSearchTimer = setTimeout(() => {
+        const searchTerm = document.getElementById('edit-tenant-search').value.toLowerCase();
+        const tableBody = document.getElementById('edit-tenant-table-body');
+        const rows = tableBody.querySelectorAll('tr');
+        let visibleCount = 0;
+        
+        rows.forEach(row => {
+            const name = row.dataset.tenantName || '';
+            const slug = row.dataset.tenantSlug || '';
+            const domain = row.dataset.tenantDomain || '';
+            
+            const isVisible = name.includes(searchTerm) || 
+                            slug.includes(searchTerm) || 
+                            domain.includes(searchTerm);
+            
+            row.style.display = isVisible ? '' : 'none';
+            if (isVisible) visibleCount++;
+        });
+        
+        // Show/hide empty state
+        const noTenantsMessage = document.getElementById('edit-no-tenants-message');
+        if (visibleCount === 0 && searchTerm !== '') {
+            noTenantsMessage.classList.remove('hidden');
+            tableBody.style.display = 'none';
+        } else {
+            noTenantsMessage.classList.add('hidden');
+            tableBody.style.display = '';
+        }
+        
+        // Update pagination after search
+        initializeEditPagination();
+    }, 300);
+}
+
+// Selection count update
+function updateEditSelectedCount() {
+    const selectedCheckboxes = document.querySelectorAll('.edit-tenant-checkbox:checked');
+    const count = selectedCheckboxes.length;
+    document.getElementById('edit-selected-count').textContent = count;
+    updateEditSelectAllState();
+}
+
+function updateEditSelectAllState() {
+    const allVisibleCheckboxes = Array.from(document.querySelectorAll('.edit-tenant-checkbox'))
+        .filter(cb => cb.closest('tr').style.display !== 'none');
+    const selectedVisibleCheckboxes = allVisibleCheckboxes.filter(cb => cb.checked);
+    const selectAllCheckbox = document.getElementById('select-all-edit-tenants');
+    
+    if (selectedVisibleCheckboxes.length === 0) {
+        selectAllCheckbox.indeterminate = false;
+        selectAllCheckbox.checked = false;
+    } else if (selectedVisibleCheckboxes.length === allVisibleCheckboxes.length) {
+        selectAllCheckbox.indeterminate = false;
+        selectAllCheckbox.checked = true;
+    } else {
+        selectAllCheckbox.indeterminate = true;
+        selectAllCheckbox.checked = false;
+    }
+}
+
+function toggleAllEditTenants(selectAllCheckbox) {
+    const visibleCheckboxes = Array.from(document.querySelectorAll('.edit-tenant-checkbox'))
+        .filter(cb => cb.closest('tr').style.display !== 'none');
+    
+    visibleCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+    updateEditSelectedCount();
+}
+
+function selectAllEditTenants() {
+    const visibleCheckboxes = Array.from(document.querySelectorAll('.edit-tenant-checkbox'))
+        .filter(cb => cb.closest('tr').style.display !== 'none');
+    const selectAllCheckbox = document.getElementById('select-all-edit-tenants');
+    
+    visibleCheckboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    selectAllCheckbox.checked = true;
+    selectAllCheckbox.indeterminate = false;
+    updateEditSelectedCount();
+}
+
+function selectNoneEditTenants() {
+    const visibleCheckboxes = Array.from(document.querySelectorAll('.edit-tenant-checkbox'))
+        .filter(cb => cb.closest('tr').style.display !== 'none');
+    const selectAllCheckbox = document.getElementById('select-all-edit-tenants');
+    
+    visibleCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    selectAllCheckbox.checked = false;
+    selectAllCheckbox.indeterminate = false;
+    updateEditSelectedCount();
+}
+
+// Pagination functionality
+function initializeEditPagination() {
+    const tableBody = document.getElementById('edit-tenant-table-body');
+    const visibleRows = Array.from(tableBody.querySelectorAll('tr'))
+        .filter(row => row.style.display !== 'none');
+    editFilteredRows = visibleRows;
+    
+    if (visibleRows.length > editItemsPerPage) {
+        document.getElementById('edit-tenant-pagination').classList.remove('hidden');
+        updateEditPagination();
+    } else {
+        document.getElementById('edit-tenant-pagination').classList.add('hidden');
+        // Show all rows if no pagination needed
+        visibleRows.forEach(row => row.style.display = '');
+    }
+}
+
+function updateEditPagination() {
+    const totalItems = editFilteredRows.length;
+    const totalPages = Math.ceil(totalItems / editItemsPerPage);
+    const startIndex = (editCurrentPage - 1) * editItemsPerPage;
+    const endIndex = Math.min(startIndex + editItemsPerPage, totalItems);
+    
+    // Update pagination info
+    document.getElementById('edit-page-start').textContent = totalItems > 0 ? startIndex + 1 : 0;
+    document.getElementById('edit-page-end').textContent = endIndex;
+    document.getElementById('edit-total-tenants').textContent = totalItems;
+    
+    // Show/hide rows
+    const allRows = document.querySelectorAll('#edit-tenant-table-body tr');
+    allRows.forEach(row => row.style.display = 'none');
+    
+    editFilteredRows.forEach((row, index) => {
+        row.style.display = (index >= startIndex && index < endIndex) ? '' : 'none';
+    });
+    
+    // Update pagination buttons
+    document.getElementById('edit-prev-page').disabled = editCurrentPage === 1;
+    document.getElementById('edit-next-page').disabled = editCurrentPage === totalPages;
+    
+    // Update page numbers
+    updateEditPageNumbers(totalPages);
+}
+
+function updateEditPageNumbers(totalPages) {
+    const pageNumbers = document.getElementById('edit-page-numbers');
+    pageNumbers.innerHTML = '';
+    
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= editCurrentPage - 2 && i <= editCurrentPage + 2)) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = i;
+            button.onclick = () => goToEditPage(i);
+            button.className = `px-3 py-2 text-sm font-medium leading-tight ${
+                i === editCurrentPage 
+                    ? 'text-primary bg-muted border border-input' 
+                    : 'text-muted-foreground bg-background border border-input hover:bg-muted hover:text-card-foreground'
+            }`;
+            pageNumbers.appendChild(button);
+        } else if (i === editCurrentPage - 3 || i === editCurrentPage + 3) {
+            const span = document.createElement('span');
+            span.textContent = '...';
+            span.className = 'px-3 py-2 text-sm font-medium text-muted-foreground';
+            pageNumbers.appendChild(span);
+        }
+    }
+}
+
+function changeEditPage(direction) {
+    const totalPages = Math.ceil(editFilteredRows.length / editItemsPerPage);
+    const newPage = editCurrentPage + direction;
+    
+    if (newPage >= 1 && newPage <= totalPages) {
+        editCurrentPage = newPage;
+        updateEditPagination();
+    }
+}
+
+function goToEditPage(page) {
+    editCurrentPage = page;
+    updateEditPagination();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize pagination on page load
+    initializeEditPagination();
+    
     // Check for success/error messages from Laravel
     @if(session('success'))
         if (window.showToast) {

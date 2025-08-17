@@ -1,5 +1,26 @@
 <!DOCTYPE html>
 <html lang="en" x-data="{ darkMode: $persist(false) }" :class="{ 'dark': darkMode }">
+<script>
+    // Prevent flash of light theme - run immediately
+    (function() {
+        try {
+            const savedTheme = localStorage.getItem('darkMode')
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+            
+            if (savedTheme !== null) {
+                if (JSON.parse(savedTheme)) {
+                    document.documentElement.classList.add('dark')
+                }
+            } else if (systemPrefersDark) {
+                document.documentElement.classList.add('dark')
+                localStorage.setItem('darkMode', 'true')
+            }
+        } catch (e) {
+            // Fallback if localStorage is not available
+            console.warn('Could not initialize theme:', e)
+        }
+    })()
+</script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,38 +38,38 @@
             theme: {
                 extend: {
                     colors: {
-                        border: "hsl(214.3 31.8% 91.4%)",
-                        input: "hsl(214.3 31.8% 91.4%)",
-                        ring: "hsl(222.2 84% 4.9%)",
-                        background: "hsl(0 0% 100%)",
-                        foreground: "hsl(222.2 84% 4.9%)",
+                        border: "hsl(var(--border))",
+                        input: "hsl(var(--input))",
+                        ring: "hsl(var(--ring))",
+                        background: "hsl(var(--background))",
+                        foreground: "hsl(var(--foreground))",
                         primary: {
-                            DEFAULT: "hsl(222.2 47.4% 11.2%)",
-                            foreground: "hsl(210 40% 98%)",
+                            DEFAULT: "hsl(var(--primary))",
+                            foreground: "hsl(var(--primary-foreground))",
                         },
                         secondary: {
-                            DEFAULT: "hsl(210 40% 96%)",
-                            foreground: "hsl(222.2 84% 4.9%)",
+                            DEFAULT: "hsl(var(--secondary))",
+                            foreground: "hsl(var(--secondary-foreground))",
                         },
                         destructive: {
-                            DEFAULT: "hsl(0 84.2% 60.2%)",
-                            foreground: "hsl(210 40% 98%)",
+                            DEFAULT: "hsl(var(--destructive))",
+                            foreground: "hsl(var(--destructive-foreground))",
                         },
                         muted: {
-                            DEFAULT: "hsl(210 40% 96%)",
-                            foreground: "hsl(215.4 16.3% 46.9%)",
+                            DEFAULT: "hsl(var(--muted))",
+                            foreground: "hsl(var(--muted-foreground))",
                         },
                         accent: {
-                            DEFAULT: "hsl(210 40% 96%)",
-                            foreground: "hsl(222.2 84% 4.9%)",
+                            DEFAULT: "hsl(var(--accent))",
+                            foreground: "hsl(var(--accent-foreground))",
                         },
                         popover: {
-                            DEFAULT: "hsl(0 0% 100%)",
-                            foreground: "hsl(222.2 84% 4.9%)",
+                            DEFAULT: "hsl(var(--popover))",
+                            foreground: "hsl(var(--popover-foreground))",
                         },
                         card: {
-                            DEFAULT: "hsl(0 0% 100%)",
-                            foreground: "hsl(222.2 84% 4.9%)",
+                            DEFAULT: "hsl(var(--card))",
+                            foreground: "hsl(var(--card-foreground))",
                         },
                     },
                     borderRadius: {
@@ -63,6 +84,50 @@
     <style>
         :root {
             --radius: 0.5rem;
+            
+            /* Light mode colors */
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 222.2 84% 4.9%;
+            --popover: 0 0% 100%;
+            --popover-foreground: 222.2 84% 4.9%;
+            --primary: 222.2 47.4% 11.2%;
+            --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96%;
+            --secondary-foreground: 222.2 84% 4.9%;
+            --muted: 210 40% 96%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96%;
+            --accent-foreground: 222.2 84% 4.9%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%;
+            --input: 214.3 31.8% 91.4%;
+            --ring: 222.2 84% 4.9%;
+        }
+        
+        .dark {
+            /* Dark mode colors */
+            --background: 222.2 84% 4.9%;
+            --foreground: 210 40% 98%;
+            --card: 222.2 84% 4.9%;
+            --card-foreground: 210 40% 98%;
+            --popover: 222.2 84% 4.9%;
+            --popover-foreground: 210 40% 98%;
+            --primary: 210 40% 98%;
+            --primary-foreground: 222.2 84% 4.9%;
+            --secondary: 217.2 32.6% 17.5%;
+            --secondary-foreground: 210 40% 98%;
+            --muted: 217.2 32.6% 17.5%;
+            --muted-foreground: 215 20.2% 65.1%;
+            --accent: 217.2 32.6% 17.5%;
+            --accent-foreground: 210 40% 98%;
+            --destructive: 0 62.8% 30.6%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 217.2 32.6% 17.5%;
+            --input: 217.2 32.6% 17.5%;
+            --ring: 212.7 26.8% 83.9%;
         }
     </style>
     <script>
@@ -88,26 +153,12 @@
             })
         })
 
-        // Initialize theme based on system preference or saved preference
-        (function() {
-            const savedTheme = localStorage.getItem('darkMode')
-            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-            
-            if (savedTheme !== null) {
-                if (JSON.parse(savedTheme)) {
-                    document.documentElement.classList.add('dark')
-                }
-            } else if (systemPrefersDark) {
-                document.documentElement.classList.add('dark')
-                localStorage.setItem('darkMode', 'true')
-            }
-        })()
     </script>
 </head>
-<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
+<body class="bg-background text-foreground min-h-screen transition-colors duration-300">
     <div class="flex min-h-screen">
         <!-- Sidebar -->
-        <div class="hidden w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 lg:block fixed h-screen transition-colors duration-300">
+        <div class="hidden w-64 bg-card border-r border-border lg:block fixed h-screen transition-colors duration-300">
             <div class="flex h-full flex-col">
                 <!-- Logo -->
                 <div class="flex h-16 items-center border-b border-gray-200 dark:border-gray-700 px-6 transition-colors duration-300">

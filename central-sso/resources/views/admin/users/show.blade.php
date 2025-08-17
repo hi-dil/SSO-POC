@@ -103,11 +103,11 @@
                     <div class="flex items-center space-x-3">
                         <h2 class="text-2xl font-bold text-card-foreground">{{ $user->name }}</h2>
                         @if($user->is_admin)
-                            <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-red-50 text-red-700">
+                            <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300">
                                 Admin
                             </span>
                         @else
-                            <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-green-50 text-green-700">
+                            <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300">
                                 User
                             </span>
                         @endif
@@ -206,7 +206,7 @@
                                     <div class="flex items-center space-x-2">
                                         <span class="text-sm text-card-foreground">{{ $contact->value }}</span>
                                         @if($contact->is_primary)
-                                            <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-blue-50 text-blue-700">
+                                            <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
                                                 Primary
                                             </span>
                                         @endif
@@ -283,7 +283,7 @@
                                             {{ $address->label ?: ucwords($address->type) }}
                                         </span>
                                         @if($address->is_primary)
-                                            <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-blue-50 text-blue-700">
+                                            <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
                                                 Primary
                                             </span>
                                         @endif
@@ -354,36 +354,72 @@
     <!-- Tenant Access -->
     <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm">
         <div class="p-6">
-            <h3 class="text-lg font-semibold mb-4">Tenant Access</h3>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">Tenant Access ({{ $user->tenants->count() }})</h3>
+                @can('users.edit')
+                    <button onclick="showTenantModal({{ $user->id }})" 
+                            class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3 py-1">
+                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        Manage Access
+                    </button>
+                @endcan
+            </div>
             @if($user->tenants->count() > 0)
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     @foreach($user->tenants as $tenant)
-                        <div class="p-4 border border-border rounded-lg">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h4 class="font-medium text-card-foreground">{{ $tenant->name }}</h4>
+                        <div class="p-4 border border-border rounded-lg hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2 mb-2">
+                                        <h4 class="font-medium text-card-foreground">{{ $tenant->name }}</h4>
+                                        @if($tenant->is_active)
+                                            <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300">
+                                                Active
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300">
+                                                Inactive
+                                            </span>
+                                        @endif
+                                    </div>
                                     <p class="text-sm text-muted-foreground">{{ $tenant->slug }}</p>
+                                    @if($tenant->domain)
+                                        <p class="text-xs text-muted-foreground">{{ $tenant->domain }}</p>
+                                    @endif
                                     @if($tenant->description)
                                         <p class="text-xs text-muted-foreground mt-1">{{ $tenant->description }}</p>
                                     @endif
-                                </div>
-                                <div class="flex-shrink-0">
-                                    @if($tenant->is_active)
-                                        <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-green-50 text-green-700">
-                                            Active
+                                    <div class="mt-2">
+                                        <span class="text-xs text-muted-foreground">
+                                            Added {{ $tenant->pivot->created_at ? $tenant->pivot->created_at->format('M d, Y') : 'N/A' }}
                                         </span>
-                                    @else
-                                        <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-red-50 text-red-700">
-                                            Inactive
-                                        </span>
-                                    @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     @endforeach
                 </div>
             @else
-                <p class="text-muted-foreground">This user does not have access to any tenants.</p>
+                <div class="text-center py-8">
+                    <svg class="mx-auto h-12 w-12 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m14 0v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5"></path>
+                    </svg>
+                    <h3 class="mt-4 text-sm font-semibold text-card-foreground">No tenant access</h3>
+                    <p class="mt-2 text-sm text-muted-foreground">This user does not have access to any tenants.</p>
+                    @can('users.edit')
+                        <div class="mt-4">
+                            <button onclick="showTenantModal({{ $user->id }})" 
+                                    class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
+                                <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Assign Tenants
+                            </button>
+                        </div>
+                    @endcan
+                </div>
             @endif
         </div>
     </div>
@@ -441,7 +477,336 @@
     </div>
 </div>
 
+<!-- Tenant Management Modal -->
+<div id="tenant-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <!-- Background overlay -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onclick="closeTenantModal()"></div>
+    
+    <!-- Modal content -->
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative w-full max-w-4xl transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 shadow-xl transition-all">
+            <!-- Modal header -->
+            <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            Manage Tenant Access
+                        </h3>
+                        <div class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                            <span id="modal-user-name" class="font-medium">{{ $user->name }}</span>
+                            <span class="text-gray-500">•</span>
+                            <span id="modal-user-email">{{ $user->email }}</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeTenantModal()" 
+                            class="rounded-md bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="sr-only">Close</span>
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Modal body -->
+            <div class="px-6 py-4">
+                <div class="space-y-4">
+                    @php
+                        $allTenants = \App\Models\Tenant::where('is_active', true)->get();
+                    @endphp
+                    
+                    <!-- Summary Information -->
+                    <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-600 dark:text-gray-400">Available Tenants:</span>
+                            <span class="font-medium text-gray-900 dark:text-white">{{ $allTenants->count() }}</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm mt-2">
+                            <span class="text-gray-600 dark:text-gray-400">Currently Assigned:</span>
+                            <span class="font-medium text-blue-600 dark:text-blue-400">{{ $user->tenants->count() }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Search and Controls -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-sm font-medium text-gray-900 dark:text-white">
+                                Select Tenant Access
+                            </h4>
+                            <div class="flex items-center space-x-2">
+                                <button type="button" onclick="selectAllShowPageTenants()" 
+                                        class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
+                                    Select All
+                                </button>
+                                <span class="text-gray-300 dark:text-gray-600">|</span>
+                                <button type="button" onclick="selectNoneShowPageTenants()" 
+                                        class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
+                                    Select None
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Search Bar -->
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-4 w-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                            <input type="text" 
+                                   id="show-tenant-search" 
+                                   placeholder="Search tenants by name, slug, or domain..."
+                                   onkeyup="searchShowPageTenants()"
+                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                    
+                    <!-- Tenant Selection Table -->
+                    <div>
+                        
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                            <div class="max-h-80 overflow-y-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-gray-50 dark:bg-gray-800 sticky top-0">
+                                        <tr>
+                                            <th class="w-12 px-4 py-3 text-left">
+                                                <input type="checkbox" 
+                                                       id="select-all-show-tenants" 
+                                                       onchange="toggleAllShowPageTenants(this)"
+                                                       class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                            </th>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-900 dark:text-white">Tenant Name</th>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-900 dark:text-white">Slug</th>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-900 dark:text-white">Domain</th>
+                                            <th class="px-4 py-3 text-left font-medium text-gray-900 dark:text-white">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="show-tenant-table-body" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                        @foreach($allTenants as $tenant)
+                                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors" 
+                                                onclick="toggleShowPageTenantRow(this, '{{ $tenant->id }}')"
+                                                data-tenant-id="{{ $tenant->id }}"
+                                                data-tenant-name="{{ strtolower($tenant->name) }}"
+                                                data-tenant-slug="{{ strtolower($tenant->slug) }}"
+                                                data-tenant-domain="{{ strtolower($tenant->domain) }}">
+                                                <td class="px-4 py-3" onclick="event.stopPropagation()">
+                                                    <input type="checkbox" 
+                                                           name="tenant_assignment" 
+                                                           value="{{ $tenant->id }}"
+                                                           {{ $user->tenants->contains('id', $tenant->id) ? 'checked' : '' }}
+                                                           onchange="updateShowPageSelectedCount()"
+                                                           class="show-page-tenant-checkbox rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    <div>
+                                                        <div class="font-medium text-gray-900 dark:text-white">
+                                                            {{ $tenant->name }}
+                                                        </div>
+                                                        @if($tenant->description)
+                                                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                                {{ Str::limit($tenant->description, 50) }}
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    <code class="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-gray-700 dark:text-gray-300">
+                                                        {{ $tenant->slug }}
+                                                    </code>
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    <span class="text-gray-600 dark:text-gray-400">
+                                                        {{ $tenant->domain }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    @if($tenant->is_active)
+                                                        <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                                                            <svg class="w-1.5 h-1.5 mr-1.5" fill="currentColor" viewBox="0 0 8 8">
+                                                                <circle cx="4" cy="4" r="3"/>
+                                                            </svg>
+                                                            Active
+                                                        </span>
+                                                    @else
+                                                        <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+                                                            <svg class="w-1.5 h-1.5 mr-1.5" fill="currentColor" viewBox="0 0 8 8">
+                                                                <circle cx="4" cy="4" r="3"/>
+                                                            </svg>
+                                                            Inactive
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        @if($allTenants->count() === 0)
+                            <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                                <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m14 0v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5"></path>
+                                </svg>
+                                <p class="text-sm">No tenants available</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal footer -->
+            <div class="border-t border-gray-200 dark:border-gray-700 px-6 py-4">
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeTenantModal()" 
+                            class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-10 px-4 py-2">
+                        Cancel
+                    </button>
+                    <button type="button" onclick="saveTenantAssignments()" 
+                            class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 h-10 px-4 py-2">
+                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+// Tenant management modal functionality
+let currentUserId = {{ $user->id }};
+
+async function showTenantModal(userId) {
+    currentUserId = userId;
+    
+    // Show the modal
+    document.getElementById('tenant-modal').classList.remove('hidden');
+}
+
+function closeTenantModal() {
+    document.getElementById('tenant-modal').classList.add('hidden');
+}
+
+async function saveTenantAssignments() {
+    if (!currentUserId) return;
+    
+    const checkboxes = document.querySelectorAll('input[name="tenant_assignment"]:checked');
+    const selectedTenants = Array.from(checkboxes).map(cb => cb.value);
+    
+    try {
+        const response = await fetch(`/admin/users/${currentUserId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                tenant_ids: selectedTenants
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            if (window.showToast) {
+                window.showToast('Tenant assignments updated successfully', 'success');
+            }
+            closeTenantModal();
+            // Reload the page to reflect changes
+            window.location.reload();
+        } else {
+            throw new Error(data.message || 'Failed to update tenant assignments');
+        }
+    } catch (error) {
+        console.error('Error updating tenant assignments:', error);
+        if (window.showToast) {
+            window.showToast('Error updating tenant assignments: ' + error.message, 'error');
+        }
+    }
+}
+
+// Show page tenant selection functions
+function updateShowPageSelectedCount() {
+    updateShowPageSelectAllState();
+}
+
+function updateShowPageSelectAllState() {
+    const allCheckboxes = document.querySelectorAll('.show-page-tenant-checkbox');
+    const selectedCheckboxes = document.querySelectorAll('.show-page-tenant-checkbox:checked');
+    const selectAllCheckbox = document.getElementById('select-all-show-tenants');
+    
+    if (selectedCheckboxes.length === 0) {
+        selectAllCheckbox.indeterminate = false;
+        selectAllCheckbox.checked = false;
+    } else if (selectedCheckboxes.length === allCheckboxes.length) {
+        selectAllCheckbox.indeterminate = false;
+        selectAllCheckbox.checked = true;
+    } else {
+        selectAllCheckbox.indeterminate = true;
+        selectAllCheckbox.checked = false;
+    }
+}
+
+function toggleAllShowPageTenants(selectAllCheckbox) {
+    const tenantCheckboxes = document.querySelectorAll('.show-page-tenant-checkbox');
+    tenantCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+    updateShowPageSelectedCount();
+}
+
+function selectAllShowPageTenants() {
+    const tenantCheckboxes = document.querySelectorAll('.show-page-tenant-checkbox');
+    const selectAllCheckbox = document.getElementById('select-all-show-tenants');
+    tenantCheckboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    selectAllCheckbox.checked = true;
+    selectAllCheckbox.indeterminate = false;
+    updateShowPageSelectedCount();
+}
+
+function selectNoneShowPageTenants() {
+    const tenantCheckboxes = document.querySelectorAll('.show-page-tenant-checkbox');
+    const selectAllCheckbox = document.getElementById('select-all-show-tenants');
+    tenantCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    selectAllCheckbox.checked = false;
+    selectAllCheckbox.indeterminate = false;
+    updateShowPageSelectedCount();
+}
+
+// Show page row click functionality
+function toggleShowPageTenantRow(row, tenantId) {
+    const checkbox = row.querySelector('input[name="tenant_assignment"]');
+    checkbox.checked = !checkbox.checked;
+    updateShowPageSelectedCount();
+}
+
+// Show page search functionality
+function searchShowPageTenants() {
+    const searchTerm = document.getElementById('show-tenant-search').value.toLowerCase();
+    const tableBody = document.getElementById('show-tenant-table-body');
+    const rows = tableBody.querySelectorAll('tr');
+    
+    rows.forEach(row => {
+        const name = row.dataset.tenantName || '';
+        const slug = row.dataset.tenantSlug || '';
+        const domain = row.dataset.tenantDomain || '';
+        
+        const isVisible = name.includes(searchTerm) || 
+                        slug.includes(searchTerm) || 
+                        domain.includes(searchTerm);
+        
+        row.style.display = isVisible ? '' : 'none';
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Check for success/error messages from Laravel
     @if(session('success'))

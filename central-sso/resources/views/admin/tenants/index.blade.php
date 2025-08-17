@@ -213,7 +213,7 @@
                                 </td>
                                 <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">
                                     <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 
-                                        @if($tenant->is_active) border-transparent bg-green-50 text-green-700 @else border-destructive/10 text-destructive @endif">
+                                        @if($tenant->is_active) border-transparent bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 @else border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 @endif">
                                         {{ $tenant->is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
@@ -233,11 +233,11 @@
                                                 </svg>
                                             </button>
 
-                                            <div id="dropdown-{{ $tenant->id }}" class="hidden absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                            <div id="dropdown-{{ $tenant->id }}" class="hidden absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black dark:ring-gray-600 ring-opacity-5 focus:outline-none">
                                                 <div class="py-1">
                                                     <!-- View Action -->
                                                     <a href="{{ route('admin.tenants.show', $tenant) }}" 
-                                                       class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                       class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                                                         <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
@@ -248,7 +248,7 @@
                                                     @can('tenants.view')
                                                         <!-- Manage Users Action -->
                                                         <a href="{{ route('admin.tenants.users', $tenant) }}" 
-                                                           class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                           class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                                                             <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                                             </svg>
@@ -259,7 +259,7 @@
                                                     @can('tenants.edit')
                                                         <!-- Edit Action -->
                                                         <a href="{{ route('admin.tenants.edit', $tenant) }}" 
-                                                           class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                           class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                                                             <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                                             </svg>
@@ -267,13 +267,13 @@
                                                         </a>
 
                                                         <!-- Divider -->
-                                                        <div class="border-t border-gray-100"></div>
+                                                        <div class="border-t border-gray-100 dark:border-gray-700"></div>
 
                                                         <!-- Toggle Status Action -->
                                                         <form method="POST" action="{{ route('admin.tenants.toggle', $tenant) }}" class="block">
                                                             @csrf
                                                             @method('PATCH')
-                                                            <button type="submit" class="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                            <button type="submit" class="flex w-full items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                                                                 <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     @if($tenant->is_active)
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"></path>
@@ -290,7 +290,7 @@
                                                         @if($tenant->users_count == 0)
                                                             <!-- Delete Action -->
                                                             <button onclick="confirmDelete('{{ route('admin.tenants.destroy', $tenant) }}')" 
-                                                                    class="flex w-full items-center px-4 py-2 text-sm text-red-700 hover:bg-red-50">
+                                                                    class="flex w-full items-center px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30">
                                                                 <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                                                 </svg>
@@ -367,7 +367,7 @@
 <div id="bulkCreateModal" class="fixed inset-0 bg-black/80 z-50 hidden">
     <div class="fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] grid w-full max-w-lg gap-4 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-lg duration-200 rounded-lg">
         <div class="flex flex-col space-y-1.5 text-center sm:text-left">
-            <h2 class="text-lg font-semibold leading-none tracking-tight">Bulk Create Tenants</h2>
+            <h2 class="text-lg font-semibold leading-none tracking-tight text-gray-900 dark:text-white">Bulk Create Tenants</h2>
             <p class="text-sm text-gray-600 dark:text-gray-400">This will create 50 realistic tenants for testing purposes.</p>
         </div>
         

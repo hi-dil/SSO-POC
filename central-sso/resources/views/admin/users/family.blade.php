@@ -62,13 +62,13 @@
                                 
                                 <div class="flex items-center space-x-2 mt-2">
                                     @if($member->is_emergency_contact)
-                                        <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-red-50 text-red-700">
+                                        <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300">
                                             Emergency Contact
                                         </span>
                                     @endif
                                     
                                     @if($member->is_dependent)
-                                        <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-blue-50 text-blue-700">
+                                        <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
                                             Dependent
                                         </span>
                                     @endif
