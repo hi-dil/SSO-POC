@@ -19,6 +19,9 @@ Check the **[Guides](guides/)** for step-by-step instructions.
 ### **Looking for technical details?**
 See the **[Reference](reference/)** section for APIs and configuration.
 
+### **Planning future features?**
+Check the **[TODO Documentation](todo/README.md)** for planned enhancements and roadmap.
+
 ## 📚 Documentation Sections
 
 ### 📖 [Getting Started](getting-started/README.md)
@@ -52,6 +55,11 @@ See the **[Reference](reference/)** section for APIs and configuration.
 - [Configuration Reference](reference/configuration.md) - All configuration options
 - [CLI Commands](reference/cli-commands.md) - Available Artisan commands
 - [Troubleshooting Guide](reference/troubleshooting.md) - Common issues and solutions
+
+### 📋 [TODO Documentation](todo/README.md)
+**Future features and roadmap**
+- [External SSO Integration](todo/external-sso-integration.md) - OAuth provider integration (Google, GitHub, etc.)
+- Future enhancements and planned features
 
 ## 🎯 Quick Start
 
