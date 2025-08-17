@@ -15,6 +15,15 @@ cp .env.docker .env
 # Start all services
 docker compose up -d
 
+# Fix permissions (prevents 500 errors)
+sudo chown -R 33:33 central-sso/storage central-sso/bootstrap/cache
+sudo chown -R 33:33 tenant1-app/storage tenant1-app/bootstrap/cache  
+sudo chown -R 33:33 tenant2-app/storage tenant2-app/bootstrap/cache
+sudo chmod -R 775 central-sso/storage central-sso/bootstrap/cache
+sudo chmod -R 775 tenant1-app/storage tenant1-app/bootstrap/cache
+sudo chmod -R 775 tenant2-app/storage tenant2-app/bootstrap/cache
+docker compose restart
+
 # Set up database and test data
 docker exec central-sso php artisan migrate
 docker exec central-sso php artisan db:seed --class=AddTestUsersSeeder
@@ -97,6 +106,20 @@ All users use password: **password**
 | `user@tenant1.com` | Tenant 1 | Regular Tenant 1 user |
 | `admin@tenant2.com` | Tenant 2 | Tenant 2 administrator |
 | `user@tenant2.com` | Tenant 2 | Regular Tenant 2 user |
+
+## 🚨 Getting 500 Errors?
+
+If you see 500 errors after starting the system:
+
+```bash
+# Quick fix for permission issues
+./scripts/fix-permissions.sh
+
+# Or manually fix permissions
+sudo chown -R 33:33 {central-sso,tenant1-app,tenant2-app}/{storage,bootstrap/cache}
+sudo chmod -R 775 {central-sso,tenant1-app,tenant2-app}/{storage,bootstrap/cache}
+docker compose restart
+```
 
 ## 🎯 What You Just Created
 

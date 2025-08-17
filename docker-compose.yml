@@ -40,6 +40,7 @@ services:
       - mariadb
     networks:
       - sso-network
+      - cloudflare-net
 
   # Tenant 1 Application
   tenant1-app:
@@ -79,6 +80,7 @@ services:
       - central-sso
     networks:
       - sso-network
+      - cloudflare-net
 
   # Tenant 2 Application
   tenant2-app:
@@ -118,6 +120,7 @@ services:
       - central-sso
     networks:
       - sso-network
+      - cloudflare-net
 
   # MariaDB Database
   mariadb:
@@ -139,6 +142,8 @@ services:
 networks:
   sso-network:
     driver: bridge
+  cloudflare-net:
+    external: true
 
 volumes:
   mariadb_data:

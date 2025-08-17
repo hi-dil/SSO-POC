@@ -270,6 +270,20 @@ The SSO system implements **enterprise-grade security** with multiple layers of 
 - Available only in development environment
 
 ## Common Issues
+
+### 🚨 500 Error - Permission Issues (Most Common)
+**Symptoms**: Getting 500 errors when accessing applications
+**Cause**: Docker bind mounts preserve host file ownership, but Laravel needs www-data (UID 33) to write to storage
+**Quick Fix**:
+```bash
+# Fix from host machine (not inside Docker)
+sudo chown -R 33:33 {central-sso,tenant1-app,tenant2-app}/{storage,bootstrap/cache}
+sudo chmod -R 775 {central-sso,tenant1-app,tenant2-app}/{storage,bootstrap/cache}
+docker compose restart
+```
+**Script Fix**: `./scripts/fix-permissions.sh`
+
+### Other Common Issues
 - **Invalid credentials**: Ensure using MariaDB, not SQLite
 - **Database connection**: Check Docker containers are running
 - **Token validation**: Verify tenant associations in database

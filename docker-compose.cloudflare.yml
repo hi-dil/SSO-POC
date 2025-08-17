@@ -1,0 +1,31 @@
+# Cloudflare Tunnel Docker Compose
+# This file sets up the Cloudflare tunnel in a separate container
+# Run with: docker-compose -f docker-compose.cloudflare.yml up -d
+
+version: '3.8'
+
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: ${CLOUDFLARE_CONTAINER:-cloudflared-sso}
+    restart: unless-stopped
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./cloudflare/config.yml:/etc/cloudflared/config.yml:ro
+      - ./cloudflare/tunnel-credentials.json:/etc/cloudflared/tunnel-credentials.json:ro
+    networks:
+      - cloudflare-net
+    environment:
+      # Optional: Cloudflare specific environment variables
+      - TUNNEL_METRICS=0.0.0.0:8080
+      - TUNNEL_LOGFILE=/var/log/cloudflared.log
+    healthcheck:
+      test: ["CMD", "cloudflared", "tunnel", "info"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  cloudflare-net:
+    external: true

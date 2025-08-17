@@ -4,6 +4,47 @@ Comprehensive guide for diagnosing and resolving common issues in the multi-tena
 
 ## 🚨 Emergency Response
 
+### 500 Error - Permission Issues (Most Common)
+
+**Symptoms**: 
+- Getting 500 Internal Server Error when accessing any application
+- Laravel logs show: "Permission denied" or "Operation not permitted"  
+- Error: "The stream or file could not be opened in append mode"
+- Error: "The /var/www/html/bootstrap/cache directory must be present and writable"
+
+**Root Cause**: 
+Docker bind mounts preserve host file ownership. Laravel runs as www-data (UID 33) but files are owned by your host user, preventing write access to storage directories.
+
+**Immediate Fix**:
+```bash
+# Run from project root on HOST machine (not inside Docker)
+sudo chown -R 33:33 central-sso/storage central-sso/bootstrap/cache
+sudo chown -R 33:33 tenant1-app/storage tenant1-app/bootstrap/cache  
+sudo chown -R 33:33 tenant2-app/storage tenant2-app/bootstrap/cache
+sudo chmod -R 775 central-sso/storage central-sso/bootstrap/cache
+sudo chmod -R 775 tenant1-app/storage tenant1-app/bootstrap/cache
+sudo chmod -R 775 tenant2-app/storage tenant2-app/bootstrap/cache
+docker compose restart
+```
+
+**Automated Fix**:
+```bash
+# Use the provided script
+./scripts/fix-permissions.sh
+```
+
+**Verification**:
+```bash
+# Test if files are now writable
+docker exec central-sso php artisan config:clear
+docker exec central-sso tail -n 10 /var/www/html/storage/logs/laravel.log
+```
+
+**Prevention**: 
+- Add permission fix to your deployment process
+- Consider using Docker volumes instead of bind mounts for production
+- Set proper ownership in Dockerfiles for new projects
+
 ### Critical System Failures
 
 #### Complete System Down

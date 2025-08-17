@@ -28,6 +28,14 @@ This approach is perfect for home users who want a secure, professional SSO syst
 - **Cloudflare Account**: For tunnel and DNS management
 - **Home Server**: Ubuntu 20.04+ or similar Linux distribution
 
+### 🌐 Example Domain Setup
+This guide uses `hi-dil.com` as the example domain with these subdomains:
+- **Central SSO**: `sso.poc.hi-dil.com` - Main authentication server
+- **Tenant 1**: `tenant-one.poc.hi-dil.com` - First tenant application  
+- **Tenant 2**: `tenant-two.poc.hi-dil.com` - Second tenant application
+
+Replace these with your actual domain throughout the guide.
+
 ---
 
 ## 🚀 Part 1: Server Preparation
@@ -86,12 +94,12 @@ cat > .env.cloudflare << 'EOF'
 # Cloudflare Configuration
 CLOUDFLARE_API_TOKEN=your_api_token_here
 CLOUDFLARE_EMAIL=your_cloudflare_email@example.com
-CLOUDFLARE_ZONE=yourdomain.com
+CLOUDFLARE_ZONE=hi-dil.com
 
 # Domain Configuration
-CENTRAL_SSO_DOMAIN=sso.yourdomain.com
-TENANT1_DOMAIN=app1.yourdomain.com
-TENANT2_DOMAIN=app2.yourdomain.com
+CENTRAL_SSO_DOMAIN=sso.poc.hi-dil.com
+TENANT1_DOMAIN=tenant-one.poc.hi-dil.com
+TENANT2_DOMAIN=tenant-two.poc.hi-dil.com
 
 # Tunnel Configuration
 TUNNEL_NAME=home-sso-tunnel
@@ -136,22 +144,62 @@ APP_ENV=production
 APP_DEBUG=false
 
 # Your Domains (matching Cloudflare setup)
-CENTRAL_SSO_APP_URL=https://sso.yourdomain.com
-TENANT1_APP_URL=https://app1.yourdomain.com
-TENANT2_APP_URL=https://app2.yourdomain.com
+CENTRAL_SSO_APP_URL=https://sso.poc.hi-dil.com
+TENANT1_APP_URL=https://tenant-one.poc.hi-dil.com
+TENANT2_APP_URL=https://tenant-two.poc.hi-dil.com
 
 # External URLs for SSO
-CENTRAL_SSO_URL=https://sso.yourdomain.com
+CENTRAL_SSO_URL=https://sso.poc.hi-dil.com
 
 # Security Settings
 SESSION_SECURE_COOKIE=true
-SESSION_DOMAIN=.yourdomain.com
+SESSION_DOMAIN=.poc.hi-dil.com
 
 # Generate new secrets (see security section below)
 CENTRAL_SSO_APP_KEY=base64:YOUR_GENERATED_KEY
 TENANT1_APP_KEY=base64:YOUR_GENERATED_KEY  
 TENANT2_APP_KEY=base64:YOUR_GENERATED_KEY
 JWT_SECRET=YOUR_JWT_SECRET
+
+# Additional Security Configuration
+TENANT1_API_KEY=tenant1_GENERATED_API_KEY_HERE
+TENANT2_API_KEY=tenant2_GENERATED_API_KEY_HERE
+HMAC_SECRET=YOUR_GENERATED_HMAC_SECRET
+```
+
+**Complete Example Configuration:**
+```bash
+# Example showing all required variables for hi-dil.com domain
+APP_ENV=production
+APP_DEBUG=false
+
+# Service URLs
+CENTRAL_SSO_APP_URL=https://sso.poc.hi-dil.com
+TENANT1_APP_URL=https://tenant-one.poc.hi-dil.com
+TENANT2_APP_URL=https://tenant-two.poc.hi-dil.com
+CENTRAL_SSO_URL=https://sso.poc.hi-dil.com
+CENTRAL_SSO_API=http://central-sso:8000/api
+
+# Security
+SESSION_SECURE_COOKIE=true
+SESSION_DOMAIN=.poc.hi-dil.com
+CENTRAL_SSO_APP_KEY=base64:FmhWkTVoDR3t2v05Xkcif7M4ODUrgqRlbdbUEVBS9XU=
+TENANT1_APP_KEY=base64:HqiigYO+Xlti2S2EsiyLvWUULEoQtM5ss5d8EUe5rdA=
+TENANT2_APP_KEY=base64:QLs20sZ3pWZOPf9ZpIFTmINE8ZD7VxgJ/DVO9CTjRIs=
+JWT_SECRET=U6HY6rcTfmpHNYeCH83Y1GL9aoRzp4rwFWp7RMhAf5vYDjrjy58sVX9QyliHdT4y
+
+# API Keys  
+TENANT1_API_KEY=tenant1_0059abacdb1bd536fd605b520902f89658672011
+TENANT2_API_KEY=tenant2_0010258f78e44ca7ad9de92a1a1c9307b278bbd7
+HMAC_SECRET=your_generated_hmac_secret_here
+
+# Database (using defaults)
+DB_CONNECTION=mysql
+DB_HOST=mariadb
+DB_PORT=3306
+DB_DATABASE=sso_main
+DB_USERNAME=sso_user
+DB_PASSWORD=sso_password
 ```
 
 ### Step 3.3: Generate Security Keys
@@ -177,6 +225,18 @@ docker-compose up -d
 # Check service status
 docker-compose ps
 
+# IMPORTANT: Fix permissions for Laravel storage
+# This prevents 500 errors and permission issues
+sudo chown -R 33:33 central-sso/storage central-sso/bootstrap/cache
+sudo chown -R 33:33 tenant1-app/storage tenant1-app/bootstrap/cache
+sudo chown -R 33:33 tenant2-app/storage tenant2-app/bootstrap/cache
+sudo chmod -R 775 central-sso/storage central-sso/bootstrap/cache
+sudo chmod -R 775 tenant1-app/storage tenant1-app/bootstrap/cache
+sudo chmod -R 775 tenant2-app/storage tenant2-app/bootstrap/cache
+
+# Restart containers after permission fix
+docker-compose restart
+
 # Run database migrations
 docker exec central-sso php artisan migrate
 
@@ -186,6 +246,8 @@ docker exec central-sso php artisan db:seed --class=AddTestUsersSeeder
 # View logs if needed
 docker-compose logs -f
 ```
+
+> ⚠️ **Critical Step**: The permission fix above is essential when using bind mounts. Without it, you'll get 500 errors because Laravel can't write to its storage directories.
 
 ## 🌉 Part 4: Connect to Cloudflare Tunnel
 
@@ -201,14 +263,14 @@ credentials-file: /etc/cloudflared/tunnel-credentials.json
 
 ingress:
   # Central SSO
-  - hostname: sso.yourdomain.com
+  - hostname: sso.poc.hi-dil.com
     service: http://central-sso:8000
   
   # Tenant Applications  
-  - hostname: app1.yourdomain.com
+  - hostname: tenant-one.poc.hi-dil.com
     service: http://tenant1-app:8000
     
-  - hostname: app2.yourdomain.com
+  - hostname: tenant-two.poc.hi-dil.com
     service: http://tenant2-app:8000
     
   # Catch-all rule (required)
@@ -216,9 +278,32 @@ ingress:
 EOF
 ```
 
-### Step 4.2: Start Cloudflare Tunnel
+### Step 4.2: Setup Bridge Network and Start Tunnel
+
+The SSO system now uses a separate bridge network for Cloudflare tunnel communication:
+
 ```bash
-# Add tunnel service to docker-compose
+# Create the bridge network
+./scripts/setup-cloudflare-network.sh
+
+# Copy tunnel configuration template
+cp cloudflare/config.yml.example cloudflare/config.yml
+
+# Edit with your tunnel details
+nano cloudflare/config.yml
+# Replace YOUR_TUNNEL_UUID_HERE with your actual tunnel UUID
+# Update domain names to match your Cloudflare domains
+
+# Start SSO services (they'll join the cloudflare-net network)
+docker-compose up -d
+
+# Start Cloudflare tunnel in separate container
+docker-compose -f docker-compose.cloudflare.yml up -d
+```
+
+**Alternative: Single Docker Compose (if you prefer)**
+```bash
+# If you want everything in one file, add to docker-compose.yml:
 cat >> docker-compose.yml << 'EOF'
 
   # Cloudflare Tunnel
@@ -230,11 +315,8 @@ cat >> docker-compose.yml << 'EOF'
       - ./cloudflare/config.yml:/etc/cloudflared/config.yml:ro
       - ./cloudflare/tunnel-credentials.json:/etc/cloudflared/tunnel-credentials.json:ro
     networks:
-      - sso-network
-    depends_on:
-      - central-sso
-      - tenant1-app
-      - tenant2-app
+      - cloudflare-net
+    restart: unless-stopped
 EOF
 
 # Restart with tunnel
@@ -246,20 +328,20 @@ docker-compose up -d
 ### Step 5.1: Test External Access
 ```bash
 # Test each endpoint
-curl -I https://sso.yourdomain.com
-curl -I https://app1.yourdomain.com
-curl -I https://app2.yourdomain.com
+curl -I https://sso.poc.hi-dil.com
+curl -I https://tenant-one.poc.hi-dil.com
+curl -I https://tenant-two.poc.hi-dil.com
 
 # Check tunnel status
 docker logs cloudflared
 ```
 
 ### Step 5.2: Test SSO Flow
-1. Visit `https://sso.yourdomain.com`
+1. Visit `https://sso.poc.hi-dil.com`
 2. Login with test credentials:
    - Email: `superadmin@sso.com`
    - Password: `password`
-3. Visit `https://app1.yourdomain.com/login`
+3. Visit `https://tenant-one.poc.hi-dil.com/login`
 4. Test both direct login and SSO redirect
 
 ## 🔄 Part 6: Maintenance and Updates
@@ -338,8 +420,8 @@ chmod +x backup.sh
 docker logs cloudflared
 
 # Verify DNS records
-dig sso.yourdomain.com
-nslookup app1.yourdomain.com
+dig sso.poc.hi-dil.com
+nslookup tenant-one.poc.hi-dil.com
 ```
 
 **SSL Certificate Issues:**
@@ -347,7 +429,7 @@ nslookup app1.yourdomain.com
 - Ensure DNS records are pointing to Cloudflare (orange cloud enabled)
 - Wait 15-30 minutes for certificate propagation
 
-**Application Not Loading:**
+**Application Not Loading (500 Error):**
 ```bash
 # Check service health
 docker-compose ps
@@ -355,15 +437,47 @@ docker-compose logs central-sso
 
 # Check database connectivity
 docker exec central-sso php artisan migrate:status
+
+# Check for specific Laravel errors
+docker exec central-sso tail -n 50 /var/www/html/storage/logs/laravel.log
 ```
 
-**Permission Issues:**
-```bash
-# Fix Docker permissions
-sudo chmod 666 /var/run/docker.sock
+**Permission Issues (Most Common Issue):**
 
-# Fix application permissions
-docker exec central-sso chown -R www-data:www-data /var/www/html/storage
+If you see errors like "Permission denied" or "Operation not permitted":
+
+```bash
+# This is the most common issue with bind mounts
+# Fix from the HOST machine (not inside Docker):
+
+# Navigate to your project directory
+cd ~/sso-deployment/sso-poc-claude3
+
+# Fix ownership for www-data (UID 33)
+sudo chown -R 33:33 central-sso/storage central-sso/bootstrap/cache
+sudo chown -R 33:33 tenant1-app/storage tenant1-app/bootstrap/cache  
+sudo chown -R 33:33 tenant2-app/storage tenant2-app/bootstrap/cache
+
+# Set proper permissions
+sudo chmod -R 775 central-sso/storage central-sso/bootstrap/cache
+sudo chmod -R 775 tenant1-app/storage tenant1-app/bootstrap/cache
+sudo chmod -R 775 tenant2-app/storage tenant2-app/bootstrap/cache
+
+# Restart containers
+docker-compose restart
+```
+
+**Why This Happens:**
+- Docker bind mounts preserve host file ownership
+- Laravel needs www-data (UID 33) to write to storage directories
+- Your host files are owned by your user, not www-data
+
+**Alternative: Run Quick Fix Script**
+```bash
+# Download and run the fix script
+curl -o fix-permissions.sh https://raw.githubusercontent.com/your-repo/sso-poc-claude3/main/scripts/fix-permissions.sh
+chmod +x fix-permissions.sh
+./fix-permissions.sh
 ```
 
 ## 🔒 Security Considerations
