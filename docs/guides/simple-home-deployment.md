@@ -234,7 +234,13 @@ sudo chmod -R 775 central-sso/storage central-sso/bootstrap/cache
 sudo chmod -R 775 tenant1-app/storage tenant1-app/bootstrap/cache
 sudo chmod -R 775 tenant2-app/storage tenant2-app/bootstrap/cache
 
-# Restart containers after permission fix
+# IMPORTANT: Configure for HTTPS (required for production deployment)
+# Add TrustProxies configuration to detect HTTPS behind Cloudflare
+echo 'TRUSTED_PROXIES=*' >> .env
+echo 'SESSION_SECURE_COOKIE=true' >> .env
+echo 'SESSION_DOMAIN=.poc.hi-dil.com' >> .env
+
+# Restart containers after configuration changes
 docker-compose restart
 
 # Run database migrations
@@ -410,6 +416,60 @@ chmod +x backup.sh
 ./backup.sh
 ```
 
+## 🛡️ Understanding TrustProxies Middleware
+
+The SSO system includes pre-configured TrustProxies middleware that is **essential for HTTPS deployments** behind Cloudflare Tunnel.
+
+### Why TrustProxies is Critical
+
+When your application runs behind Cloudflare's proxy, Laravel cannot automatically detect that requests are using HTTPS. This causes several issues:
+
+- **Session Cookies**: Secure cookies won't be set properly
+- **CSRF Protection**: Token validation fails because Laravel thinks requests are HTTP
+- **URL Generation**: Links and redirects may use HTTP instead of HTTPS
+
+### How It Works
+
+The TrustProxies middleware is automatically configured in all applications:
+
+- **`central-sso/app/Http/Middleware/TrustProxies.php`**
+- **`tenant1-app/app/Http/Middleware/TrustProxies.php`**
+- **`tenant2-app/app/Http/Middleware/TrustProxies.php`**
+
+Each middleware:
+1. **Detects Cloudflare IPs**: Automatically trusts Cloudflare's IP ranges
+2. **Reads Proxy Headers**: Processes `X-Forwarded-Proto`, `X-Forwarded-For`, etc.
+3. **Environment Configurable**: Use `TRUSTED_PROXIES=*` for development
+
+### Configuration Options
+
+```env
+# Development: Trust all proxies (convenient but less secure)
+TRUSTED_PROXIES=*
+
+# Production: Trust specific Cloudflare IP ranges (automatic)
+# TRUSTED_PROXIES=173.245.48.0/20,103.21.244.0/22,...
+
+# Required for HTTPS
+SESSION_SECURE_COOKIE=true
+SESSION_DOMAIN=.poc.hi-dil.com
+SESSION_SAME_SITE=lax
+```
+
+### Verification
+
+Check that TrustProxies is working:
+
+```bash
+# Verify middleware configuration
+./scripts/verify-trustproxies.sh
+
+# Test HTTPS detection
+docker exec central-sso curl -H "X-Forwarded-Proto: https" http://localhost:8000/health
+```
+
+**✅ Pre-configured**: The middleware is already installed and configured in all applications. You just need to set the environment variables for your deployment.
+
 ## 🔧 Troubleshooting
 
 ### Common Issues
@@ -479,6 +539,66 @@ curl -o fix-permissions.sh https://raw.githubusercontent.com/your-repo/sso-poc-c
 chmod +x fix-permissions.sh
 ./fix-permissions.sh
 ```
+
+**SSL/TLS Connection Errors (ERR_SSL_VERSION_OR_CIPHER_MISMATCH):**
+
+If you get SSL connection errors when trying to access your domain:
+
+```bash
+# Run comprehensive SSL troubleshooting
+./scripts/troubleshoot-ssl.sh
+
+# Common fixes:
+# 1. Check if Cloudflare tunnel is running
+docker logs cloudflared-sso
+
+# 2. Verify DNS is pointing to Cloudflare
+dig sso.poc.hi-dil.com
+
+# 3. Check Cloudflare SSL settings
+# - Go to SSL/TLS → Overview in Cloudflare dashboard
+# - Set to "Full" or "Full (strict)" mode
+# - Ensure DNS records are "Proxied" (orange cloud)
+
+# 4. Restart tunnel if needed
+docker-compose -f docker-compose.cloudflare.yml restart
+```
+
+**419 Page Expired (CSRF Token Errors):**
+
+If you get "Page Expired" errors when submitting forms:
+
+```bash
+# Run automatic CSRF fix
+./scripts/fix-https-csrf.sh
+
+# Manual fix if needed:
+# 1. Update session configuration for HTTPS
+echo 'SESSION_SECURE_COOKIE=true' >> .env
+echo 'SESSION_DOMAIN=.poc.hi-dil.com' >> .env
+echo 'SESSION_SAME_SITE=lax' >> .env
+echo 'TRUSTED_PROXIES=*' >> .env
+
+# 2. Restart containers
+docker-compose restart
+
+# 3. Clear caches
+docker exec central-sso php artisan config:clear
+docker exec central-sso php artisan cache:clear
+```
+
+**Why CSRF Errors Happen:**
+- Laravel's CSRF protection fails when it can't detect HTTPS properly
+- Session cookies need secure flag enabled for HTTPS
+- TrustProxies middleware is required behind Cloudflare
+- SameSite cookie policy can block CSRF tokens
+
+**SSL Configuration Checklist:**
+- [ ] Cloudflare tunnel is running (`docker ps | grep cloudflared`)
+- [ ] DNS records point to Cloudflare with "Proxied" status
+- [ ] SSL/TLS mode is "Full" or "Full (strict)" in Cloudflare
+- [ ] Tunnel configuration file exists (`cloudflare/config.yml`)
+- [ ] Tunnel credentials are valid (`cloudflare/tunnel-credentials.json`)
 
 ## 🔒 Security Considerations
 

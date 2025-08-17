@@ -23,7 +23,81 @@ composer require laravel/telescope
 composer require guzzlehttp/guzzle
 ```
 
-### 2. Environment Configuration
+### 2. Configure TrustProxies Middleware
+
+**⚠️ CRITICAL for HTTPS deployments**: Create TrustProxies middleware to handle Cloudflare proxy detection:
+
+```php
+<?php
+// app/Http/Middleware/TrustProxies.php
+namespace App\Http\Middleware;
+
+use Illuminate\Http\Middleware\TrustProxies as Middleware;
+use Illuminate\Http\Request;
+
+class TrustProxies extends Middleware
+{
+    protected $proxies;
+    
+    protected $headers =
+        Request::HEADER_X_FORWARDED_FOR |
+        Request::HEADER_X_FORWARDED_HOST |
+        Request::HEADER_X_FORWARDED_PORT |
+        Request::HEADER_X_FORWARDED_PROTO |
+        Request::HEADER_X_FORWARDED_AWS_ELB;
+
+    public function __construct()
+    {
+        $this->proxies = $this->getTrustedProxies();
+    }
+
+    protected function getTrustedProxies()
+    {
+        $trustedProxies = env('TRUSTED_PROXIES');
+        
+        if ($trustedProxies === '*') {
+            return '*';
+        }
+        
+        if ($trustedProxies) {
+            return array_map('trim', explode(',', $trustedProxies));
+        }
+        
+        // Default Cloudflare IP ranges
+        return [
+            '173.245.48.0/20', '103.21.244.0/22', '103.22.200.0/22',
+            '103.31.4.0/22', '141.101.64.0/18', '108.162.192.0/18',
+            '190.93.240.0/20', '188.114.96.0/20', '197.234.240.0/22',
+            '198.41.128.0/17', '162.158.0.0/15', '104.16.0.0/13',
+            '104.24.0.0/14', '172.64.0.0/13', '131.0.72.0/22',
+        ];
+    }
+}
+```
+
+Update your `bootstrap/app.php`:
+
+```php
+<?php
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Middleware;
+
+return Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        commands: __DIR__.'/../routes/console.php',
+        health: '/up',
+    )
+    ->withMiddleware(function (Middleware $middleware): void {
+        // Configure trusted proxies for HTTPS detection behind Cloudflare
+        $middleware->trustProxies(at: \App\Http\Middleware\TrustProxies::class);
+    })
+    ->withExceptions(function (Exceptions $exceptions): void {
+        //
+    })->create();
+```
+
+### 3. Environment Configuration
 
 Add these variables to your `.env` file:
 
@@ -48,6 +122,11 @@ JWT_TTL=60
 # App Configuration
 APP_URL=http://localhost:8003  # Use next available port
 SESSION_DOMAIN=localhost
+
+# HTTPS/Proxy Configuration (REQUIRED for production)
+TRUSTED_PROXIES=*
+SESSION_SECURE_COOKIE=false  # Set to true for HTTPS deployment
+SESSION_SAME_SITE=lax
 SANCTUM_STATEFUL_DOMAINS=localhost:8003,localhost:8000
 ```
 

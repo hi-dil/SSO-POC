@@ -224,15 +224,22 @@ The SSO system implements **enterprise-grade security** with multiple layers of 
 ┌─────────────────────────────────────────────────────────────┐
 │                     Security Layers                        │
 ├─────────────────────────────────────────────────────────────┤
-│ 1. API Key Authentication (Server-to-Server)               │
-│ 2. HMAC Request Signing (Tamper Protection)                │
-│ 3. Multi-Layer Rate Limiting (DoS Protection)              │
-│ 4. Request ID Tracking (Audit Trail)                       │
-│ 5. SSL/TLS Encryption (Data in Transit)                    │
-│ 6. JWT Token Security (Session Management)                 │
-│ 7. CSRF Protection (Web UI)                                │
+│ 1. TrustProxies Middleware (HTTPS Detection)               │
+│ 2. API Key Authentication (Server-to-Server)               │
+│ 3. HMAC Request Signing (Tamper Protection)                │
+│ 4. Multi-Layer Rate Limiting (DoS Protection)              │
+│ 5. Request ID Tracking (Audit Trail)                       │
+│ 6. SSL/TLS Encryption (Data in Transit)                    │
+│ 7. JWT Token Security (Session Management)                 │
+│ 8. CSRF Protection (Web UI)                                │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+### 🛡️ TrustProxies Middleware
+- **HTTPS Detection**: Properly detects HTTPS requests behind Cloudflare proxy
+- **Cloudflare Integration**: Pre-configured with Cloudflare IP ranges for automatic proxy detection
+- **Flexible Configuration**: Supports `TRUSTED_PROXIES=*` for development or specific IP ranges for production
+- **Essential for CSRF**: Enables proper session cookie handling and CSRF token validation on HTTPS
 
 ### 🔑 API Key Authentication
 - **Tenant-Specific Keys**: Each tenant has a unique API key for identification
@@ -282,6 +289,39 @@ sudo chmod -R 775 {central-sso,tenant1-app,tenant2-app}/{storage,bootstrap/cache
 docker compose restart
 ```
 **Script Fix**: `./scripts/fix-permissions.sh`
+
+### 🔒 SSL/HTTPS Connection Issues
+**Symptoms**: ERR_SSL_VERSION_OR_CIPHER_MISMATCH or connection refused errors when accessing HTTPS domains
+**Cause**: Cloudflare tunnel configuration or SSL certificate issues
+**Quick Fix**:
+```bash
+# Diagnose SSL issues
+./scripts/troubleshoot-ssl.sh
+
+# Check tunnel status
+docker logs cloudflared-sso
+
+# Verify DNS pointing to Cloudflare (should show Cloudflare IPs)
+dig sso.poc.hi-dil.com
+```
+**Complete Fix**: `./scripts/fix-https-csrf.sh`
+
+### 🛡️ 419 Page Expired (CSRF Token) Errors
+**Symptoms**: "Page Expired" errors when submitting forms on HTTPS deployment
+**Cause**: Laravel cannot detect HTTPS properly behind Cloudflare proxy, breaking CSRF token validation
+**Root Cause**: Missing TrustProxies middleware configuration
+**Quick Fix**:
+```bash
+# Automatic fix for CSRF and HTTPS issues
+./scripts/fix-https-csrf.sh
+
+# Manual fix - ensure these are in your .env:
+echo 'TRUSTED_PROXIES=*' >> .env
+echo 'SESSION_SECURE_COOKIE=true' >> .env
+echo 'SESSION_DOMAIN=.poc.hi-dil.com' >> .env
+docker-compose restart
+```
+**Important**: TrustProxies middleware is pre-configured in all applications to handle Cloudflare proxy detection.
 
 ### Other Common Issues
 - **Invalid credentials**: Ensure using MariaDB, not SQLite
