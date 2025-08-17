@@ -106,7 +106,7 @@ cat ~/.ssh/github_actions_deploy
 
 1. **Add Domain to Cloudflare**
    - Sign up at [cloudflare.com](https://cloudflare.com)
-   - Add your domain (e.g., `your-domain.com`)
+   - Add your domain (e.g., `hi-dil.com`)
    - Update nameservers at your domain registrar
    - Wait for activation (usually 5-30 minutes)
 
@@ -122,7 +122,7 @@ cat ~/.ssh/github_actions_deploy
    - Zone:Read (for zone information access)
    
    Zone Resources:
-   - Include: Specific zone - your-domain.com
+   - Include: Specific zone - hi-dil.com
    
    Account Resources:
    - Leave default (not required for basic tunnel setup)
@@ -204,22 +204,22 @@ tunnel: ${TUNNEL_ID}
 
 ingress:
   # Central SSO Server
-  - hostname: sso.your-domain.com
+  - hostname: sso.poc.hi-dil.com
     service: http://central-sso:8000
     originRequest:
-      httpHostHeader: sso.your-domain.com
+      httpHostHeader: sso.poc.hi-dil.com
       
   # Tenant 1 Application
-  - hostname: tenant-one.your-domain.com
+  - hostname: tenant-one.poc.hi-dil.com
     service: http://tenant1-app:8000
     originRequest:
-      httpHostHeader: tenant-one.your-domain.com
+      httpHostHeader: tenant-one.poc.hi-dil.com
       
   # Tenant 2 Application
-  - hostname: tenant-two.your-domain.com
+  - hostname: tenant-two.poc.hi-dil.com
     service: http://tenant2-app:8000
     originRequest:
-      httpHostHeader: tenant-two.your-domain.com
+      httpHostHeader: tenant-two.poc.hi-dil.com
       
   # Catch-all rule (required)
   - service: http_status:404
@@ -239,22 +239,22 @@ credentials-file: /etc/cloudflared/tunnel-credentials.json
 
 ingress:
   # Central SSO Server
-  - hostname: sso.your-domain.com
+  - hostname: sso.poc.hi-dil.com
     service: http://central-sso:8000
     originRequest:
-      httpHostHeader: sso.your-domain.com
+      httpHostHeader: sso.poc.hi-dil.com
       
   # Tenant 1 Application
-  - hostname: tenant-one.your-domain.com
+  - hostname: tenant-one.poc.hi-dil.com
     service: http://tenant1-app:8000
     originRequest:
-      httpHostHeader: tenant-one.your-domain.com
+      httpHostHeader: tenant-one.poc.hi-dil.com
       
   # Tenant 2 Application
-  - hostname: tenant-two.your-domain.com
+  - hostname: tenant-two.poc.hi-dil.com
     service: http://tenant2-app:8000
     originRequest:
-      httpHostHeader: tenant-two.your-domain.com
+      httpHostHeader: tenant-two.poc.hi-dil.com
       
   # Catch-all rule (required)
   - service: http_status:404
@@ -273,7 +273,7 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/YOUR_ZONE_ID/dns_record
      -H "Content-Type: application/json" \
      --data '{
        "type": "CNAME",
-       "name": "sso.your-domain.com",
+       "name": "sso.poc",
        "content": "TUNNEL_ID.cfargotunnel.com",
        "ttl": 1
      }'
@@ -283,7 +283,7 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/YOUR_ZONE_ID/dns_record
      -H "Content-Type: application/json" \
      --data '{
        "type": "CNAME",
-       "name": "tenant-one.your-domain.com",
+       "name": "tenant-one.poc",
        "content": "TUNNEL_ID.cfargotunnel.com",
        "ttl": 1
      }'
@@ -293,7 +293,7 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/YOUR_ZONE_ID/dns_record
      -H "Content-Type: application/json" \
      --data '{
        "type": "CNAME",
-       "name": "tenant-two.your-domain.com",
+       "name": "tenant-two.poc",
        "content": "TUNNEL_ID.cfargotunnel.com",
        "ttl": 1
      }'
@@ -376,7 +376,7 @@ cat > .env.production << EOF
 APP_NAME="Multi-Tenant SSO"
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://sso.your-domain.com
+APP_URL=https://sso.poc.hi-dil.com
 APP_KEY=base64:$(openssl rand -base64 32)
 
 # Database Configuration
@@ -400,7 +400,7 @@ REDIS_PORT=6379
 # Session Configuration
 SESSION_DRIVER=redis
 SESSION_LIFETIME=120
-SESSION_DOMAIN=.your-domain.com
+SESSION_DOMAIN=.poc.hi-dil.com
 SESSION_SECURE_COOKIE=true
 SESSION_SAME_SITE=lax
 
@@ -417,7 +417,7 @@ MAIL_PORT=587
 MAIL_USERNAME=your-email@gmail.com
 MAIL_PASSWORD=your-app-password
 MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS=noreply@your-domain.com
+MAIL_FROM_ADDRESS=noreply@hi-dil.com
 MAIL_FROM_NAME="Multi-Tenant SSO"
 
 # Cloudflare Configuration
@@ -556,13 +556,13 @@ services:
     environment:
       - APP_ENV=production
       - APP_DEBUG=false
-      - APP_URL=https://sso.your-domain.com
+      - APP_URL=https://sso.poc.hi-dil.com
       - DB_HOST=mariadb
       - DB_PASSWORD=${DB_PASSWORD}
       - REDIS_HOST=redis
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
-      - SESSION_DOMAIN=.your-domain.com
+      - SESSION_DOMAIN=.poc.hi-dil.com
       - SESSION_SECURE_COOKIE=true
     volumes:
       - ./logs/central-sso:/var/www/html/storage/logs
@@ -582,7 +582,7 @@ services:
     environment:
       - APP_ENV=production
       - APP_DEBUG=false
-      - APP_URL=https://tenant-one.your-domain.com
+      - APP_URL=https://tenant-one.poc.hi-dil.com
       - CENTRAL_SSO_URL=http://central-sso:8000
       - TENANT_SLUG=tenant1
       - TENANT_API_KEY=${TENANT1_API_KEY}
@@ -593,7 +593,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
-      - SESSION_DOMAIN=.your-domain.com
+      - SESSION_DOMAIN=.poc.hi-dil.com
     volumes:
       - ./logs/tenant1-app:/var/www/html/storage/logs
     networks:
@@ -613,7 +613,7 @@ services:
     environment:
       - APP_ENV=production
       - APP_DEBUG=false
-      - APP_URL=https://tenant-two.your-domain.com
+      - APP_URL=https://tenant-two.poc.hi-dil.com
       - CENTRAL_SSO_URL=http://central-sso:8000
       - TENANT_SLUG=tenant2
       - TENANT_API_KEY=${TENANT2_API_KEY}
@@ -624,7 +624,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
-      - SESSION_DOMAIN=.your-domain.com
+      - SESSION_DOMAIN=.poc.hi-dil.com
     volumes:
       - ./logs/tenant2-app:/var/www/html/storage/logs
     networks:
@@ -702,9 +702,9 @@ docker-compose -f docker-compose.production.yml exec central-sso php artisan ten
 
 ```bash
 # Test tunnel connectivity
-curl -I https://sso.your-domain.com
-curl -I https://tenant-one.your-domain.com
-curl -I https://tenant-two.your-domain.com
+curl -I https://sso.poc.hi-dil.com
+curl -I https://tenant-one.poc.hi-dil.com
+curl -I https://tenant-two.poc.hi-dil.com
 
 # Check tunnel metrics
 curl http://localhost:9090/metrics
@@ -713,23 +713,23 @@ curl http://localhost:9090/metrics
 ### Step 6.2: Test SSO Authentication
 
 1. **Access Central SSO**
-   - Open: https://sso.your-domain.com
+   - Open: https://sso.poc.hi-dil.com
    - Login with: `superadmin@sso.com` / `password`
 
 2. **Test Tenant 1**
-   - Open: https://tenant-one.your-domain.com
+   - Open: https://tenant-one.poc.hi-dil.com
    - Try direct login with SSO credentials
    - Test "Login with SSO" button
 
 3. **Test Tenant 2**
-   - Open: https://tenant-two.your-domain.com
+   - Open: https://tenant-two.poc.hi-dil.com
    - Verify cross-tenant access works
 
 ### Step 6.3: Test API Endpoints
 
 ```bash
 # Test API authentication
-curl -X POST https://sso.your-domain.com/api/auth/login \
+curl -X POST https://sso.poc.hi-dil.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "superadmin@sso.com",
@@ -738,9 +738,9 @@ curl -X POST https://sso.your-domain.com/api/auth/login \
   }'
 
 # Test health endpoints
-curl https://sso.your-domain.com/health
-curl https://tenant-one.your-domain.com/health
-curl https://tenant-two.your-domain.com/health
+curl https://sso.poc.hi-dil.com/health
+curl https://tenant-one.poc.hi-dil.com/health
+curl https://tenant-two.poc.hi-dil.com/health
 ```
 
 ---
@@ -751,10 +751,10 @@ curl https://tenant-two.your-domain.com/health
 
 ```bash
 # Verify SSL certificates
-echo | openssl s_client -connect sso.your-domain.com:443 -servername sso.your-domain.com | openssl x509 -noout -dates
+echo | openssl s_client -connect sso.poc.hi-dil.com:443 -servername sso.poc.hi-dil.com | openssl x509 -noout -dates
 
 # Check security headers
-curl -I https://sso.your-domain.com
+curl -I https://sso.poc.hi-dil.com
 
 # Enable HSTS and security headers in Cloudflare
 # Go to Cloudflare Dashboard → SSL/TLS → Edge Certificates → Enable HSTS
@@ -850,7 +850,7 @@ git push origin main
 
 - **GitHub Actions**: Monitor progress in repository Actions tab
 - **Server Logs**: `docker-compose -f docker-compose.production.yml logs -f`
-- **Application Health**: Visit https://sso.your-domain.com/health
+- **Application Health**: Visit https://sso.poc.hi-dil.com/health
 
 ---
 
@@ -987,11 +987,11 @@ docker-compose -f docker-compose.production.yml restart mariadb central-sso
 #### Issue: SSL Certificate Problems
 ```bash
 # Check certificate status
-echo | openssl s_client -connect sso.your-domain.com:443 -servername sso.your-domain.com
+echo | openssl s_client -connect sso.poc.hi-dil.com:443 -servername sso.poc.hi-dil.com
 
 # Verify DNS records
-dig sso.your-domain.com
-nslookup tenant-one.your-domain.com
+dig sso.poc.hi-dil.com
+nslookup tenant-one.poc.hi-dil.com
 
 # Force SSL renewal in Cloudflare (dashboard)
 ```
