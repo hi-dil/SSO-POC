@@ -155,19 +155,32 @@ cat ~/.ssh/github_actions_deploy
    - Note the tunnel ID (shown in the dashboard)
    - Click **Next**
 
-4. **Configure Routes** (we'll do this later)
-   - Skip the route configuration for now
+4. **Configure Public Hostnames**
+   - Add Route 1:
+     - **Subdomain**: `sso.poc`
+     - **Domain**: `hi-dil.com`
+     - **Service Type**: HTTP
+     - **URL**: `central-sso:8000`
+   - Add Route 2:
+     - **Subdomain**: `tenant-one.poc`
+     - **Domain**: `hi-dil.com`
+     - **Service Type**: HTTP
+     - **URL**: `tenant1-app:8000`
+   - Add Route 3:
+     - **Subdomain**: `tenant-two.poc`
+     - **Domain**: `hi-dil.com`
+     - **Service Type**: HTTP
+     - **URL**: `tenant2-app:8000`
    - Click **Save tunnel**
 
 5. **Save Tunnel Information**
    ```bash
    # Create project directory
-   mkdir -p ~/sso-production/cloudflare
+   mkdir -p ~/sso-production
    cd ~/sso-production
    
-   # Save tunnel information (replace with your values)
-   echo "TUNNEL_TOKEN=eyJhIjoiYWJjZGVmZ..." > cloudflare/tunnel-token.txt
-   echo "TUNNEL_ID=your-tunnel-id-here" > cloudflare/tunnel-id.txt
+   # Save tunnel token (replace with your actual token)
+   echo "TUNNEL_TOKEN=eyJhIjoiYWJjZGVmZ..." > tunnel-token.txt
    ```
 
 #### Method B: CLI Setup (Alternative)
@@ -189,50 +202,18 @@ ls -la cloudflare/
 # Should show: tunnel-credentials.json and config files
 ```
 
-### Step 2.3: Configure Tunnel
+### Step 2.3: Verify Tunnel Setup
 
-#### For Manual Setup (Method A):
+**For Manual Setup (Method A)**: No additional configuration needed! 
+- Routes are configured in the Cloudflare dashboard
+- Tunnel will use the token for authentication
+- DNS records will be created automatically
 
-```bash
-# Get your tunnel ID
-TUNNEL_ID=$(cat cloudflare/tunnel-id.txt)
-
-# Create tunnel configuration
-cat > cloudflare/config.yml << EOF
-tunnel: ${TUNNEL_ID}
-# credentials-file not needed when using tunnel token
-
-ingress:
-  # Central SSO Server
-  - hostname: sso.poc.hi-dil.com
-    service: http://central-sso:8000
-    originRequest:
-      httpHostHeader: sso.poc.hi-dil.com
-      
-  # Tenant 1 Application
-  - hostname: tenant-one.poc.hi-dil.com
-    service: http://tenant1-app:8000
-    originRequest:
-      httpHostHeader: tenant-one.poc.hi-dil.com
-      
-  # Tenant 2 Application
-  - hostname: tenant-two.poc.hi-dil.com
-    service: http://tenant2-app:8000
-    originRequest:
-      httpHostHeader: tenant-two.poc.hi-dil.com
-      
-  # Catch-all rule (required)
-  - service: http_status:404
-
-# Metrics configuration
-metrics: 0.0.0.0:9090
-EOF
-```
-
-#### For CLI Setup (Method B):
+**For CLI Setup (Method B)**: Create configuration file:
 
 ```bash
 # Create tunnel configuration using credentials file
+mkdir -p cloudflare
 cat > cloudflare/config.yml << 'EOF'
 tunnel: sso-home-server
 credentials-file: /etc/cloudflared/tunnel-credentials.json
@@ -241,20 +222,14 @@ ingress:
   # Central SSO Server
   - hostname: sso.poc.hi-dil.com
     service: http://central-sso:8000
-    originRequest:
-      httpHostHeader: sso.poc.hi-dil.com
       
   # Tenant 1 Application
   - hostname: tenant-one.poc.hi-dil.com
     service: http://tenant1-app:8000
-    originRequest:
-      httpHostHeader: tenant-one.poc.hi-dil.com
       
   # Tenant 2 Application
   - hostname: tenant-two.poc.hi-dil.com
     service: http://tenant2-app:8000
-    originRequest:
-      httpHostHeader: tenant-two.poc.hi-dil.com
       
   # Catch-all rule (required)
   - service: http_status:404
@@ -264,7 +239,17 @@ metrics: 0.0.0.0:9090
 EOF
 ```
 
-### Step 2.4: Create DNS Records
+### Step 2.4: Verify DNS Records
+
+**For Manual Setup (Method A)**: DNS records are created automatically!
+- When you configured Public Hostnames in the dashboard, Cloudflare automatically created the necessary CNAME records
+- Verify in Cloudflare dashboard: **DNS** → **Records**
+- You should see:
+  - `sso.poc.hi-dil.com` → `TUNNEL_ID.cfargotunnel.com`
+  - `tenant-one.poc.hi-dil.com` → `TUNNEL_ID.cfargotunnel.com`  
+  - `tenant-two.poc.hi-dil.com` → `TUNNEL_ID.cfargotunnel.com`
+
+**For CLI Setup (Method B)**: Create DNS records manually:
 
 ```bash
 # Create DNS records via API (replace YOUR_ZONE_ID and YOUR_API_TOKEN)
@@ -365,6 +350,7 @@ TENANT1_API_KEY
 TENANT2_API_KEY
 TENANT1_HMAC_SECRET
 TENANT2_HMAC_SECRET
+TUNNEL_TOKEN          # From Cloudflare tunnel setup
 ```
 
 ### Step 3.3: Create Environment Configurations
@@ -639,15 +625,15 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: sso-cloudflared
-    # For Manual Setup (Method A): Use tunnel token
+    # For Manual Setup (Method A): Use tunnel token only
     command: tunnel --token ${TUNNEL_TOKEN} run
-    # For CLI Setup (Method B): Use config file
+    # For CLI Setup (Method B): Use config file instead
     # command: tunnel --config /etc/cloudflared/config.yml run
     volumes:
-      - ./cloudflare/config.yml:/etc/cloudflared/config.yml:ro
-      # Only needed for CLI setup (Method B):
-      # - ./cloudflare/tunnel-credentials.json:/etc/cloudflared/tunnel-credentials.json:ro
       - ./logs/cloudflared:/var/log/cloudflared
+      # Only needed for CLI setup (Method B):
+      # - ./cloudflare/config.yml:/etc/cloudflared/config.yml:ro
+      # - ./cloudflare/tunnel-credentials.json:/etc/cloudflared/tunnel-credentials.json:ro
     networks:
       - sso-network
     depends_on:
