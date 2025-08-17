@@ -2,12 +2,15 @@
 
 Get the multi-tenant SSO system running in under 5 minutes with zero configuration.
 
-## ⚡ One-Command Setup
+## ⚡ Quick Setup
 
 ```bash
 # Clone the repository
 git clone <repository-url>
 cd sso-poc-claude3
+
+# Configure environment (copy template with defaults)
+cp .env.docker .env
 
 # Start all services
 docker compose up -d
@@ -18,6 +21,8 @@ docker exec central-sso php artisan db:seed --class=AddTestUsersSeeder
 ```
 
 **That's it!** The system is now running and ready to use.
+
+> 💡 **Customization Note**: The `.env.docker` file contains sensible defaults for local development. For production or custom configurations, edit your `.env` file to modify ports, database settings, security keys, and other options.
 
 ## 🌐 Access the Applications
 

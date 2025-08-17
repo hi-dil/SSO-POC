@@ -9,6 +9,95 @@ The SSO system uses environment variables for configuration across three main ar
 - **Security Configuration**: Authentication, encryption, and access control
 - **Infrastructure Settings**: Database, caching, and external services
 
+## 🐳 Docker Compose Configuration
+
+### Configuration Files
+The system provides multiple configuration approaches:
+
+- **`.env.docker`** - Pre-configured template with all Docker Compose variables
+- **`.env`** - Your customized environment file (copy from .env.docker)
+- **`.env.example`** - Comprehensive reference with all possible variables
+
+### Docker Compose Variables
+
+#### Container Configuration
+```bash
+# Container Names (configurable for multiple deployments)
+CENTRAL_SSO_CONTAINER=central-sso
+TENANT1_CONTAINER=tenant1-app
+TENANT2_CONTAINER=tenant2-app
+MARIADB_CONTAINER=sso-mariadb
+
+# Port Mappings
+CENTRAL_SSO_PORT=8000      # External port for Central SSO
+TENANT1_PORT=8001          # External port for Tenant 1
+TENANT2_PORT=8002          # External port for Tenant 2
+MARIADB_EXTERNAL_PORT=3307 # External port for MariaDB
+```
+
+#### Service-Specific Application Variables
+```bash
+# Central SSO Application
+CENTRAL_SSO_APP_NAME="Central SSO"
+CENTRAL_SSO_APP_URL=http://localhost:8000
+CENTRAL_SSO_APP_KEY=base64:GENERATED_KEY
+CENTRAL_SSO_SESSION_COOKIE=central_sso_session
+
+# Tenant 1 Application
+TENANT1_APP_NAME="Tenant 1 Application"
+TENANT1_APP_URL=http://localhost:8001
+TENANT1_APP_KEY=base64:GENERATED_KEY
+TENANT1_SESSION_COOKIE=tenant1_session
+
+# Tenant 2 Application
+TENANT2_APP_NAME="Tenant 2 Application"
+TENANT2_APP_URL=http://localhost:8002
+TENANT2_APP_KEY=base64:GENERATED_KEY
+TENANT2_SESSION_COOKIE=tenant2_session
+```
+
+#### Database Configuration
+```bash
+# MariaDB Version
+MARIADB_VERSION=10.9
+
+# Shared Database Settings
+DB_CONNECTION=mysql
+DB_HOST=mariadb
+DB_PORT=3306
+DB_USERNAME=sso_user
+DB_PASSWORD=sso_password
+
+# Database Names (per service)
+CENTRAL_SSO_DB_DATABASE=sso_main
+TENANT1_DB_DATABASE=tenant1_db
+TENANT2_DB_DATABASE=tenant2_db
+
+# MariaDB Root Access
+MYSQL_ROOT_PASSWORD=root_password
+```
+
+#### Volume Configuration
+```bash
+# Data Persistence
+MARIADB_DATA_VOLUME=mariadb_data
+```
+
+### Environment Variable Inheritance
+Docker Compose uses variable substitution with fallback defaults:
+```yaml
+container_name: ${CENTRAL_SSO_CONTAINER:-central-sso}
+ports:
+  - "${CENTRAL_SSO_PORT:-8000}:8000"
+environment:
+  - APP_KEY=${CENTRAL_SSO_APP_KEY}
+```
+
+This allows the system to:
+- Work out-of-the-box with sensible defaults
+- Be easily customized by setting environment variables
+- Support multiple deployment environments
+
 ## 📋 Environment Variables Reference
 
 ### Application Configuration

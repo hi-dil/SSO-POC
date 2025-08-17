@@ -21,6 +21,9 @@ sso-poc-claude3/
 ## Quick Start
 
 ```bash
+# Configure environment (copy and customize as needed)
+cp .env.docker .env
+
 # Start all services
 docker compose up -d
 
@@ -34,6 +37,51 @@ docker exec central-sso php artisan db:seed --class=AddTestUsersSeeder
 # Central SSO: http://localhost:8000
 # Tenant 1: http://localhost:8001
 # Tenant 2: http://localhost:8002
+```
+
+## Environment Configuration
+
+The SSO system now uses a centralized environment configuration system for Docker Compose deployments:
+
+### 📄 Configuration Files
+- **`.env.docker`** - Template with all configurable variables and defaults
+- **`.env`** - Your customized environment file (copy from .env.docker)
+- **`.env.example`** - Comprehensive reference for all possible variables
+
+### 🔧 Key Configuration Areas
+
+**Application Settings:**
+- Service-specific APP_KEY, APP_NAME, APP_URL for each application
+- Shared environment settings (APP_ENV, APP_DEBUG, LOG_LEVEL)
+
+**Database Configuration:**
+- Centralized database credentials (DB_USERNAME, DB_PASSWORD)
+- Per-service database names (CENTRAL_SSO_DB_DATABASE, TENANT1_DB_DATABASE, etc.)
+
+**Security Settings:**
+- JWT secrets and API keys for secure communication
+- Session configuration with separate cookies per service
+- HMAC secrets for request signing
+
+**Docker Settings:**
+- Configurable container names and port mappings
+- Volume configurations and service dependencies
+
+### 🚀 Deployment Scenarios
+
+**Development:**
+```bash
+cp .env.docker .env
+# Edit .env as needed
+docker compose up -d
+```
+
+**Production:**
+```bash
+cp .env.docker .env
+# Update secrets, URLs, and security settings
+# Set APP_ENV=production, APP_DEBUG=false
+docker compose up -d
 ```
 
 ## Architecture
@@ -271,7 +319,9 @@ The SSO system implements **enterprise-grade security** with multiple layers of 
 9. **Docker**: Add tenant app to docker-compose.yml
 10. **Register**: Add tenant to central SSO database
 
-## Environment Configuration
+## Tenant Integration Environment
+
+For new tenant applications, add these variables to your `.env` file:
 
 ```env
 # Central SSO Configuration
@@ -282,6 +332,8 @@ TENANT_SLUG=your-tenant-slug
 TENANT_API_KEY=tenant3_SECURE_32_CHAR_API_KEY_HERE
 HMAC_SECRET=64_CHAR_HMAC_SECRET_FROM_CENTRAL_SSO
 ```
+
+**Note:** For Docker Compose deployments, these variables are centrally managed in the main `.env.docker` file.
 
 ## Register Tenant in Central SSO
 

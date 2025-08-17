@@ -4,6 +4,20 @@ Production deployment strategies, infrastructure setup, and operational procedur
 
 ## 📖 Documentation in This Section
 
+### **[Simple Home Deployment](../guides/simple-home-deployment.md)**
+🏠 **Easy setup** - Direct Docker Compose deployment with Cloudflare Tunnel
+- No CI/CD complexity - perfect for home users
+- Manual deployment and updates
+- Cloudflare Tunnel for secure access
+- Minimal prerequisites and setup time
+
+### **[Advanced Home Server Deployment](../guides/home-server-deployment.md)**
+🚀 **Automated home setup** - Full CI/CD pipeline for home servers
+- GitHub Actions for automated deployments
+- Blue-green deployment strategy
+- Comprehensive monitoring and alerting
+- Production-grade automation
+
 ### **[Cloudflare Tunnel Deployment](cloudflare-tunnel.md)**
 🌐 **Production deployment** - Complete guide for Cloudflare Tunnel integration
 - Zero-trust architecture setup
@@ -25,10 +39,36 @@ Production deployment strategies, infrastructure setup, and operational procedur
 - Alerting rules and notifications
 - Performance monitoring
 
-## 🎯 Deployment Strategy Overview
+## 🎯 Choose Your Deployment Strategy
+
+### Decision Matrix
+
+| Feature | Simple Home | Advanced Home | Production |
+|---------|-------------|---------------|------------|
+| **Setup Time** | 30-60 mins | 2-3 hours | 4-6 hours |
+| **Complexity** | ⭐ Low | ⭐⭐ Medium | ⭐⭐⭐ High |
+| **Automation** | Manual | Full CI/CD | Full CI/CD |
+| **Monitoring** | Basic logs | Prometheus/Grafana | Enterprise |
+| **Updates** | Manual git pull | Automated | Automated |
+| **Rollback** | Manual | Automated | Blue-Green |
+| **Team Size** | 1 person | 1-3 people | 3+ people |
+| **Use Case** | Personal/Home | Small team | Enterprise |
 
 ### Recommended Deployment Order
 
+#### For Home Users (Personal/Family Use)
+1. **[Simple Home Deployment](../guides/simple-home-deployment.md)** (30-60 minutes)
+   - Direct Docker Compose setup
+   - Cloudflare Tunnel for external access
+   - Manual updates and maintenance
+
+#### For Small Teams/Advanced Users
+1. **[Advanced Home Server Deployment](../guides/home-server-deployment.md)** (2-3 hours)
+   - Full CI/CD pipeline with GitHub Actions
+   - Automated testing and deployment
+   - Comprehensive monitoring setup
+
+#### For Production/Enterprise
 1. **[Manual Setup First](cloudflare-tunnel.md#manual-setup)** (1-2 hours)
    - Validate infrastructure configuration
    - Test Cloudflare Tunnel connectivity

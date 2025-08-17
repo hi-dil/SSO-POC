@@ -6,21 +6,36 @@ services:
     build:
       context: ./central-sso
       dockerfile: Dockerfile
-    container_name: central-sso
+    container_name: ${CENTRAL_SSO_CONTAINER:-central-sso}
     ports:
-      - "8000:8000"
+      - "${CENTRAL_SSO_PORT:-8000}:8000"
     volumes:
       - ./central-sso:/var/www/html
       - /var/www/html/vendor
     environment:
-      - APP_ENV=local
-      - APP_DEBUG=true
-      - DB_CONNECTION=mysql
-      - DB_HOST=mariadb
-      - DB_PORT=3306
-      - DB_DATABASE=sso_main
-      - DB_USERNAME=sso_user
-      - DB_PASSWORD=sso_password
+      - APP_NAME=${CENTRAL_SSO_APP_NAME:-Central SSO}
+      - APP_ENV=${APP_ENV:-local}
+      - APP_KEY=${CENTRAL_SSO_APP_KEY}
+      - APP_DEBUG=${APP_DEBUG:-true}
+      - APP_URL=${CENTRAL_SSO_APP_URL:-http://localhost:8000}
+      - DB_CONNECTION=${DB_CONNECTION:-mysql}
+      - DB_HOST=${DB_HOST:-mariadb}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_DATABASE=${CENTRAL_SSO_DB_DATABASE:-sso_main}
+      - DB_USERNAME=${DB_USERNAME:-sso_user}
+      - DB_PASSWORD=${DB_PASSWORD:-sso_password}
+      - SESSION_DRIVER=${SESSION_DRIVER:-database}
+      - SESSION_COOKIE=${CENTRAL_SSO_SESSION_COOKIE:-central_sso_session}
+      - SESSION_DOMAIN=${SESSION_DOMAIN:-localhost}
+      - SESSION_SECURE_COOKIE=${SESSION_SECURE_COOKIE:-false}
+      - JWT_SECRET=${JWT_SECRET}
+      - TENANT1_API_KEY=${TENANT1_API_KEY}
+      - TENANT2_API_KEY=${TENANT2_API_KEY}
+      - MASTER_API_KEY=${MASTER_API_KEY}
+      - HMAC_SECRET=${HMAC_SECRET}
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+      - CACHE_STORE=${CACHE_STORE:-database}
+      - QUEUE_CONNECTION=${QUEUE_CONNECTION:-database}
     depends_on:
       - mariadb
     networks:
@@ -31,24 +46,34 @@ services:
     build:
       context: ./tenant1-app
       dockerfile: Dockerfile
-    container_name: tenant1-app
+    container_name: ${TENANT1_CONTAINER:-tenant1-app}
     ports:
-      - "8001:8000"
+      - "${TENANT1_PORT:-8001}:8000"
     volumes:
       - ./tenant1-app:/var/www/html
       - /var/www/html/vendor
     environment:
-      - APP_ENV=local
-      - APP_DEBUG=true
-      - DB_CONNECTION=mysql
-      - DB_HOST=mariadb
-      - DB_PORT=3306
-      - DB_DATABASE=tenant1_db
-      - DB_USERNAME=sso_user
-      - DB_PASSWORD=sso_password
-      - CENTRAL_SSO_URL=http://localhost:8000
-      - CENTRAL_SSO_API=http://central-sso:8000/api
-      - TENANT_SLUG=tenant1
+      - APP_NAME=${TENANT1_APP_NAME:-Tenant 1 Application}
+      - APP_ENV=${APP_ENV:-local}
+      - APP_KEY=${TENANT1_APP_KEY}
+      - APP_DEBUG=${APP_DEBUG:-true}
+      - APP_URL=${TENANT1_APP_URL:-http://localhost:8001}
+      - DB_CONNECTION=${DB_CONNECTION:-mysql}
+      - DB_HOST=${DB_HOST:-mariadb}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_DATABASE=${TENANT1_DB_DATABASE:-tenant1_db}
+      - DB_USERNAME=${DB_USERNAME:-sso_user}
+      - DB_PASSWORD=${DB_PASSWORD:-sso_password}
+      - SESSION_DRIVER=${SESSION_DRIVER:-database}
+      - SESSION_COOKIE=${TENANT1_SESSION_COOKIE:-tenant1_session}
+      - SESSION_DOMAIN=${SESSION_DOMAIN:-localhost}
+      - SESSION_SECURE_COOKIE=${SESSION_SECURE_COOKIE:-false}
+      - CENTRAL_SSO_URL=${CENTRAL_SSO_URL:-http://localhost:8000}
+      - CENTRAL_SSO_API=${CENTRAL_SSO_API:-http://central-sso:8000/api}
+      - TENANT_SLUG=${TENANT1_SLUG:-tenant1}
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+      - CACHE_STORE=${CACHE_STORE:-database}
+      - QUEUE_CONNECTION=${QUEUE_CONNECTION:-database}
     depends_on:
       - mariadb
       - central-sso
@@ -60,24 +85,34 @@ services:
     build:
       context: ./tenant2-app
       dockerfile: Dockerfile
-    container_name: tenant2-app
+    container_name: ${TENANT2_CONTAINER:-tenant2-app}
     ports:
-      - "8002:8000"
+      - "${TENANT2_PORT:-8002}:8000"
     volumes:
       - ./tenant2-app:/var/www/html
       - /var/www/html/vendor
     environment:
-      - APP_ENV=local
-      - APP_DEBUG=true
-      - DB_CONNECTION=mysql
-      - DB_HOST=mariadb
-      - DB_PORT=3306
-      - DB_DATABASE=tenant2_db
-      - DB_USERNAME=sso_user
-      - DB_PASSWORD=sso_password
-      - CENTRAL_SSO_URL=http://localhost:8000
-      - CENTRAL_SSO_API=http://central-sso:8000/api
-      - TENANT_SLUG=tenant2
+      - APP_NAME=${TENANT2_APP_NAME:-Tenant 2 Application}
+      - APP_ENV=${APP_ENV:-local}
+      - APP_KEY=${TENANT2_APP_KEY}
+      - APP_DEBUG=${APP_DEBUG:-true}
+      - APP_URL=${TENANT2_APP_URL:-http://localhost:8002}
+      - DB_CONNECTION=${DB_CONNECTION:-mysql}
+      - DB_HOST=${DB_HOST:-mariadb}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_DATABASE=${TENANT2_DB_DATABASE:-tenant2_db}
+      - DB_USERNAME=${DB_USERNAME:-sso_user}
+      - DB_PASSWORD=${DB_PASSWORD:-sso_password}
+      - SESSION_DRIVER=${SESSION_DRIVER:-database}
+      - SESSION_COOKIE=${TENANT2_SESSION_COOKIE:-tenant2_session}
+      - SESSION_DOMAIN=${SESSION_DOMAIN:-localhost}
+      - SESSION_SECURE_COOKIE=${SESSION_SECURE_COOKIE:-false}
+      - CENTRAL_SSO_URL=${CENTRAL_SSO_URL:-http://localhost:8000}
+      - CENTRAL_SSO_API=${CENTRAL_SSO_API:-http://central-sso:8000/api}
+      - TENANT_SLUG=${TENANT2_SLUG:-tenant2}
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+      - CACHE_STORE=${CACHE_STORE:-database}
+      - QUEUE_CONNECTION=${QUEUE_CONNECTION:-database}
     depends_on:
       - mariadb
       - central-sso
@@ -86,17 +121,17 @@ services:
 
   # MariaDB Database
   mariadb:
-    image: mariadb:10.9
-    container_name: sso-mariadb
+    image: mariadb:${MARIADB_VERSION:-10.9}
+    container_name: ${MARIADB_CONTAINER:-sso-mariadb}
     ports:
-      - "3307:3306"
+      - "${MARIADB_EXTERNAL_PORT:-3307}:3306"
     environment:
-      - MYSQL_ROOT_PASSWORD=root_password
-      - MYSQL_DATABASE=sso_main
-      - MYSQL_USER=sso_user
-      - MYSQL_PASSWORD=sso_password
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root_password}
+      - MYSQL_DATABASE=${CENTRAL_SSO_DB_DATABASE:-sso_main}
+      - MYSQL_USER=${DB_USERNAME:-sso_user}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-sso_password}
     volumes:
-      - mariadb_data:/var/lib/mysql
+      - ${MARIADB_DATA_VOLUME:-mariadb_data}:/var/lib/mysql
       - ./infrastructure/database/mariadb/init:/docker-entrypoint-initdb.d
     networks:
       - sso-network
