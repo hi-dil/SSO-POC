@@ -34,7 +34,7 @@ TENANT2_SUBDOMAIN="tenant-two.poc"
 # Directories
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-CLOUDFLARE_DIR="$PROJECT_ROOT/cloudflare"
+CLOUDFLARE_DIR="$PROJECT_ROOT/infrastructure/cloudflare"
 LOGS_DIR="$PROJECT_ROOT/logs"
 
 # Helper functions

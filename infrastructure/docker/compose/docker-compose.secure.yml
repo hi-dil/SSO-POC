@@ -126,7 +126,7 @@ services:
       - MYSQL_ONETIME_PASSWORD=yes
     volumes:
       - ./ssl:/etc/mysql/ssl:ro
-      - ./mariadb-secure.cnf:/etc/mysql/conf.d/security.cnf:ro
+      - ../../../infrastructure/docker/config/mariadb-secure.cnf:/etc/mysql/conf.d/security.cnf:ro
       - ./logs/mariadb:/var/log/mysql
     networks:
       - sso-network-secure

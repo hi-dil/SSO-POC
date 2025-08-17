@@ -21,7 +21,8 @@
       "Bash(find:*)",
       "Bash(chmod:*)",
       "Bash(./run_tests.sh)",
-      "Bash(touch:*)"
+      "Bash(touch:*)",
+      "Bash(mv:*)"
     ],
     "deny": [],
     "ask": []

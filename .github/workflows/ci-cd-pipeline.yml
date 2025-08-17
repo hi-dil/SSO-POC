@@ -365,7 +365,7 @@ jobs:
           sed -i 's/sso-poc-tunnel/sso-staging-tunnel/g' .env.staging
           
           # Deploy with staging configuration
-          docker-compose -f docker-compose.yml -f docker-compose.staging.yml up -d
+          docker-compose -f docker-compose.yml -f infrastructure/docker/compose/docker-compose.staging.yml up -d
         env:
           CENTRAL_SSO_IMAGE: ${{ needs.build-images.outputs.central-sso-image }}
           TENANT1_APP_IMAGE: ${{ needs.build-images.outputs.tenant1-app-image }}
@@ -463,7 +463,7 @@ jobs:
           cp .env.cloudflare.example .env.production
           
           # Deploy new version to alternate color
-          docker-compose -f docker-compose.yml -f docker-compose.production.yml up -d --scale central-sso=2 --scale tenant1-app=2 --scale tenant2-app=2
+          docker-compose -f docker-compose.yml -f infrastructure/docker/compose/docker-compose.production.yml up -d --scale central-sso=2 --scale tenant1-app=2 --scale tenant2-app=2
         env:
           DEPLOYMENT_COLOR: ${{ env.NEW_COLOR }}
           CENTRAL_SSO_IMAGE: ${{ needs.build-images.outputs.central-sso-image }}
@@ -520,7 +520,7 @@ jobs:
         if: success()
         run: |
           # Scale down old color deployment
-          docker-compose -f docker-compose.production.yml stop central-sso-${{ env.CURRENT_COLOR }} tenant1-app-${{ env.CURRENT_COLOR }} tenant2-app-${{ env.CURRENT_COLOR }}
+          docker-compose -f infrastructure/docker/compose/docker-compose.production.yml stop central-sso-${{ env.CURRENT_COLOR }} tenant1-app-${{ env.CURRENT_COLOR }} tenant2-app-${{ env.CURRENT_COLOR }}
           
           # Keep old deployment for potential rollback (don't remove)
           echo "Old deployment (${{ env.CURRENT_COLOR }}) scaled down but kept for potential rollback"
@@ -540,7 +540,7 @@ jobs:
         if: success()
         run: |
           # Remove old deployment after successful verification
-          docker-compose -f docker-compose.production.yml rm -f central-sso-${{ env.CURRENT_COLOR }} tenant1-app-${{ env.CURRENT_COLOR }} tenant2-app-${{ env.CURRENT_COLOR }}
+          docker-compose -f infrastructure/docker/compose/docker-compose.production.yml rm -f central-sso-${{ env.CURRENT_COLOR }} tenant1-app-${{ env.CURRENT_COLOR }} tenant2-app-${{ env.CURRENT_COLOR }}
       
       - name: Rollback on failure
         if: failure()
@@ -551,10 +551,10 @@ jobs:
           ./scripts/blue-green-switch.sh ${{ env.CURRENT_COLOR }}
           
           # Scale up old deployment
-          docker-compose -f docker-compose.production.yml up -d central-sso-${{ env.CURRENT_COLOR }} tenant1-app-${{ env.CURRENT_COLOR }} tenant2-app-${{ env.CURRENT_COLOR }}
+          docker-compose -f infrastructure/docker/compose/docker-compose.production.yml up -d central-sso-${{ env.CURRENT_COLOR }} tenant1-app-${{ env.CURRENT_COLOR }} tenant2-app-${{ env.CURRENT_COLOR }}
           
           # Remove failed deployment
-          docker-compose -f docker-compose.production.yml rm -f central-sso-${{ env.NEW_COLOR }} tenant1-app-${{ env.NEW_COLOR }} tenant2-app-${{ env.NEW_COLOR }}
+          docker-compose -f infrastructure/docker/compose/docker-compose.production.yml rm -f central-sso-${{ env.NEW_COLOR }} tenant1-app-${{ env.NEW_COLOR }} tenant2-app-${{ env.NEW_COLOR }}
       
       - name: Notify production deployment
         uses: 8398a7/action-slack@v3

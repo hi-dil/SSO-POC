@@ -87,7 +87,7 @@ for SUBDOMAIN in "sso.poc" "tenant-one.poc" "tenant-two.poc"; do
 done
 
 # 4. Deploy with Docker Compose
-docker-compose -f docker-compose.yml -f docker-compose.cloudflare.yml up -d
+docker-compose -f docker-compose.yml -f infrastructure/docker/compose/docker-compose.cloudflare.yml up -d
 ```
 
 ### Step 2: Verify Deployment (15 minutes)

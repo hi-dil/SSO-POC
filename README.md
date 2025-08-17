@@ -102,13 +102,27 @@ docker exec central-sso php artisan cache:clear
 
 Comprehensive documentation is available in the [docs/](./docs/) directory:
 
+### Core Documentation
 - **[Setup Guide](./docs/setup-guide.md)** - Detailed local development setup
 - **[Architecture Overview](./docs/architecture.md)** - System design and components
 - **[Authentication Flow](./docs/authentication-flow.md)** - Detailed auth workflows
 - **[API Documentation](./docs/api-documentation.md)** - API endpoints and usage
 - **[Tenant Management](./docs/tenant-management.md)** - Multi-tenancy implementation
 - **[Database Schema](./docs/database-schema.md)** - Database structure and relationships
+
+### Deployment & Infrastructure
+- **[Deployment Setup Order](./docs/deployment-setup-order.md)** - Complete deployment guide
+- **[Cloudflare Tunnel Deployment](./docs/cloudflare-tunnel-deployment.md)** - Production deployment
+- **[CI/CD Pipeline Guide](./docs/cicd-deployment-guide.md)** - Automated deployment setup
+- **[Monitoring Implementation](./docs/prometheus-grafana-monitoring.md)** - Observability setup
+
+### Testing & Security
 - **[Testing Guide](./docs/testing-guide.md)** - Testing SSO integration
+- **[Security Architecture](./docs/security-architecture.md)** - Security implementation details
+
+### Quick References
+- **[Implementation Summaries](./docs/summaries/)** - High-level feature overviews
+- **[Testing Documentation](./docs/testing/)** - Testing resources and guides
 
 ## 🔐 Authentication Flows
 
@@ -179,9 +193,20 @@ sso-poc-claude3/
 ├── central-sso/          # Main SSO authentication server
 ├── tenant1-app/          # Tenant 1 application  
 ├── tenant2-app/          # Tenant 2 application
+├── tenant-template/      # Template for creating new tenant apps
 ├── docs/                 # Complete documentation
-├── docker/               # Docker configuration files
-├── docker-compose.yml    # Services orchestration
+│   ├── summaries/        # Implementation summaries
+│   └── testing/          # Testing documentation
+├── infrastructure/       # Infrastructure configurations
+│   ├── cloudflare/       # Cloudflare Tunnel configs
+│   ├── database/         # Database initialization
+│   └── docker/           # Docker configurations
+├── scripts/              # Deployment and utility scripts
+├── monitoring/           # Prometheus and Grafana configs
+├── security-tests/       # Security testing tools
+├── .github/              # CI/CD workflows
+├── docker-compose.yml    # Main services orchestration
+├── .env.example          # Environment configuration template
 └── README.md            # This file
 ```
 

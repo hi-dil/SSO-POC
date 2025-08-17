@@ -7,8 +7,8 @@ services:
     container_name: cloudflared-tunnel
     command: tunnel --config /etc/cloudflared/config.yml run
     volumes:
-      - ./cloudflare/config.yml:/etc/cloudflared/config.yml:ro
-      - ./cloudflare/tunnel-credentials.json:/etc/cloudflared/tunnel-credentials.json:ro
+      - ../../../infrastructure/cloudflare/config.yml:/etc/cloudflared/config.yml:ro
+      - ../../../infrastructure/cloudflare/tunnel-credentials.json:/etc/cloudflared/tunnel-credentials.json:ro
       - ./logs/cloudflared:/var/log/cloudflared
     networks:
       - sso-network

@@ -97,7 +97,7 @@ services:
       - MYSQL_PASSWORD=sso_password
     volumes:
       - mariadb_data:/var/lib/mysql
-      - ./docker/mariadb/init:/docker-entrypoint-initdb.d
+      - ./infrastructure/database/mariadb/init:/docker-entrypoint-initdb.d
     networks:
       - sso-network
 

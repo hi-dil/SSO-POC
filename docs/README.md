@@ -1,33 +1,67 @@
-# Multi-Tenant SSO Proof of Concept
+# Documentation
 
-This documentation covers the architecture, implementation, and usage of a complete multi-tenant Single Sign-On (SSO) system built with Laravel 11 and Docker, featuring role-based access control, modern UI, and comprehensive API documentation.
+Complete documentation for the multi-tenant SSO system, organized by audience and use case.
 
-## Documentation Structure
+## 🚀 Quick Navigation
 
-- [Architecture Overview](./architecture.md) - System design and component relationships
-- [Dual-Session Architecture](./dual-session-architecture.md) - **New!** Comprehensive guide to the dual-session authentication system
-- [shadcn/ui Design System](./shadcn-ui-design-system.md) - **New!** Complete guide to the UI design system and components
-- [Authentication Flow](./authentication-flow.md) - Detailed auth workflows and JWT handling
-- [API Documentation](./api-documentation.md) - Central SSO API endpoints and usage
-- [Setup Guide](./setup-guide.md) - Local development setup with Docker
-- [User Management](./user-management.md) - Central SSO user administration and tenant access
-- [Tenant Management](./tenant-management.md) - How tenancy works and tenant integration
-- [Role Management](./role-management.md) - Role-based access control system
-- [Database Schema](./database-schema.md) - Database structure for multi-tenancy
-- [Testing Guide](./testing-guide.md) - Comprehensive testing suite and audit system validation
-- [Deployment Guide](./deployment-guide.md) - Production deployment considerations
-- [Tenant Integration Guide](./tenant-integration.md) - How to create new tenant applications
+### **New to the project?**
+Start with **[Getting Started](getting-started/README.md)** for setup and basic usage.
 
-## Quick Start
+### **Need to understand the system?**
+Read the **[Architecture Overview](architecture/README.md)** for design and concepts.
 
-1. Clone the repository
-2. Run `docker compose up -d`
-3. Run migrations: `docker exec central-sso php artisan migrate`
-4. Seed test data: `docker exec central-sso php artisan db:seed --class=AddTestUsersSeeder`
-5. Access:
-   - Central SSO: `http://localhost:8000`
-   - Tenant 1: `http://localhost:8001`
-   - Tenant 2: `http://localhost:8002`
+### **Ready for production?**
+Follow the **[Deployment Guide](deployment/README.md)** for production deployment.
+
+### **Working on specific tasks?**
+Check the **[Guides](guides/)** for step-by-step instructions.
+
+### **Looking for technical details?**
+See the **[Reference](reference/)** section for APIs and configuration.
+
+## 📚 Documentation Sections
+
+### 📖 [Getting Started](getting-started/README.md)
+**Quick setup and local development**
+- [Quick Start Guide](getting-started/quick-start.md) - 5-minute setup
+- [Local Development Setup](getting-started/local-development.md) - Complete development environment
+
+### 🏗️ [Architecture](architecture/README.md)
+**System design and concepts**
+- [Authentication Systems](architecture/authentication.md) - SSO flows and security
+- [Multi-Tenancy Design](architecture/multi-tenancy.md) - Tenant isolation and management
+- [Database Design](architecture/database-design.md) - Schema and relationships
+
+### 🚀 [Deployment](deployment/README.md)
+**Production deployment and operations**
+- [Cloudflare Tunnel Deployment](deployment/cloudflare-tunnel-deployment.md) - Zero-trust production setup
+- [CI/CD Pipeline](deployment/cicd-pipeline.md) - Automated deployment with GitHub Actions
+- [Monitoring Setup](deployment/prometheus-grafana-monitoring.md) - Observability and alerting
+
+### 📋 [Guides](guides/README.md)
+**Step-by-step instructions for common tasks**
+- [User Management](guides/user-management.md) - Managing users and profiles
+- [Role Management](guides/role-management.md) - RBAC implementation
+- [Tenant Management](guides/tenant-management.md) - Adding and configuring tenants
+- [Tenant Integration](guides/tenant-integration.md) - Integrating new applications with SSO
+- [Security Guide](guides/security.md) - Security best practices
+
+### 📄 [Reference](reference/README.md)
+**Technical reference and APIs**
+- [API Documentation](reference/api.md) - Complete REST API reference
+- [Configuration Reference](reference/configuration.md) - All configuration options
+- [CLI Commands](reference/cli-commands.md) - Available Artisan commands
+- [Troubleshooting Guide](reference/troubleshooting.md) - Common issues and solutions
+
+## 🎯 Quick Start
+
+1. **Setup**: `docker compose up -d`
+2. **Database**: `docker exec central-sso php artisan migrate`
+3. **Test Data**: `docker exec central-sso php artisan db:seed --class=AddTestUsersSeeder`
+4. **Access**:
+   - Central SSO: http://localhost:8000
+   - Tenant 1: http://localhost:8001
+   - Tenant 2: http://localhost:8002
 
 ## Key Features
 
