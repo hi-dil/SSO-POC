@@ -18,6 +18,16 @@ This section contains detailed documentation for features that are planned for f
 - Tenant-specific provider configuration
 - Account linking and user management
 
+### **[Prometheus & Grafana Monitoring](prometheus-grafana-monitoring.md)**
+📊 **Comprehensive Monitoring & Observability** - Production-ready monitoring stack
+- **Status**: 📋 TODO - Future Implementation
+- **Priority**: High
+- **Effort**: 2-3 weeks
+- Laravel Prometheus integration for custom metrics
+- Grafana dashboards for SSO, authentication, and infrastructure
+- Alert rules for critical system events
+- Business intelligence and performance monitoring
+
 ## 📊 Feature Status Legend
 
 | Status | Description |

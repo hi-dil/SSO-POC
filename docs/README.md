@@ -59,6 +59,7 @@ Check the **[TODO Documentation](todo/README.md)** for planned enhancements and 
 ### 📋 [TODO Documentation](todo/README.md)
 **Future features and roadmap**
 - [External SSO Integration](todo/external-sso-integration.md) - OAuth provider integration (Google, GitHub, etc.)
+- [Prometheus & Grafana Monitoring](todo/prometheus-grafana-monitoring.md) - Comprehensive monitoring and observability
 - Future enhancements and planned features
 
 ## 🎯 Quick Start
