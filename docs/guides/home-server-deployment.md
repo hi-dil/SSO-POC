@@ -119,13 +119,13 @@ cat ~/.ssh/github_actions_deploy
    ```
    Permissions:
    - Zone:Edit (for DNS management)
-   - Account:Read (for account access)
+   - Zone:Read (for zone information access)
    
    Zone Resources:
    - Include: Specific zone - your-domain.com
    
    Account Resources:
-   - Include: All accounts
+   - Leave default (not required for basic tunnel setup)
    ```
 
 3. **Save Token Information**
@@ -138,14 +138,48 @@ cat ~/.ssh/github_actions_deploy
 
 ### Step 2.2: Create Cloudflare Tunnel
 
+#### Method A: Manual Setup (Recommended)
+
+1. **Go to Cloudflare Zero Trust Dashboard**
+   - Visit: https://one.dash.cloudflare.com/
+   - Navigate to **Access** → **Tunnels**
+   - Click **Create a tunnel**
+
+2. **Create Tunnel**
+   - Choose **Cloudflared** as connector type
+   - Enter tunnel name: `sso-home-server`
+   - Click **Save tunnel**
+
+3. **Download Tunnel Credentials**
+   - Copy the tunnel token shown (starts with `eyJ...`)
+   - Note the tunnel ID (shown in the dashboard)
+   - Click **Next**
+
+4. **Configure Routes** (we'll do this later)
+   - Skip the route configuration for now
+   - Click **Save tunnel**
+
+5. **Save Tunnel Information**
+   ```bash
+   # Create project directory
+   mkdir -p ~/sso-production/cloudflare
+   cd ~/sso-production
+   
+   # Save tunnel information (replace with your values)
+   echo "TUNNEL_TOKEN=eyJhIjoiYWJjZGVmZ..." > cloudflare/tunnel-token.txt
+   echo "TUNNEL_ID=your-tunnel-id-here" > cloudflare/tunnel-id.txt
+   ```
+
+#### Method B: CLI Setup (Alternative)
+
 ```bash
 # Create project directory
 mkdir -p ~/sso-production/cloudflare
 cd ~/sso-production
 
-# Create tunnel using Docker (no local cloudflared needed)
+# Create tunnel using Docker with API token authentication
 docker run --rm \
-    -v "$(pwd)/cloudflare:/output" \
+    -v "$(pwd)/cloudflare:/home/nonroot/.cloudflared" \
     -e CLOUDFLARE_API_TOKEN="your-api-token-here" \
     cloudflare/cloudflared:latest \
     tunnel create sso-home-server
@@ -157,8 +191,48 @@ ls -la cloudflare/
 
 ### Step 2.3: Configure Tunnel
 
+#### For Manual Setup (Method A):
+
 ```bash
+# Get your tunnel ID
+TUNNEL_ID=$(cat cloudflare/tunnel-id.txt)
+
 # Create tunnel configuration
+cat > cloudflare/config.yml << EOF
+tunnel: ${TUNNEL_ID}
+# credentials-file not needed when using tunnel token
+
+ingress:
+  # Central SSO Server
+  - hostname: sso.your-domain.com
+    service: http://central-sso:8000
+    originRequest:
+      httpHostHeader: sso.your-domain.com
+      
+  # Tenant 1 Application
+  - hostname: tenant-one.your-domain.com
+    service: http://tenant1-app:8000
+    originRequest:
+      httpHostHeader: tenant-one.your-domain.com
+      
+  # Tenant 2 Application
+  - hostname: tenant-two.your-domain.com
+    service: http://tenant2-app:8000
+    originRequest:
+      httpHostHeader: tenant-two.your-domain.com
+      
+  # Catch-all rule (required)
+  - service: http_status:404
+
+# Metrics configuration
+metrics: 0.0.0.0:9090
+EOF
+```
+
+#### For CLI Setup (Method B):
+
+```bash
+# Create tunnel configuration using credentials file
 cat > cloudflare/config.yml << 'EOF'
 tunnel: sso-home-server
 credentials-file: /etc/cloudflared/tunnel-credentials.json
@@ -565,10 +639,14 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: sso-cloudflared
-    command: tunnel --config /etc/cloudflared/config.yml run
+    # For Manual Setup (Method A): Use tunnel token
+    command: tunnel --token ${TUNNEL_TOKEN} run
+    # For CLI Setup (Method B): Use config file
+    # command: tunnel --config /etc/cloudflared/config.yml run
     volumes:
       - ./cloudflare/config.yml:/etc/cloudflared/config.yml:ro
-      - ./cloudflare/tunnel-credentials.json:/etc/cloudflared/tunnel-credentials.json:ro
+      # Only needed for CLI setup (Method B):
+      # - ./cloudflare/tunnel-credentials.json:/etc/cloudflared/tunnel-credentials.json:ro
       - ./logs/cloudflared:/var/log/cloudflared
     networks:
       - sso-network
