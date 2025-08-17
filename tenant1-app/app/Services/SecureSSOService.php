@@ -19,7 +19,15 @@ class SecureSSOService
 
     public function __construct()
     {
-        // Get configuration from environment
+        // Initialize basic configuration - validation happens on first use
+        $this->initializeConfiguration();
+    }
+
+    /**
+     * Initialize configuration from environment variables
+     */
+    private function initializeConfiguration(): void
+    {
         $this->apiUrl = env('CENTRAL_SSO_API', 'http://central-sso:8000/api');
         $this->tenantSlug = env('TENANT_SLUG', 'tenant1');
         $this->apiKey = env('TENANT1_API_KEY');
@@ -38,13 +46,19 @@ class SecureSSOService
                 'Content-Type' => 'application/json',
             ]
         ]);
+    }
 
+    /**
+     * Validate that required configuration is available
+     */
+    private function validateConfiguration(): void
+    {
         if (!$this->apiKey) {
-            throw new \InvalidArgumentException('API key is required for secure SSO communication');
+            throw new \InvalidArgumentException('API key is required for secure SSO communication. Please set TENANT1_API_KEY in your environment.');
         }
 
         if (!$this->hmacSecret) {
-            throw new \InvalidArgumentException('HMAC secret is required for request signing');
+            throw new \InvalidArgumentException('HMAC secret is required for request signing. Please set HMAC_SECRET in your environment.');
         }
     }
 
@@ -229,6 +243,9 @@ class SecureSSOService
      */
     private function makeSecureRequest($method, $endpoint, $payload = [])
     {
+        // Validate configuration before making any requests
+        $this->validateConfiguration();
+        
         $uri = $endpoint;
         $body = !empty($payload) ? json_encode($payload) : '';
         
