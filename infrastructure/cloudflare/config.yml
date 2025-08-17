@@ -21,11 +21,11 @@ warp-routing:
 ingress:
   # Central SSO Server
   # Handles authentication, user management, and API endpoints
-  - hostname: sso.poc.hi-dil.com
+  - hostname: sso-poc.hi-dil.com
     service: http://central-sso:8000
     originRequest:
       # Forward the correct host header
-      httpHostHeader: sso.poc.hi-dil.com
+      httpHostHeader: sso-poc.hi-dil.com
       # Optimize connection settings
       noHappyEyeballs: true
       keepAliveTimeout: 30s
@@ -47,10 +47,10 @@ ingress:
 
   # Tenant 1 Application
   # Handles tenant-specific functionality and local authentication
-  - hostname: tenant-one.poc.hi-dil.com
+  - hostname: tenant-one-poc.hi-dil.com
     service: http://tenant1-app:8000
     originRequest:
-      httpHostHeader: tenant-one.poc.hi-dil.com
+      httpHostHeader: tenant-one-poc.hi-dil.com
       noHappyEyeballs: true
       keepAliveTimeout: 30s
       tcpKeepAlive: 30s
@@ -65,10 +65,10 @@ ingress:
 
   # Tenant 2 Application
   # Handles tenant-specific functionality and local authentication
-  - hostname: tenant-two.poc.hi-dil.com
+  - hostname: tenant-two-poc.hi-dil.com
     service: http://tenant2-app:8000
     originRequest:
-      httpHostHeader: tenant-two.poc.hi-dil.com
+      httpHostHeader: tenant-two-poc.hi-dil.com
       noHappyEyeballs: true
       keepAliveTimeout: 30s
       tcpKeepAlive: 30s

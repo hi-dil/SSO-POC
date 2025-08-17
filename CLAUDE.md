@@ -278,7 +278,21 @@ The SSO system implements **enterprise-grade security** with multiple layers of 
 
 ## Common Issues
 
-### 🚨 500 Error - Permission Issues (Most Common)
+### 🚨 419 Page Expired (CSRF Token) Errors
+**Symptoms**: Getting 419 "Page Expired" errors when submitting forms via Cloudflare tunnel
+**Cause**: SSL certificate coverage issues with third-level subdomains
+**Quick Fix**: Use second-level subdomain format covered by Universal SSL
+```bash
+# ❌ Wrong (not covered by Universal SSL)
+sso.poc.hi-dil.com
+
+# ✅ Correct (covered by Universal SSL)  
+sso-poc.hi-dil.com
+```
+**Complete Resolution**: See `docs/troubleshooting/419-csrf-error-resolution.md`
+**Quick Reference**: See `docs/troubleshooting/quick-reference-csrf-fix.md`
+
+### 🚨 500 Error - Permission Issues
 **Symptoms**: Getting 500 errors when accessing applications
 **Cause**: Docker bind mounts preserve host file ownership, but Laravel needs www-data (UID 33) to write to storage
 **Quick Fix**:

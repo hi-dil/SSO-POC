@@ -22,7 +22,8 @@
       "Bash(chmod:*)",
       "Bash(./run_tests.sh)",
       "Bash(touch:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(docker-compose restart:*)"
     ],
     "deny": [],
     "ask": []
