@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Services\LoginAuditService;
 
@@ -165,25 +166,26 @@ class MainAuthController extends Controller
         // Clear temporary session
         session()->forget('pending_auth_user');
 
-        // Tenant URL mapping
-        $tenantUrls = [
-            'tenant1' => 'http://localhost:8001',
-            'tenant2' => 'http://localhost:8002',
-        ];
+        // Fetch tenant URL from database
+        $tenant = \App\Models\Tenant::where('slug', $tenantSlug)->first();
 
-        $tenantUrl = $tenantUrls[$tenantSlug] ?? null;
-
-        if (!$tenantUrl) {
+        if (!$tenant) {
             return redirect()->route('login')->withErrors(['error' => 'Invalid tenant']);
+        }
+
+        if (!$tenant->domain) {
+            return redirect()->route('login')->withErrors(['error' => 'Tenant URL not configured']);
         }
 
         // Redirect to tenant application with token as query parameter
         // The tenant application will capture this token and store it in session
-        return redirect($tenantUrl . '/sso/callback?token=' . urlencode($token) . '&user=' . urlencode(base64_encode(json_encode([
+        $redirectUrl = $tenant->domain . '/sso/callback?token=' . urlencode($token) . '&user=' . urlencode(base64_encode(json_encode([
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email
-        ]))));
+        ])));
+        
+        return Redirect::away($redirectUrl);
     }
 
     public function logout()

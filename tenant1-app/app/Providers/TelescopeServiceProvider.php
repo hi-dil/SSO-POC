@@ -28,6 +28,21 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
                    $entry->isScheduledTask() ||
                    $entry->hasMonitoredTag();
         });
+        
+    }
+
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
+    {
+        parent::boot();
+        
+        // Always enforce authentication, even in local environment
+        Telescope::auth(function ($request) {
+            $user = app('auth')->guard()->user();
+            return $user && $user->email === 'superadmin@sso.com';
+        });
     }
 
     /**
@@ -55,10 +70,7 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
      */
     protected function gate(): void
     {
-        Gate::define('viewTelescope', function ($user) {
-            return in_array($user->email, [
-                //
-            ]);
-        });
+        // Gate definition not needed since we're using direct email check in Telescope::auth()
+        // keeping method for compatibility with parent class
     }
 }
