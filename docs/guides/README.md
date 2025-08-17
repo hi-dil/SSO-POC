@@ -12,6 +12,9 @@ Step-by-step instructions for common tasks and workflows in the multi-tenant SSO
 - **[Tenant Management](tenant-management.md)** - Adding and configuring tenants
 - **[Tenant Integration](tenant-integration.md)** - Integrating new applications with SSO
 
+### **Deployment & Operations**
+- **[Home Server Deployment](home-server-deployment.md)** - Complete CI/CD setup with Cloudflare Tunnel
+
 ### **Security & Administration**
 - **[Security Guide](security.md)** - Security best practices and configuration
 
@@ -110,6 +113,39 @@ The [Tenant Integration Guide](tenant-integration.md) provides:
 - **Integration Tests**: End-to-end SSO testing across applications
 - **Security Testing**: Verifying isolation and access control
 
+## 🚀 Deployment & Operations
+
+### Home Server Deployment
+
+The [Home Server Deployment Guide](home-server-deployment.md) provides:
+
+#### **Complete Production Setup**
+- **Cloudflare Tunnel**: Secure external access without port forwarding
+- **GitHub Actions CI/CD**: Automated testing, building, and deployment
+- **Docker Architecture**: Containerized production environment
+- **SSL Certificates**: Automatic SSL via Cloudflare with enterprise security
+
+#### **Automated Setup Scripts**
+- **home-server-setup.sh**: Complete server preparation and configuration
+- **generate-secrets.sh**: Cryptographically secure secret generation
+- **Environment Templates**: Production-ready configuration files
+- **Backup Scripts**: Automated database and configuration backups
+
+#### **Step-by-Step Implementation**
+- **Prerequisites Setup**: Ubuntu server, Docker, firewall configuration
+- **Cloudflare Configuration**: Tunnel creation, DNS records, SSL setup
+- **GitHub Integration**: Repository setup, secrets configuration, CI/CD triggers
+- **Testing & Verification**: End-to-end deployment validation
+- **Maintenance**: Monitoring, backups, updates, and troubleshooting
+
+#### **Security Best Practices**
+- **UFW Firewall**: Secure network configuration with minimal exposure
+- **SSH Key Authentication**: Secure deployment access for GitHub Actions
+- **Secret Management**: Encrypted storage and rotation of sensitive data
+- **Automated Updates**: Security patches and system maintenance
+
+---
+
 ## 🔒 Security & Administration
 
 ### Security Implementation
@@ -153,6 +189,12 @@ The [Security Guide](security.md) covers:
 2. **[Configure Domain](tenant-management.md#domain-setup)**
 3. **[Deploy Application](tenant-integration.md#deployment)**
 4. **[Test SSO Integration](tenant-integration.md#testing)**
+
+### **Home Server Deployment** (2-3 hours)
+1. **[Prepare Server](home-server-deployment.md#part-1-home-server-preparation)**
+2. **[Setup Cloudflare Tunnel](home-server-deployment.md#part-2-cloudflare-setup)**
+3. **[Configure CI/CD](home-server-deployment.md#part-3-repository-setup)**
+4. **[Deploy Application](home-server-deployment.md#part-5-initial-server-setup)**
 
 ### **Security Hardening** (15 minutes)
 1. **[Review Password Policies](security.md#password-security)**
