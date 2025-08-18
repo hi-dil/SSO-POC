@@ -191,23 +191,31 @@ curl http://localhost:8000/api/auth/login \
 
 ```
 sso-poc-claude3/
-├── central-sso/          # Main SSO authentication server
-├── tenant1-app/          # Tenant 1 application  
-├── tenant2-app/          # Tenant 2 application
-├── tenant-template/      # Template for creating new tenant apps
-├── docs/                 # Complete documentation
-│   ├── summaries/        # Implementation summaries
-│   └── testing/          # Testing documentation
-├── infrastructure/       # Infrastructure configurations
+├── apps/                 # Core SSO Applications
+│   ├── central-sso/      # Main SSO authentication server
+│   ├── tenant1-app/      # Tenant 1 application  
+│   ├── tenant2-app/      # Tenant 2 application
+│   └── tenant-template/  # Template for creating new tenant apps
+├── deploy/               # Deployment configurations
 │   ├── cloudflare/       # Cloudflare Tunnel configs
 │   ├── database/         # Database initialization
-│   └── docker/           # Docker configurations
-├── scripts/              # Deployment and utility scripts
-├── monitoring/           # Prometheus and Grafana configs
-├── security-tests/       # Security testing tools
-├── .github/              # CI/CD workflows
+│   ├── docker/           # Docker compose variants
+│   └── monitoring/       # Prometheus and Grafana configs
+├── tools/                # Development & operations tools
+│   ├── scripts/          # Deployment and utility scripts
+│   ├── security-tests/   # Security testing tools
+│   └── run_tests.sh      # Main test runner
+├── config/               # Environment configurations
+│   └── templates/        # Environment configuration templates
+├── docs/                 # Complete documentation
+│   ├── infrastructure/   # Infrastructure documentation
+│   ├── deployment/       # Deployment guides
+│   ├── architecture/     # System architecture
+│   ├── mobile-api/       # Mobile API documentation
+│   └── guides/           # Feature guides
+├── .github/              # CI/CD workflows  
 ├── docker-compose.yml    # Main services orchestration
-├── .env.example          # Environment configuration template
+├── CLAUDE.md             # AI assistant instructions
 └── README.md            # This file
 ```
 

@@ -22,7 +22,7 @@ echo "📁 Checking project structure..."
 
 # Check for Laravel applications
 APPS=()
-for app in central-sso tenant1-app tenant2-app; do
+for app in apps/central-sso apps/tenant1-app apps/tenant2-app; do
     if [ -d "$app" ]; then
         APPS+=("$app")
         echo "   ✅ Found $app"
@@ -33,7 +33,7 @@ done
 
 if [ ${#APPS[@]} -eq 0 ]; then
     echo "❌ Error: No Laravel applications found."
-    echo "   Expected directories: central-sso, tenant1-app, tenant2-app"
+    echo "   Expected directories: apps/central-sso, apps/tenant1-app, apps/tenant2-app"
     exit 1
 fi
 

@@ -4,13 +4,13 @@ services:
   # Central SSO API
   central-sso:
     build:
-      context: ./central-sso
+      context: ./apps/central-sso
       dockerfile: Dockerfile
     container_name: ${CENTRAL_SSO_CONTAINER:-central-sso}
     ports:
       - "${CENTRAL_SSO_PORT:-8000}:8000"
     volumes:
-      - ./central-sso:/var/www/html
+      - ./apps/central-sso:/var/www/html
       - /var/www/html/vendor
     environment:
       - APP_NAME=${CENTRAL_SSO_APP_NAME:-Central SSO}
@@ -45,13 +45,13 @@ services:
   # Tenant 1 Application
   tenant1-app:
     build:
-      context: ./tenant1-app
+      context: ./apps/tenant1-app
       dockerfile: Dockerfile
     container_name: ${TENANT1_CONTAINER:-tenant1-app}
     ports:
       - "${TENANT1_PORT:-8001}:8000"
     volumes:
-      - ./tenant1-app:/var/www/html
+      - ./apps/tenant1-app:/var/www/html
       - /var/www/html/vendor
     environment:
       - APP_NAME=${TENANT1_APP_NAME:-Tenant 1 Application}
@@ -88,13 +88,13 @@ services:
   # Tenant 2 Application
   tenant2-app:
     build:
-      context: ./tenant2-app
+      context: ./apps/tenant2-app
       dockerfile: Dockerfile
     container_name: ${TENANT2_CONTAINER:-tenant2-app}
     ports:
       - "${TENANT2_PORT:-8002}:8000"
     volumes:
-      - ./tenant2-app:/var/www/html
+      - ./apps/tenant2-app:/var/www/html
       - /var/www/html/vendor
     environment:
       - APP_NAME=${TENANT2_APP_NAME:-Tenant 2 Application}
@@ -141,7 +141,7 @@ services:
       - MYSQL_PASSWORD=${DB_PASSWORD:-sso_password}
     volumes:
       - ${MARIADB_DATA_VOLUME:-mariadb_data}:/var/lib/mysql
-      - ./infrastructure/database/mariadb/init:/docker-entrypoint-initdb.d
+      - ./deploy/database/mariadb/init:/docker-entrypoint-initdb.d
     networks:
       - sso-network
 

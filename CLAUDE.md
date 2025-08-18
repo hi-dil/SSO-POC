@@ -10,11 +10,24 @@ Complete SSO (Single Sign-On) proof of concept built with Laravel and Docker. Th
 
 ```
 sso-poc-claude3/
-├── central-sso/          # Main SSO authentication server (Laravel)
-├── tenant1-app/          # Tenant 1 application (Laravel)
-├── tenant2-app/          # Tenant 2 application (Laravel)
-├── docs/                 # Documentation (including original CLAUDE.md)
-├── docker-compose.yml    # Docker services configuration
+├── apps/                 # Core SSO Applications
+│   ├── central-sso/      # Main SSO authentication server (Laravel)
+│   ├── tenant1-app/      # Tenant 1 application (Laravel)
+│   ├── tenant2-app/      # Tenant 2 application (Laravel)
+│   └── tenant-template/  # Template for new tenant applications
+├── deploy/               # Deployment configurations
+│   ├── cloudflare/       # Cloudflare tunnel configurations
+│   ├── database/         # Database initialization scripts
+│   ├── docker/           # Docker compose variants
+│   └── monitoring/       # Monitoring configurations
+├── tools/                # Development & operations tools
+│   ├── scripts/          # Deployment and utility scripts
+│   ├── security-tests/   # Security testing suite
+│   └── run_tests.sh      # Main test runner
+├── config/               # Environment configurations
+│   └── templates/        # Environment configuration templates
+├── docs/                 # Complete documentation
+├── docker-compose.yml    # Main Docker services configuration
 └── CLAUDE.md            # This file
 ```
 
@@ -22,7 +35,7 @@ sso-poc-claude3/
 
 ```bash
 # Configure environment (copy and customize as needed)
-cp .env.docker .env
+cp config/templates/.env.docker .env
 
 # Start all services
 docker compose up -d

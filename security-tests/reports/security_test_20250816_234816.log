@@ -1,4 +1,0 @@
-[2025-08-16 23:48:16] [INFO] Starting SSO Security Testing Framework
-[2025-08-16 23:48:16] [INFO] Log file: /Users/oztblueimac/git/sso-poc-claude3/security-tests/reports/security_test_20250816_234816.log
-[2025-08-16 23:48:16] [ERROR] Configuration file not found: /Users/oztblueimac/git/sso-poc-claude3/security-tests/config/test.env
-[2025-08-16 23:48:16] [INFO] Please copy config/test.env.example to config/test.env and configure
