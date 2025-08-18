@@ -10,7 +10,7 @@ services:
     ports:
       - "${CENTRAL_SSO_PORT:-8000}:8000"
     volumes:
-      - ./apps/central-sso:/var/www/html
+      - central_sso_app_data:/var/www/html
       - /var/www/html/vendor
     environment:
       - APP_NAME=${CENTRAL_SSO_APP_NAME:-Central SSO}
@@ -51,7 +51,7 @@ services:
     ports:
       - "${TENANT1_PORT:-8001}:8000"
     volumes:
-      - ./apps/tenant1-app:/var/www/html
+      - tenant1_app_data:/var/www/html
       - /var/www/html/vendor
     environment:
       - APP_NAME=${TENANT1_APP_NAME:-Tenant 1 Application}
@@ -94,7 +94,7 @@ services:
     ports:
       - "${TENANT2_PORT:-8002}:8000"
     volumes:
-      - ./apps/tenant2-app:/var/www/html
+      - tenant2_app_data:/var/www/html
       - /var/www/html/vendor
     environment:
       - APP_NAME=${TENANT2_APP_NAME:-Tenant 2 Application}
@@ -153,4 +153,10 @@ networks:
 
 volumes:
   mariadb_data:
+    driver: local
+  central_sso_app_data:
+    driver: local
+  tenant1_app_data:
+    driver: local
+  tenant2_app_data:
     driver: local
