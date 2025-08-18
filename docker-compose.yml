@@ -72,6 +72,9 @@ services:
       - CENTRAL_SSO_URL=${CENTRAL_SSO_URL:-http://localhost:8000}
       - CENTRAL_SSO_API=${CENTRAL_SSO_API:-http://central-sso:8000/api}
       - TENANT_SLUG=${TENANT1_SLUG:-tenant1}
+      - TENANT1_API_KEY=${TENANT1_API_KEY}
+      - HMAC_SECRET=${HMAC_SECRET}
+      - HMAC_ALGORITHM=${HMAC_ALGORITHM}
       - LOG_LEVEL=${LOG_LEVEL:-debug}
       - CACHE_STORE=${CACHE_STORE:-database}
       - QUEUE_CONNECTION=${QUEUE_CONNECTION:-database}
@@ -112,6 +115,9 @@ services:
       - CENTRAL_SSO_URL=${CENTRAL_SSO_URL:-http://localhost:8000}
       - CENTRAL_SSO_API=${CENTRAL_SSO_API:-http://central-sso:8000/api}
       - TENANT_SLUG=${TENANT2_SLUG:-tenant2}
+      - TENANT2_API_KEY=${TENANT2_API_KEY}
+      - HMAC_SECRET=${HMAC_SECRET}
+      - HMAC_ALGORITHM=${HMAC_ALGORITHM}
       - LOG_LEVEL=${LOG_LEVEL:-debug}
       - CACHE_STORE=${CACHE_STORE:-database}
       - QUEUE_CONNECTION=${QUEUE_CONNECTION:-database}
