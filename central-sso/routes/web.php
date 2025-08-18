@@ -214,7 +214,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::put('roles/{role}', [\App\Http\Controllers\Admin\RoleManagementController::class, 'update'])->name('roles.update');
     Route::delete('roles/{role}', [\App\Http\Controllers\Admin\RoleManagementController::class, 'destroy'])->name('roles.destroy');
     Route::get('permissions/data', [\App\Http\Controllers\Admin\RoleManagementController::class, 'getPermissions'])->name('permissions.data');
-    Route::get('users/data', [\App\Http\Controllers\Admin\RoleManagementController::class, 'getUsers'])->name('users.data');
     Route::post('users/{userId}/roles', [\App\Http\Controllers\Admin\RoleManagementController::class, 'assignUserRole'])->name('users.assign-role');
     Route::delete('users/{userId}/roles', [\App\Http\Controllers\Admin\RoleManagementController::class, 'removeUserRole'])->name('users.remove-role');
 });
