@@ -13,7 +13,7 @@
 
 @section('actions')
     <div class="flex space-x-3">
-        <a href="{{ route('admin.users.create') }}" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 h-10 px-4 py-2">
+        <a href="{{ route('admin.users.create') }}" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-teal-600 dark:bg-teal-500 text-white hover:bg-teal-700 dark:hover:bg-teal-600 h-10 px-4 py-2">
             <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
             </svg>
@@ -38,7 +38,7 @@
                            name="search" 
                            value="{{ request('search') }}"
                            placeholder="Search users by name, email, job title, department..."
-                           class="block w-full pl-10 pr-24 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                           class="block w-full pl-10 pr-24 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
                     <div class="absolute inset-y-0 right-0 flex items-center">
                         @if(request('search'))
                             <a href="{{ route('admin.users.index') }}" 
@@ -48,7 +48,7 @@
                                 </svg>
                             </a>
                         @endif
-                        <button type="submit" class="pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
+                        <button type="submit" class="pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
@@ -78,7 +78,7 @@
                 <span id="selected-count">0</span> selected
             </span>
             <button onclick="showBulkTenantModal()" 
-                    class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-8 px-3 py-1">
+                    class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-8 px-3 py-1">
                 <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m14 0v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5"></path>
                 </svg>
@@ -105,7 +105,7 @@
                                 <input type="checkbox" 
                                        id="select-all" 
                                        onchange="toggleSelectAll(this)"
-                                       class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                       class="rounded border-gray-300 dark:border-gray-600 text-teal-600 focus:ring-teal-500 dark:focus:ring-teal-400">
                             </th>
                             <th class="h-12 px-4 text-left align-middle font-medium text-gray-600 dark:text-gray-400">
                                 <button onclick="sortTable('name')" class="flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white">
@@ -220,7 +220,7 @@
                             <tr class="border-b border-gray-200 dark:border-gray-700 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                 <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">
                                     <input type="checkbox" 
-                                           class="user-checkbox rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400" 
+                                           class="user-checkbox rounded border-gray-300 dark:border-gray-600 text-teal-600 focus:ring-teal-500 dark:focus:ring-teal-400" 
                                            value="{{ $user->id }}"
                                            onchange="updateBulkActions()">
                                 </td>
@@ -270,12 +270,12 @@
                                     @if($user->tenants->count() > 0)
                                         <div class="flex flex-wrap gap-1">
                                             @foreach($user->tenants->take(2) as $tenant)
-                                                <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 border-transparent bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                                                <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 border-transparent bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200">
                                                     {{ $tenant->slug }}
                                                 </span>
                                             @endforeach
                                             @if($user->tenants->count() > 2)
-                                                <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                                                <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
                                                     +{{ $user->tenants->count() - 2 }}
                                                 </span>
                                             @endif
@@ -305,7 +305,7 @@
                                     <div class="flex justify-end">
                                         <div class="relative inline-block text-left">
                                             <button type="button" onclick="toggleDropdown('dropdown-{{ $user->id }}')" 
-                                                    class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-8 w-8">
+                                                    class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-8 w-8">
                                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
                                                 </svg>
@@ -390,7 +390,7 @@
                         No users found for "{{ request('search') }}". Try adjusting your search terms.
                     </p>
                     <div class="mt-6">
-                        <a href="{{ route('admin.users.index') }}" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-10 px-4 py-2">
+                        <a href="{{ route('admin.users.index') }}" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-10 px-4 py-2">
                             Clear Search
                         </a>
                     </div>
@@ -403,7 +403,7 @@
                     <p class="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">Get started by creating your first user account.</p>
                     @can('users.create')
                         <div class="mt-6">
-                            <a href="{{ route('admin.users.create') }}" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 h-10 px-4 py-2">
+                            <a href="{{ route('admin.users.create') }}" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-teal-600 dark:bg-teal-500 text-white hover:bg-teal-700 dark:hover:bg-teal-600 h-10 px-4 py-2">
                                 <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                 </svg>
@@ -445,7 +445,7 @@
                         </div>
                     </div>
                     <button type="button" onclick="closeTenantModal()" 
-                            class="rounded-md bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            class="rounded-md bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500">
                         <span class="sr-only">Close</span>
                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -465,7 +465,7 @@
                         </div>
                         <div class="flex items-center justify-between text-sm mt-2">
                             <span class="text-gray-600 dark:text-gray-400">Currently Selected:</span>
-                            <span id="selected-tenants-count" class="font-medium text-blue-600 dark:text-blue-400">0</span>
+                            <span id="selected-tenants-count" class="font-medium text-teal-600 dark:text-teal-400">0</span>
                         </div>
                     </div>
                     
@@ -477,12 +477,12 @@
                             </h4>
                             <div class="flex items-center space-x-2">
                                 <button type="button" onclick="selectAllTenants()" 
-                                        class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
+                                        class="text-xs text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300">
                                     Select All
                                 </button>
                                 <span class="text-gray-300 dark:text-gray-600">|</span>
                                 <button type="button" onclick="selectNoneTenants()" 
-                                        class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
+                                        class="text-xs text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300">
                                     Select None
                                 </button>
                             </div>
@@ -499,7 +499,7 @@
                                    id="tenant-search" 
                                    placeholder="Search tenants by name, slug, or domain..."
                                    onkeyup="searchTenants()"
-                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
                         </div>
                     </div>
                     
@@ -515,7 +515,7 @@
                                                 <input type="checkbox" 
                                                        id="select-all-tenants" 
                                                        onchange="toggleAllTenants(this)"
-                                                       class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                                       class="rounded border-gray-300 dark:border-gray-600 text-teal-600 focus:ring-teal-500 dark:focus:ring-teal-400">
                                             </th>
                                             <th class="px-4 py-3 text-left font-medium text-gray-900 dark:text-white">Tenant Name</th>
                                             <th class="px-4 py-3 text-left font-medium text-gray-900 dark:text-white">Slug</th>
@@ -536,7 +536,7 @@
                                                            name="tenant_assignment" 
                                                            value="{{ $tenant->id }}"
                                                            onchange="updateSelectedCount()"
-                                                           class="tenant-checkbox rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                                           class="tenant-checkbox rounded border-gray-300 dark:border-gray-600 text-teal-600 focus:ring-teal-500 dark:focus:ring-teal-400">
                                                 </td>
                                                 <td class="px-4 py-3">
                                                     <div>
@@ -635,11 +635,11 @@
             <div class="border-t border-gray-200 dark:border-gray-700 px-6 py-4">
                 <div class="flex justify-end space-x-3">
                     <button type="button" onclick="closeTenantModal()" 
-                            class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-10 px-4 py-2">
+                            class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-10 px-4 py-2">
                         Cancel
                     </button>
                     <button type="button" onclick="saveTenantAssignments()" 
-                            class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 h-10 px-4 py-2">
+                            class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-teal-600 dark:bg-teal-500 text-white hover:bg-teal-700 dark:hover:bg-teal-600 h-10 px-4 py-2">
                         <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
@@ -671,7 +671,7 @@
                         </div>
                     </div>
                     <button type="button" onclick="closeBulkTenantModal()" 
-                            class="rounded-md bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            class="rounded-md bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500">
                         <span class="sr-only">Close</span>
                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -690,17 +690,17 @@
                         <div class="space-y-2">
                             <label class="flex items-center space-x-2">
                                 <input type="radio" name="bulk_assignment_type" value="add" checked
-                                       class="text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                       class="text-teal-600 focus:ring-teal-500 dark:focus:ring-teal-400">
                                 <span class="text-sm text-gray-900 dark:text-white">Add to existing tenant assignments</span>
                             </label>
                             <label class="flex items-center space-x-2">
                                 <input type="radio" name="bulk_assignment_type" value="replace"
-                                       class="text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                       class="text-teal-600 focus:ring-teal-500 dark:focus:ring-teal-400">
                                 <span class="text-sm text-gray-900 dark:text-white">Replace all tenant assignments</span>
                             </label>
                             <label class="flex items-center space-x-2">
                                 <input type="radio" name="bulk_assignment_type" value="remove"
-                                       class="text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                       class="text-teal-600 focus:ring-teal-500 dark:focus:ring-teal-400">
                                 <span class="text-sm text-gray-900 dark:text-white">Remove selected tenant assignments</span>
                             </label>
                         </div>
@@ -713,12 +713,12 @@
                             </h4>
                             <div class="flex items-center space-x-2">
                                 <button type="button" onclick="selectAllBulkTenants()" 
-                                        class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
+                                        class="text-xs text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300">
                                     Select All
                                 </button>
                                 <span class="text-gray-300 dark:text-gray-600">|</span>
                                 <button type="button" onclick="selectNoneBulkTenants()" 
-                                        class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
+                                        class="text-xs text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300">
                                     Select None
                                 </button>
                             </div>
@@ -735,7 +735,7 @@
                                    id="bulk-tenant-search" 
                                    placeholder="Search tenants by name or slug..."
                                    onkeyup="searchBulkTenants()"
-                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
                         </div>
                     </div>
                         
@@ -748,7 +748,7 @@
                                                 <input type="checkbox" 
                                                        id="select-all-bulk-tenants" 
                                                        onchange="toggleAllBulkTenants(this)"
-                                                       class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                                       class="rounded border-gray-300 dark:border-gray-600 text-teal-600 focus:ring-teal-500 dark:focus:ring-teal-400">
                                             </th>
                                             <th class="px-3 py-2 text-left font-medium text-gray-900 dark:text-white">Tenant</th>
                                             <th class="px-3 py-2 text-left font-medium text-gray-900 dark:text-white">Slug</th>
@@ -767,7 +767,7 @@
                                                            name="bulk_tenant_assignment" 
                                                            value="{{ $tenant->id }}"
                                                            onchange="updateBulkSelectedCount()"
-                                                           class="bulk-tenant-checkbox rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                                           class="bulk-tenant-checkbox rounded border-gray-300 dark:border-gray-600 text-teal-600 focus:ring-teal-500 dark:focus:ring-teal-400">
                                                 </td>
                                                 <td class="px-3 py-2">
                                                     <div class="font-medium text-gray-900 dark:text-white">
@@ -810,11 +810,11 @@
             <div class="border-t border-gray-200 dark:border-gray-700 px-6 py-4">
                 <div class="flex justify-end space-x-3">
                     <button type="button" onclick="closeBulkTenantModal()" 
-                            class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-10 px-4 py-2">
+                            class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-10 px-4 py-2">
                         Cancel
                     </button>
                     <button type="button" onclick="saveBulkTenantAssignments()" 
-                            class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 h-10 px-4 py-2">
+                            class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-teal-600 dark:bg-teal-500 text-white hover:bg-teal-700 dark:hover:bg-teal-600 h-10 px-4 py-2">
                         <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
@@ -1103,7 +1103,7 @@ function updatePageNumbers(totalPages) {
             button.onclick = () => goToPage(i);
             button.className = `px-3 py-2 text-sm font-medium leading-tight ${
                 i === currentPage 
-                    ? 'text-blue-600 bg-blue-50 border border-blue-300 dark:border-gray-700 dark:bg-gray-700 dark:text-white' 
+                    ? 'text-teal-600 bg-teal-50 border border-teal-300 dark:border-gray-700 dark:bg-gray-700 dark:text-white' 
                     : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
             }`;
             pageNumbers.appendChild(button);

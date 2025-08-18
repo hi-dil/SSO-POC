@@ -47,7 +47,7 @@
                         </dl>
                     </div>
                     
-                    <div class="bg-blue-50 p-4 rounded-md">
+                    <div class="bg-teal-50 p-4 rounded-md">
                         <h3 class="text-lg font-medium text-gray-900 mb-3">JWT Token</h3>
                         <div class="bg-white p-3 rounded border">
                             <code class="text-xs text-gray-800 break-all">{{ $token }}</code>
@@ -57,7 +57,7 @@
                         </p>
                     </div>
                     
-                    <div class="bg-indigo-50 p-4 rounded-md">
+                    <div class="bg-cyan-50 p-4 rounded-md">
                         <h3 class="text-lg font-medium text-gray-900 mb-3">Next Steps</h3>
                         <p class="text-sm text-gray-600 mb-3">
                             You can now access your tenant application:
@@ -70,7 +70,7 @@
                         @if($tenantUrl)
                             <div class="space-y-2">
                                 <a href="{{ $tenantUrl }}/auth/callback?token={{ $token }}" 
-                                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                                     Go to {{ ucfirst($tenant_slug) }} App
                                     <svg class="ml-2 -mr-1 w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -87,12 +87,12 @@
                     <div class="flex space-x-3">
                         @if($user->tenants->count() > 1)
                             <a href="{{ route('tenant.select') }}" 
-                               class="flex-1 py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-center">
+                               class="flex-1 py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 text-center">
                                 Switch Tenant
                             </a>
                         @endif
                         <a href="{{ route('main.logout') }}" 
-                           class="flex-1 py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-center">
+                           class="flex-1 py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 text-center">
                             Logout
                         </a>
                     </div>

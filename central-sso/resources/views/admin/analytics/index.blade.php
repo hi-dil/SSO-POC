@@ -13,13 +13,13 @@
 
 @section('actions')
     <div class="flex items-center space-x-2">
-        <button onclick="refreshData()" class="inline-flex items-center justify-center rounded-md text-sm font-medium  transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-10 px-4 py-2">
+        <button onclick="refreshData()" class="inline-flex items-center justify-center rounded-md text-sm font-medium  transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white h-10 px-4 py-2">
             <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
             </svg>
             Refresh
         </button>
-        <button onclick="exportData()" class="inline-flex items-center justify-center rounded-md text-sm font-medium  transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 h-10 px-4 py-2">
+        <button onclick="exportData()" class="inline-flex items-center justify-center rounded-md text-sm font-medium  transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-teal-600 dark:bg-teal-500 text-white hover:bg-teal-700 dark:hover:bg-teal-600 h-10 px-4 py-2">
             <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
@@ -58,8 +58,8 @@
                         <span :class="stats.login_trend >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600'" x-text="(stats.login_trend >= 0 ? '+' : '') + stats.login_trend + ' from yesterday'"></span>
                     </p>
                 </div>
-                <div class="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                    <svg class="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="h-12 w-12 rounded-full bg-teal-100 dark:bg-teal-900 flex items-center justify-center">
+                    <svg class="h-6 w-6 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
                     </svg>
                 </div>
@@ -108,7 +108,7 @@
                 <template x-for="(data, tenantId) in stats.active_by_tenant" :key="tenantId">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-3">
-                            <div class="h-3 w-3 rounded-full bg-blue-500"></div>
+                            <div class="h-3 w-3 rounded-full bg-teal-500"></div>
                             <span class="text-sm font-medium" x-text="data.tenant?.name || tenantId"></span>
                         </div>
                         <span class="text-sm text-gray-600 dark:text-gray-400" x-text="data.count + ' users'"></span>
@@ -249,7 +249,7 @@ function analyticsPage() {
         
         getMethodColor(method) {
             const colors = {
-                'sso': 'bg-blue-500',
+                'sso': 'bg-teal-500',
                 'direct': 'bg-green-500',
                 'api': 'bg-purple-500'
             };
@@ -258,7 +258,7 @@ function analyticsPage() {
         
         getMethodBadgeClass(method) {
             const classes = {
-                'sso': 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 ring-1 ring-inset ring-blue-200 dark:ring-blue-700',
+                'sso': 'bg-teal-100 dark:bg-teal-900 text-blue-800 dark:text-blue-200 ring-1 ring-inset ring-blue-200 dark:ring-blue-700',
                 'direct': 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 ring-1 ring-inset ring-green-200 dark:ring-green-700',
                 'api': 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 ring-1 ring-inset ring-purple-200 dark:ring-purple-700'
             };

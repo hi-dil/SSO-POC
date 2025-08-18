@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Authentication') - Central SSO</title>
+    <title>@yield('title', 'Authentication') - {{ config('app.name', 'Tenant One') }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script>
@@ -61,6 +61,8 @@
     <style>
         :root {
             --radius: 0.5rem;
+            --tenant-primary: 6, 190, 182;
+            --tenant-secondary: 72, 177, 191;
         }
         [x-cloak] { display: none !important; }
     </style>
@@ -103,7 +105,7 @@
         })()
     </script>
 </head>
-<body class="bg-gradient-to-br from-teal-50 via-cyan-50 to-teal-100 dark:from-gray-900 dark:via-teal-900 dark:to-cyan-900 min-h-screen flex items-center justify-center transition-colors duration-300">
+<body class="bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50 dark:from-gray-900 dark:via-teal-900 dark:to-cyan-900 min-h-screen flex items-center justify-center transition-colors duration-300">
     <div class="max-w-md w-full mx-auto">
         <!-- Theme Toggle -->
         <div class="flex justify-end mb-4">
@@ -123,10 +125,10 @@
         <div class="text-center mb-8">
             <a href="/" class="inline-block">
                 <h1 class="text-3xl font-bold bg-gradient-to-r from-teal-custom to-teal-custom-light bg-clip-text text-transparent">
-                    Central SSO
+                    {{ config('app.name', 'Tenant One') }}
                 </h1>
             </a>
-            <p class="text-gray-600 dark:text-gray-400 mt-2 transition-colors duration-200">@yield('subtitle', 'Secure Authentication Server')</p>
+            <p class="text-gray-600 dark:text-gray-400 mt-2 transition-colors duration-200">@yield('subtitle', 'Secure Tenant Application')</p>
         </div>
 
         <!-- Main Card -->
@@ -169,6 +171,25 @@
                     </div>
                 @endif
 
+                @if($errors->any())
+                    <div class="mb-4 bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-500 text-red-700 dark:text-red-400 px-4 py-3 rounded transition-colors duration-200" x-data="{ show: true }" x-show="show">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <ul class="list-disc list-inside space-y-1">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                            <button @click="show = false" class="text-red-700 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 ml-4">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                @endif
+
                 @if(session('warning'))
                     <div class="mb-4 bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-400 dark:border-yellow-500 text-yellow-700 dark:text-yellow-400 px-4 py-3 rounded transition-colors duration-200" x-data="{ show: true }" x-show="show">
                         <div class="flex justify-between items-center">
@@ -198,10 +219,10 @@
             @yield('bottom-links')
             <div class="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">
                 <a href="/" class="hover:text-gray-700 dark:hover:text-gray-300">← Back to Home</a>
-                @if(Route::has('api.docs'))
-                    <span class="mx-2">•</span>
-                    <a href="/docs" class="hover:text-gray-700 dark:hover:text-gray-300">API Documentation</a>
-                @endif
+                <span class="mx-2">•</span>
+                <a href="{{ route('login') }}" class="hover:text-gray-700 dark:hover:text-gray-300">Login</a>
+                <span class="mx-2">•</span>
+                <a href="{{ route('register') }}" class="hover:text-gray-700 dark:hover:text-gray-300">Register</a>
             </div>
         </div>
     </div>

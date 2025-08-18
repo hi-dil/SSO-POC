@@ -3,14 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Central SSO - Single Sign-On Authentication Server</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Central SSO - Enterprise Authentication Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script>
         tailwind.config = {
-            darkMode: 'class'
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'teal-custom': '#06beb6',
+                        'teal-custom-light': '#48b1bf',
+                    }
+                }
+            }
         }
-
+    </script>
+    <script>
         // Alpine.js persist plugin for theme persistence
         document.addEventListener('alpine:init', () => {
             Alpine.magic('persist', (el, { interceptor }) => {
@@ -52,23 +62,23 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 min-h-screen transition-colors duration-300">
+<body class="bg-gradient-to-br from-teal-50 via-cyan-50 to-teal-100 dark:from-gray-900 dark:via-teal-900 dark:to-cyan-900 min-h-screen transition-colors duration-300">
     <!-- Navigation -->
-    <nav class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-300">
+    <nav class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 transition-colors duration-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
                 <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                            Central SSO
-                        </h1>
-                    </div>
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-teal-custom to-teal-custom-light bg-clip-text text-transparent">
+                        Central SSO
+                    </h1>
                 </div>
-                
+
+                <!-- Navigation Links -->
                 <div class="flex items-center space-x-4">
                     <!-- Theme Toggle -->
                     <button @click="darkMode = !darkMode" 
-                            class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200"
+                            class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
                             :title="darkMode ? 'Switch to light mode' : 'Switch to dark mode'">
                         <svg x-show="!darkMode" class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
@@ -79,17 +89,17 @@
                     </button>
 
                     @auth
-                        <a href="{{ route('dashboard') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        <a href="{{ route('dashboard') }}" 
+                           class="bg-gradient-to-r from-teal-custom to-teal-custom-light text-white px-6 py-2 rounded-lg hover:from-teal-600 hover:to-cyan-600 transition-all duration-200 font-medium">
                             Dashboard
                         </a>
-                        <a href="{{ route('main.logout') }}" class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 text-sm font-medium transition-colors">
-                            Logout
-                        </a>
                     @else
-                        <a href="{{ route('login') }}" class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 text-sm font-medium transition-colors">
-                            Login
+                        <a href="{{ route('login') }}" 
+                           class="text-gray-700 dark:text-gray-200 hover:text-teal-600 dark:hover:text-teal-400 px-4 py-2 rounded-lg transition-colors duration-200">
+                            Sign In
                         </a>
-                        <a href="{{ route('login') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        <a href="{{ route('login') }}" 
+                           class="bg-gradient-to-r from-teal-custom to-teal-custom-light text-white px-6 py-2 rounded-lg hover:from-teal-600 hover:to-cyan-600 transition-all duration-200 font-medium">
                             Get Started
                         </a>
                     @endauth
@@ -99,246 +109,263 @@
     </nav>
 
     <!-- Hero Section -->
-    <div class="relative overflow-hidden">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-            <div class="text-center">
-                <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-                    <span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                        Single Sign-On
-                    </span>
-                    <br>Made Simple
-                </h1>
-                <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-                    Secure, centralized authentication server powering seamless access across multiple tenant applications. 
-                    One login, unlimited possibilities.
-                </p>
-                
+    <section class="py-20 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto text-center">
+            <h1 class="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+                Enterprise
+                <span class="bg-gradient-to-r from-teal-custom to-teal-custom-light bg-clip-text text-transparent">
+                    SSO Platform
+                </span>
+            </h1>
+            <p class="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
+                Secure, centralized authentication server powering seamless access across multiple tenant applications. 
+                Built for enterprise scale with modern security standards and developer-friendly APIs.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
                 @auth
-                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                        <a href="{{ route('dashboard') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors inline-flex items-center justify-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            Access Dashboard
-                        </a>
-                        <a href="{{ route('admin.tenants.index') }}" class="bg-white hover:bg-gray-50 text-gray-900 px-8 py-4 rounded-lg text-lg font-medium border border-gray-300 transition-colors inline-flex items-center justify-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m14 0v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5"></path>
-                            </svg>
+                    <a href="{{ route('dashboard') }}" 
+                       class="bg-gradient-to-r from-teal-custom to-teal-custom-light text-white px-8 py-4 rounded-xl hover:from-teal-600 hover:to-cyan-600 transition-all duration-200 font-semibold text-lg shadow-lg hover:shadow-xl">
+                        Access Dashboard
+                    </a>
+                    @can('manage-tenants')
+                        <a href="{{ route('admin.tenants.index') }}" 
+                           class="bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-8 py-4 rounded-xl border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 font-semibold text-lg">
                             Manage Tenants
                         </a>
+                    @endcan
+                @else
+                    <a href="{{ route('login') }}" 
+                       class="bg-gradient-to-r from-teal-custom to-teal-custom-light text-white px-8 py-4 rounded-xl hover:from-teal-600 hover:to-cyan-600 transition-all duration-200 font-semibold text-lg shadow-lg hover:shadow-xl">
+                        Sign In to Dashboard
+                    </a>
+                    <a href="/docs" 
+                       class="bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-8 py-4 rounded-xl border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 font-semibold text-lg">
+                        API Documentation
+                    </a>
+                @endauth
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-20 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                    Enterprise-Grade SSO Features
+                </h2>
+                <p class="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                    Built with modern technologies and enterprise security standards for seamless authentication experiences.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Multi-Tenant Architecture -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200 dark:border-gray-700">
+                    <div class="w-12 h-12 bg-gradient-to-r from-teal-custom to-teal-custom-light rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m14 0v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5"></path>
+                        </svg>
                     </div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Multi-Tenant Architecture</h3>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        Support for multiple tenant applications with isolated access control and seamless cross-tenant authentication.
+                    </p>
+                </div>
+
+                <!-- Role-Based Access Control -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200 dark:border-gray-700">
+                    <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Role-Based Access Control</h3>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        Granular permissions system with {{ \App\Models\Permission::count() }}+ built-in permissions for fine-grained access control.
+                    </p>
+                </div>
+
+                <!-- Enterprise Security -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200 dark:border-gray-700">
+                    <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Enterprise Security</h3>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        JWT tokens with HMAC-SHA256 signing, bcrypt password hashing, and comprehensive security measures.
+                    </p>
+                </div>
+
+                <!-- Developer Tools -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200 dark:border-gray-700">
+                    <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">RESTful API</h3>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        Complete OpenAPI 3.0 documented REST API with structured responses and comprehensive error handling.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-800 transition-colors duration-200">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                    Real-Time System Statistics
+                </h2>
+                <p class="text-xl text-gray-600 dark:text-gray-300">
+                    Live data from your Central SSO instance
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+                <div class="bg-gradient-to-r from-teal-custom to-teal-custom-light rounded-xl p-8 text-white">
+                    <div class="text-4xl font-bold mb-2">{{ \App\Models\Tenant::count() }}</div>
+                    <div class="text-lg opacity-90">Active Tenants</div>
+                </div>
+                <div class="bg-gradient-to-r from-teal-custom to-teal-custom-light rounded-xl p-8 text-white">
+                    <div class="text-4xl font-bold mb-2">{{ \App\Models\User::count() }}</div>
+                    <div class="text-lg opacity-90">Registered Users</div>
+                </div>
+                <div class="bg-gradient-to-r from-teal-custom to-teal-custom-light rounded-xl p-8 text-white">
+                    <div class="text-4xl font-bold mb-2">{{ \App\Models\Role::count() }}</div>
+                    <div class="text-lg opacity-90">Available Roles</div>
+                </div>
+                <div class="bg-gradient-to-r from-teal-custom to-teal-custom-light rounded-xl p-8 text-white">
+                    <div class="text-4xl font-bold mb-2">{{ \App\Models\Permission::count() }}</div>
+                    <div class="text-lg opacity-90">System Permissions</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Start Guide -->
+    <section class="py-20 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                    Quick Start Guide
+                </h2>
+                <p class="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                    Get started with Central SSO in three simple steps
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg border border-gray-200 dark:border-gray-700 text-center">
+                    <div class="w-16 h-16 bg-gradient-to-r from-teal-custom to-teal-custom-light rounded-full flex items-center justify-center mx-auto mb-6">
+                        <span class="text-2xl font-bold text-white">1</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">Access Dashboard</h3>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        Login with your administrator credentials to access the SSO management dashboard.
+                    </p>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg border border-gray-200 dark:border-gray-700 text-center">
+                    <div class="w-16 h-16 bg-gradient-to-r from-teal-custom to-teal-custom-light rounded-full flex items-center justify-center mx-auto mb-6">
+                        <span class="text-2xl font-bold text-white">2</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">Configure Tenants</h3>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        Set up your tenant applications and configure their access permissions and user assignments.
+                    </p>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg border border-gray-200 dark:border-gray-700 text-center">
+                    <div class="w-16 h-16 bg-gradient-to-r from-teal-custom to-teal-custom-light rounded-full flex items-center justify-center mx-auto mb-6">
+                        <span class="text-2xl font-bold text-white">3</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">Manage Access</h3>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        Assign roles and permissions to users for granular access control across all tenant applications.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action Section -->
+    <section class="py-20 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto text-center">
+            <div class="bg-gradient-to-r from-teal-custom to-teal-custom-light rounded-2xl p-12 text-white">
+                <h2 class="text-4xl font-bold mb-4">Ready to Centralize Authentication?</h2>
+                <p class="text-xl mb-8 opacity-90">
+                    Join organizations using Central SSO to streamline authentication across multiple applications with enterprise-grade security.
+                </p>
+                @auth
+                    <a href="{{ route('dashboard') }}" 
+                       class="bg-white text-teal-600 px-8 py-4 rounded-xl hover:bg-gray-100 transition-all duration-200 font-semibold text-lg inline-block">
+                        Access Your Dashboard
+                    </a>
                 @else
                     <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                        <a href="{{ route('login') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors inline-flex items-center justify-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
-                            </svg>
-                            Sign In
+                        <a href="{{ route('login') }}" 
+                           class="bg-white text-teal-600 px-8 py-4 rounded-xl hover:bg-gray-100 transition-all duration-200 font-semibold text-lg">
+                            Get Started Now
                         </a>
-                        <a href="/docs" class="bg-white hover:bg-gray-50 text-gray-900 px-8 py-4 rounded-lg text-lg font-medium border border-gray-300 transition-colors inline-flex items-center justify-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            API Documentation
+                        <a href="/docs" 
+                           class="border-2 border-white text-white px-8 py-4 rounded-xl hover:bg-white hover:text-teal-600 transition-all duration-200 font-semibold text-lg">
+                            View Documentation
                         </a>
                     </div>
                 @endauth
             </div>
         </div>
-    </div>
-
-    <!-- Features Section -->
-    <div class="py-24 bg-white/50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                    Powerful SSO Features
-                </h2>
-                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                    Built with modern technologies and enterprise-grade security for seamless authentication experiences.
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Multi-Tenant Support -->
-                <div class="bg-white p-8 rounded-xl shadow-sm border hover:shadow-md transition-shadow">
-                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
-                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m14 0v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Multi-Tenant Architecture</h3>
-                    <p class="text-gray-600">Support for multiple tenant applications with isolated access control and seamless cross-tenant authentication.</p>
-                </div>
-
-                <!-- Role-Based Access -->
-                <div class="bg-white p-8 rounded-xl shadow-sm border hover:shadow-md transition-shadow">
-                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-6">
-                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Role-Based Access Control</h3>
-                    <p class="text-gray-600">Granular permissions system with 17+ built-in permissions across 5 categories for fine-grained access control.</p>
-                </div>
-
-                <!-- JWT Security -->
-                <div class="bg-white p-8 rounded-xl shadow-sm border hover:shadow-md transition-shadow">
-                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6">
-                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Enterprise Security</h3>
-                    <p class="text-gray-600">JWT tokens with HMAC-SHA256 signing, bcrypt password hashing, and comprehensive security measures.</p>
-                </div>
-
-                <!-- RESTful API -->
-                <div class="bg-white p-8 rounded-xl shadow-sm border hover:shadow-md transition-shadow">
-                    <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-6">
-                        <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3">RESTful API</h3>
-                    <p class="text-gray-600">Complete OpenAPI 3.0 documented REST API with structured responses and comprehensive error handling.</p>
-                </div>
-
-                <!-- Admin Dashboard -->
-                <div class="bg-white p-8 rounded-xl shadow-sm border hover:shadow-md transition-shadow">
-                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-6">
-                        <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Admin Dashboard</h3>
-                    <p class="text-gray-600">Intuitive web interface for managing tenants, users, roles, and permissions with real-time updates.</p>
-                </div>
-
-                <!-- Developer Tools -->
-                <div class="bg-white p-8 rounded-xl shadow-sm border hover:shadow-md transition-shadow">
-                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-6">
-                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Developer Tools</h3>
-                    <p class="text-gray-600">Laravel Telescope integration, comprehensive logging, and monitoring tools for debugging and optimization.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stats Section -->
-    <div class="py-16 bg-gradient-to-r from-blue-600 to-purple-600">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-                <div>
-                    <div class="text-3xl md:text-4xl font-bold text-white mb-2">{{ \App\Models\Tenant::count() }}</div>
-                    <div class="text-blue-100">Active Tenants</div>
-                </div>
-                <div>
-                    <div class="text-3xl md:text-4xl font-bold text-white mb-2">{{ \App\Models\User::count() }}</div>
-                    <div class="text-blue-100">Registered Users</div>
-                </div>
-                <div>
-                    <div class="text-3xl md:text-4xl font-bold text-white mb-2">{{ \App\Models\Role::count() }}</div>
-                    <div class="text-blue-100">Available Roles</div>
-                </div>
-                <div>
-                    <div class="text-3xl md:text-4xl font-bold text-white mb-2">{{ \App\Models\Permission::count() }}</div>
-                    <div class="text-blue-100">Permissions</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Start Section -->
-    <div class="py-24 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                    Quick Start Guide
-                </h2>
-                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                    Get started with Central SSO in just a few simple steps.
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="text-center">
-                    <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <span class="text-2xl font-bold text-white">1</span>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Login to Dashboard</h3>
-                    <p class="text-gray-600">Access the admin dashboard with your credentials to manage the SSO system.</p>
-                </div>
-
-                <div class="text-center">
-                    <div class="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <span class="text-2xl font-bold text-white">2</span>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Configure Tenants</h3>
-                    <p class="text-gray-600">Set up your tenant applications and configure their access permissions.</p>
-                </div>
-
-                <div class="text-center">
-                    <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <span class="text-2xl font-bold text-white">3</span>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Manage Users & Roles</h3>
-                    <p class="text-gray-600">Assign roles and permissions to users for granular access control.</p>
-                </div>
-            </div>
-        </div>
-    </div>
+    </section>
 
     <!-- Footer -->
-    <footer class="bg-white border-t">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-12 transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div class="col-span-2">
-                    <h3 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+                    <h3 class="text-2xl font-bold bg-gradient-to-r from-teal-custom to-teal-custom-light bg-clip-text text-transparent mb-4">
                         Central SSO
                     </h3>
-                    <p class="text-gray-600 mb-4">
-                        A modern, secure, and scalable Single Sign-On authentication server built with Laravel.
-                        Powering seamless authentication across multiple tenant applications.
+                    <p class="text-gray-600 dark:text-gray-300 mb-6">
+                        Enterprise Single Sign-On authentication server built with Laravel. 
+                        Secure, scalable, and developer-friendly authentication for modern applications.
                     </p>
                     <div class="flex space-x-4">
-                        <a href="/docs" class="text-gray-400 hover:text-gray-500">
-                            <span class="sr-only">Documentation</span>
-                            <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                            </svg>
+                        <a href="/docs" class="text-gray-500 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200">
+                            Documentation
                         </a>
-                        <a href="/telescope" class="text-gray-400 hover:text-gray-500">
-                            <span class="sr-only">Monitoring</span>
-                            <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                            </svg>
+                        <a href="/telescope" class="text-gray-500 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200">
+                            Monitoring
+                        </a>
+                        <a href="#" class="text-gray-500 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200">
+                            Support
                         </a>
                     </div>
                 </div>
 
                 <div>
-                    <h4 class="text-sm font-semibold text-gray-900 tracking-wider uppercase mb-4">Quick Links</h4>
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white tracking-wider uppercase mb-4">Quick Links</h4>
                     <ul class="space-y-2">
-                        <li><a href="{{ route('login') }}" class="text-gray-600 hover:text-gray-900">Login</a></li>
+                        <li><a href="{{ route('login') }}" class="text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200">Login</a></li>
                         @auth
-                            <li><a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-gray-900">Dashboard</a></li>
-                            <li><a href="{{ route('admin.tenants.index') }}" class="text-gray-600 hover:text-gray-900">Tenants</a></li>
-                            <li><a href="{{ route('admin.roles.index') }}" class="text-gray-600 hover:text-gray-900">Roles</a></li>
+                            <li><a href="{{ route('dashboard') }}" class="text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200">Dashboard</a></li>
+                            @can('manage-tenants')
+                                <li><a href="{{ route('admin.tenants.index') }}" class="text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200">Tenants</a></li>
+                                <li><a href="{{ route('admin.roles.index') }}" class="text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200">Roles</a></li>
+                            @endcan
                         @endauth
-                        <li><a href="/docs" class="text-gray-600 hover:text-gray-900">API Docs</a></li>
+                        <li><a href="/docs" class="text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200">API Docs</a></li>
                     </ul>
                 </div>
 
                 <div>
-                    <h4 class="text-sm font-semibold text-gray-900 tracking-wider uppercase mb-4">System Info</h4>
-                    <ul class="space-y-2 text-sm text-gray-600">
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white tracking-wider uppercase mb-4">System Info</h4>
+                    <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                         <li>Laravel {{ app()->version() }}</li>
                         <li>PHP {{ PHP_VERSION }}</li>
                         <li>Environment: {{ config('app.env') }}</li>
@@ -347,8 +374,8 @@
                 </div>
             </div>
 
-            <div class="border-t border-gray-200 mt-8 pt-8 text-center">
-                <p class="text-gray-600 text-sm">
+            <div class="border-t border-gray-200 dark:border-gray-600 mt-8 pt-8 text-center">
+                <p class="text-gray-600 dark:text-gray-400 text-sm">
                     © {{ date('Y') }} Central SSO. Built with Laravel & Tailwind CSS.
                 </p>
             </div>

@@ -1,135 +1,77 @@
-@extends('layouts.app')
+@extends('layouts.auth')
 
-@section('styles')
-<style>
-    .auth-container {
-        max-width: 400px;
-        margin: 4rem auto;
-        background: white;
-        padding: 2rem;
-        border-radius: 10px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-    }
-    .auth-title {
-        text-align: center;
-        margin-bottom: 2rem;
-        color: #333;
-    }
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-    .form-label {
-        display: block;
-        margin-bottom: 0.5rem;
-        color: #555;
-        font-weight: 500;
-    }
-    .form-input {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        font-size: 1rem;
-        transition: border-color 0.3s;
-    }
-    .form-input:focus {
-        outline: none;
-        border-color: #667eea;
-    }
-    .form-error {
-        color: #dc3545;
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
-    }
-    .btn {
-        width: 100%;
-        padding: 0.75rem;
-        background: #667eea;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        font-size: 1rem;
-        cursor: pointer;
-        transition: background 0.3s;
-    }
-    .btn:hover {
-        background: #5a67d8;
-    }
-    .btn-sso {
-        background: #764ba2;
-        margin-bottom: 1rem;
-    }
-    .btn-sso:hover {
-        background: #6b4194;
-    }
-    .divider {
-        text-align: center;
-        margin: 1.5rem 0;
-        position: relative;
-    }
-    .divider::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: #ddd;
-    }
-    .divider span {
-        background: white;
-        padding: 0 1rem;
-        position: relative;
-        color: #999;
-    }
-    .auth-links {
-        text-align: center;
-        margin-top: 1.5rem;
-    }
-    .auth-links a {
-        color: #667eea;
-        text-decoration: none;
-    }
-    .auth-links a:hover {
-        text-decoration: underline;
-    }
-</style>
-@endsection
+@section('title', 'Login')
+@section('subtitle', 'Sign in to access your applications')
+@section('header', 'Sign In')
 
 @section('content')
-<div class="auth-container">
-    <h2 class="auth-title">Login to {{ config('app.name') }}</h2>
-    
-    <a href="{{ route('sso.redirect') }}" class="btn btn-sso">Login with Central SSO</a>
-    
-    <div class="divider">
-        <span>OR</span>
-    </div>
-    
-    <form method="POST" action="{{ route('login') }}">
-        @csrf
-        
-        <div class="form-group">
-            <label for="email" class="form-label">Email Address</label>
-            <input type="email" id="email" name="email" class="form-input" value="{{ old('email') }}" required autofocus>
-            @error('email')
-                <div class="form-error">{{ $message }}</div>
-            @enderror
-        </div>
-        
-        <div class="form-group">
-            <label for="password" class="form-label">Password</label>
-            <input type="password" id="password" name="password" class="form-input" required>
-            @error('password')
-                <div class="form-error">{{ $message }}</div>
-            @enderror
-        </div>
-        
-        <button type="submit" class="btn">Login</button>
-    </form>
-    
-    <div class="auth-links">
-        <p>Don't have an account? <a href="{{ route('register') }}">Register here</a></p>
-    </div>
-</div>
+                <!-- SSO Login Button -->
+                <div class="mb-6">
+                    <a href="{{ route('sso.redirect') }}" 
+                       class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-teal-custom to-teal-custom-light text-white hover:from-teal-600 hover:to-cyan-600 h-10 px-4 py-2 w-full">
+                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        Login with Central SSO
+                    </a>
+                </div>
+
+                <!-- Divider -->
+                <div class="relative mb-6">
+                    <div class="absolute inset-0 flex items-center">
+                        <span class="w-full border-t border-gray-300 dark:border-gray-600"></span>
+                    </div>
+                    <div class="relative flex justify-center text-xs uppercase">
+                        <span class="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">Or continue with</span>
+                    </div>
+                </div>
+
+                <!-- Direct Login Form -->
+                <form class="space-y-6" action="{{ route('login') }}" method="POST">
+                    @csrf
+                    
+                    <div class="space-y-4">
+                        <div class="space-y-2">
+                            <label for="email" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-700 dark:text-gray-200">
+                                Email address
+                            </label>
+                            <input id="email" name="email" type="email" autocomplete="email" required 
+                                   class="flex h-10 w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors duration-200" 
+                                   placeholder="Enter your email" value="{{ old('email') }}">
+                            @error('email')
+                                <div class="text-sm text-red-600 dark:text-red-400">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="space-y-2">
+                            <label for="password" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-700 dark:text-gray-200">
+                                Password
+                            </label>
+                            <input id="password" name="password" type="password" autocomplete="current-password" required 
+                                   class="flex h-10 w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors duration-200" 
+                                   placeholder="Enter your password">
+                            @error('password')
+                                <div class="text-sm text-red-600 dark:text-red-400">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <button type="submit" 
+                                class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-teal-custom to-teal-custom-light text-white hover:from-teal-600 hover:to-cyan-600 h-10 px-4 py-2 w-full">
+                            <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                            </svg>
+                            Sign In
+                        </button>
+                    </div>
+                </form>
+@endsection
+
+@section('bottom-links')
+                <div class="text-sm text-gray-600 dark:text-gray-400">
+                    Don't have an account? 
+                    <a href="{{ route('register') }}" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors">
+                        Register here
+                    </a>
+                </div>
 @endsection

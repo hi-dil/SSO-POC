@@ -164,10 +164,12 @@ The SSO system uses **tenant slugs** for clean, user-friendly URLs and tenant id
 - **SSO Login**: `http://localhost:8000/auth/{tenant_slug}`
 
 ### 🎨 Modern UI Design
+- **Unified Teal Theme**: Consistent teal gradient design (`#06beb6` → `#48b1bf`) across all applications
 - **shadcn/ui Design System**: Complete design system with dark/light themes
-- **Modern Landing Page**: Professional UI with gradient design and responsive layout
+- **Modern Landing Pages**: Professional UI with responsive layout and teal gradients
 - **Accessible Components**: WCAG compliant components with proper color contrast
 - **Interactive Elements**: Toast notifications, modals, dropdowns with Alpine.js
+- **Theme Consistency**: Central SSO, Tenant 1, and Tenant 2 all use matching teal color scheme
 
 ### 🔄 Authentication Flows
 
