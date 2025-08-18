@@ -43,21 +43,21 @@
     <!-- Tenant Overview -->
     <div class="mb-8">
         <div class="bg-white dark:bg-gray-800 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
-            <div class="px-4 py-5 sm:p-0">
+            <div class="px-4 py-5 sm:p-4">
                 <dl class="sm:divide-y sm:divide-gray-200 dark:sm:divide-gray-700">
                     <!-- Basic Info -->
                     <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
                         <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Name</dt>
                         <dd class="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">{{ $tenant->name }}</dd>
                     </div>
-                    
+
                     <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
                         <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Slug</dt>
                         <dd class="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">
                             <code class="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 rounded">{{ $tenant->slug }}</code>
                         </dd>
                     </div>
-                    
+
                     <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
                         <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Domain</dt>
                         <dd class="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">
@@ -73,31 +73,31 @@
                             @endif
                         </dd>
                     </div>
-                    
+
                     <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
                         <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
                         <dd class="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                 @if($tenant->is_active) bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 @else bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 @endif">
                                 {{ $tenant->is_active ? 'Active' : 'Inactive' }}
                             </span>
                         </dd>
                     </div>
-                    
+
                     <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
                         <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Max Users</dt>
                         <dd class="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">
                             {{ $tenant->max_users ?? 'Unlimited' }}
                         </dd>
                     </div>
-                    
+
                     @if($tenant->description)
                         <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Description</dt>
                             <dd class="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">{{ $tenant->description }}</dd>
                         </div>
                     @endif
-                    
+
                     <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
                         <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Created</dt>
                         <dd class="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">
@@ -209,7 +209,7 @@
                     </a>
                 @endcan
             </div>
-            
+
             <div class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-md border border-gray-200 dark:border-gray-700">
                 <ul class="divide-y divide-gray-200 dark:divide-gray-700">
                     @foreach($tenant->users->take(5) as $user)
@@ -230,9 +230,9 @@
                                 </div>
                                 <div class="flex items-center space-x-2">
                                     @foreach($user->roles as $role)
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                            @if($role->name === 'super-admin') bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 
-                                            @elseif($role->name === 'tenant-admin') bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                            @if($role->name === 'super-admin') bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400
+                                            @elseif($role->name === 'tenant-admin') bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400
                                             @else bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 @endif">
                                             {{ ucwords(str_replace('-', ' ', $role->name)) }}
                                         </span>
@@ -258,7 +258,7 @@
                         {{ $tenant->is_active ? 'Deactivate' : 'Activate' }} Tenant
                     </button>
                 </form>
-                
+
                 @can('tenants.delete')
                     @if($tenant->users()->count() == 0)
                         <button onclick="confirmDelete('{{ route('admin.tenants.destroy', $tenant) }}')" class="inline-flex items-center px-3 py-2 border border-red-300 dark:border-red-700 shadow-sm text-sm leading-4 font-medium rounded-md text-red-700 dark:text-red-400 bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
