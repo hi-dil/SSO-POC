@@ -2,7 +2,7 @@
 
 ## Overview
 
-This documentation covers the secure implementation of Tenant 1's mobile API that enables native mobile applications (iOS, Android) to authenticate and interact with tenant-specific resources. The system implements OAuth 2.0 with PKCE, Laravel Sanctum for token management, and multi-layer security without the complexity of certificate pinning.
+This documentation covers the secure implementation of Tenant 1's mobile API that enables native mobile applications (iOS, Android, React Native) to authenticate and interact with tenant-specific resources. The system implements OAuth 2.0 with PKCE, Laravel Sanctum for token management, and multi-layer security without the complexity of certificate pinning.
 
 ## Architecture
 
@@ -12,7 +12,7 @@ This documentation covers the secure implementation of Tenant 1's mobile API tha
 ├─────────────────────────────────────────────────────────────┤
 │ • iOS App (Swift)                                           │
 │ • Android App (Kotlin/Java)                                │
-│ • React Native / Flutter                                   │
+│ • React Native App (TypeScript/JavaScript)                 │
 └────────────────┬───────────────────────────────────────────┘
                  │ HTTPS + HMAC Signing
                  ▼
@@ -114,6 +114,7 @@ echo "MOBILE_HMAC_SECRET=$(openssl rand -hex 32)" >> .env
 Choose your platform:
 - [📱 iOS Implementation](client-sdks/ios-implementation.md)
 - [🤖 Android Implementation](client-sdks/android-implementation.md)
+- [⚛️ React Native Implementation](client-sdks/react-native-implementation.md)
 
 ### 3. Test the Integration
 ```bash
@@ -133,6 +134,7 @@ curl -X POST https://tenant1.example.com/api/v1/mobile/auth/authorize \
 ### Client SDKs
 - [🍎 iOS Implementation](client-sdks/ios-implementation.md) - Swift with Keychain integration
 - [🤖 Android Implementation](client-sdks/android-implementation.md) - Kotlin with secure storage
+- [⚛️ React Native Implementation](client-sdks/react-native-implementation.md) - TypeScript with cross-platform security
 
 ### Operations
 - [🧪 Testing Guide](testing-guide.md) - Unit and integration testing
