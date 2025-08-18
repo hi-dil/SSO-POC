@@ -216,6 +216,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::get('permissions/data', [\App\Http\Controllers\Admin\RoleManagementController::class, 'getPermissions'])->name('permissions.data');
     Route::post('users/{userId}/roles', [\App\Http\Controllers\Admin\RoleManagementController::class, 'assignUserRole'])->name('users.assign-role');
     Route::delete('users/{userId}/roles', [\App\Http\Controllers\Admin\RoleManagementController::class, 'removeUserRole'])->name('users.remove-role');
+    
+    // Settings Management
+    Route::get('settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');
+    Route::put('settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('settings.update');
+    Route::post('settings/reset/{key}', [\App\Http\Controllers\Admin\SettingsController::class, 'reset'])->name('settings.reset');
+    Route::post('settings/clear-cache', [\App\Http\Controllers\Admin\SettingsController::class, 'clearCache'])->name('settings.clear-cache');
 });
 
 // API-style routes for admin role management (web authenticated)

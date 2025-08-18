@@ -15,7 +15,8 @@ Step-by-step instructions for common tasks and workflows in the multi-tenant SSO
 ### **Deployment & Operations**
 - **[Home Server Deployment](home-server-deployment.md)** - Complete CI/CD setup with Cloudflare Tunnel
 
-### **Security & Administration**
+### **System Administration**
+- **[Settings Management](settings-management.md)** - Dynamic configuration and system settings
 - **[Security Guide](security.md)** - Security best practices and configuration
 
 ## 👥 User & Access Management
@@ -147,6 +148,30 @@ The [Home Server Deployment Guide](home-server-deployment.md) provides:
 ---
 
 ## 🔒 Security & Administration
+
+### Settings Management System
+
+The [Settings Management Guide](settings-management.md) provides:
+
+#### **Dynamic Configuration**
+- **JWT Token Settings**: Access and refresh token TTL configuration
+- **Session Management**: Session lifetime and behavior control
+- **Security Parameters**: Login attempts, lockout duration, password policies
+- **System Configuration**: Application branding and maintenance mode
+
+#### **Admin Interface**
+- **Web-based Configuration**: Intuitive settings management interface
+- **Real-time Updates**: Changes take effect immediately with optional cache clearing
+- **Permission-based Access**: Secure admin-only configuration access
+- **Validation & Type Safety**: Automatic validation and type conversion
+
+#### **Performance & Caching**
+- **Intelligent Caching**: 1-hour cache with automatic invalidation
+- **Database Optimization**: Efficient storage and retrieval of configuration
+- **Bulk Operations**: Update multiple settings simultaneously
+- **Cache Management**: Manual cache clearing and performance monitoring
+
+---
 
 ### Security Implementation
 

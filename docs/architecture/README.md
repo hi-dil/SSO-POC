@@ -25,6 +25,13 @@ Understanding the design and structure of the multi-tenant SSO system.
 - Migration strategies
 - Performance considerations
 
+### **[Settings System](settings-system.md)**
+⚙️ **Configuration management** - Dynamic system configuration
+- Database-driven settings
+- Caching and performance
+- Admin interface architecture
+- JWT integration patterns
+
 ## 🏗️ High-Level Architecture
 
 ```
@@ -73,9 +80,16 @@ Stateless authentication between services:
 - Signed JWT tokens for security
 - Tenant-specific claims in tokens
 - Cross-service validation
-- Configurable token expiration
+- Configurable token expiration via settings
 
-### 4. **API-First Design**
+### 4. **Dynamic Configuration Management**
+Database-driven configuration system:
+- Real-time settings updates without deployment
+- Type-safe configuration storage
+- Intelligent caching for performance
+- Permission-based admin access
+
+### 5. **API-First Design**
 RESTful APIs enable flexible integration:
 - Central SSO API for authentication
 - Tenant APIs for application-specific data
@@ -175,6 +189,7 @@ For detailed information on specific architectural components:
 - **[Authentication Systems](authentication.md)** - Complete authentication flows
 - **[Multi-Tenancy Design](multi-tenancy.md)** - Tenant isolation and management
 - **[Database Design](database-design.md)** - Schema and relationships
+- **[Settings System](settings-system.md)** - Configuration management architecture
 
 ## 🔗 Related Documentation
 

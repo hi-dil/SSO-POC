@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Tenant;
+use App\Models\Setting;
 use App\DTOs\Request\LoginRequestDTO;
 use App\DTOs\Request\RegisterRequestDTO;
 use App\DTOs\Request\ValidateTokenRequestDTO;
@@ -135,7 +136,12 @@ class AuthController extends Controller
                 'current_tenant' => $loginDto->tenant,
             ];
 
-            $token = JWTAuth::customClaims($customClaims)->fromUser($user);
+            // Get JWT TTL from settings (in minutes)
+            $ttl = Setting::getJwtAccessTokenTtl();
+            
+            $token = JWTAuth::customClaims($customClaims)
+                ->setTTL($ttl)
+                ->fromUser($user);
         } catch (JWTException $e) {
             $errorResponse = new ErrorResponseDTO('Could not create token', null, 500);
             return response()->json($errorResponse->toArray(), $errorResponse->code);
@@ -225,7 +231,12 @@ class AuthController extends Controller
                 'current_tenant' => $tenant->slug,
             ];
 
-            $token = JWTAuth::customClaims($customClaims)->fromUser($user);
+            // Get JWT TTL from settings (in minutes)
+            $ttl = Setting::getJwtAccessTokenTtl();
+            
+            $token = JWTAuth::customClaims($customClaims)
+                ->setTTL($ttl)
+                ->fromUser($user);
         } catch (JWTException $e) {
             $errorResponse = new ErrorResponseDTO('User created but could not create token', null, 500);
             return response()->json($errorResponse->toArray(), $errorResponse->code);
@@ -369,12 +380,15 @@ class AuthController extends Controller
     public function refresh(Request $request)
     {
         try {
-            $token = JWTAuth::refresh(JWTAuth::getToken());
+            // Get refresh token TTL from settings (in minutes)
+            $refreshTtl = Setting::getJwtRefreshTokenTtl();
+            
+            $token = JWTAuth::setTTL($refreshTtl)->refresh(JWTAuth::getToken());
             
             return response()->json([
                 'success' => true,
                 'token' => $token,
-                'expires_in' => config('jwt.ttl') * 60
+                'expires_in' => $refreshTtl * 60
             ]);
         } catch (JWTException $e) {
             $errorResponse = ErrorResponseDTO::unauthorized('Could not refresh token');

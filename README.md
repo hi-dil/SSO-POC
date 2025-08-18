@@ -13,6 +13,7 @@ docker compose up -d
 # Run database migrations and seed test data
 docker exec central-sso php artisan migrate
 docker exec central-sso php artisan db:seed --class=AddTestUsersSeeder
+docker exec central-sso php artisan db:seed --class=SettingsSeeder
 
 # Access applications
 # Central SSO: http://localhost:8000
@@ -55,6 +56,7 @@ docker exec central-sso php artisan db:seed --class=AddTestUsersSeeder
 - **⚡ Processing Page Flow** - JavaScript-based authentication checking with loading states
 - **🎟️ JWT-based Authentication** - Stateless token authentication with tenant-specific claims
 - **👥 Cross-tenant User Access** - Users can belong to multiple tenants
+- **⚙️ Dynamic Settings Management** - Database-driven configuration with admin interface
 - **🎨 Modern UI Design** - Unified teal theme with responsive design and dark mode support
 - **🛡️ Security Best Practices** - CSRF protection, rate limiting, secure password hashing
 - **🐳 Dockerized Environment** - Complete development setup with Docker Compose
@@ -81,9 +83,10 @@ docker exec central-sso php artisan migrate
 
 # Seed test data
 docker exec central-sso php artisan db:seed --class=AddTestUsersSeeder
+docker exec central-sso php artisan db:seed --class=SettingsSeeder
 
 # Connect to database
-docker exec -it mariadb mysql -u sso_user -psso_password sso_main
+docker exec -it sso-mariadb mysql -u sso_user -psso_password sso_main
 ```
 
 ### Development
@@ -107,6 +110,7 @@ Comprehensive documentation is available in the [docs/](./docs/) directory:
 - **[Setup Guide](./docs/setup-guide.md)** - Detailed local development setup
 - **[Architecture Overview](./docs/architecture.md)** - System design and components
 - **[Authentication Flow](./docs/authentication-flow.md)** - Detailed auth workflows
+- **[Settings Management](./docs/guides/settings-management.md)** - Dynamic configuration system
 - **[API Documentation](./docs/api-documentation.md)** - API endpoints and usage
 - **[Tenant Management](./docs/tenant-management.md)** - Multi-tenancy implementation
 - **[Database Schema](./docs/database-schema.md)** - Database structure and relationships
@@ -121,7 +125,9 @@ Comprehensive documentation is available in the [docs/](./docs/) directory:
 - **[Testing Guide](./docs/testing-guide.md)** - Testing SSO integration
 - **[Security Architecture](./docs/security-architecture.md)** - Security implementation details
 
-### Quick References
+### Technical References
+- **[Settings Architecture](./docs/architecture/settings-system.md)** - Settings system design
+- **[Settings Configuration](./docs/reference/settings-configuration.md)** - Complete settings reference
 - **[Implementation Summaries](./docs/summaries/)** - High-level feature overviews
 - **[Testing Documentation](./docs/testing/)** - Testing resources and guides
 
@@ -157,20 +163,31 @@ Monitor and debug your application at `http://localhost:8000/telescope`
 - Job monitoring
 - Cache operations
 
+### Settings Management
+Configure system behavior at `http://localhost:8000/admin/settings` (Super Admin access required)
+
+- **JWT Token Configuration** - Access and refresh token TTL
+- **Session Management** - Session lifetime and behavior
+- **Security Settings** - Login attempts, lockout duration
+- **System Configuration** - Application name, maintenance mode
+- **Real-time Updates** - Changes take effect immediately (with optional cache clearing)
+
 ### Docker Services
 
 | Service | Port | Purpose |
 |---------|------|---------|
-| central-sso | 8000 | Central SSO API and dashboard |
+| central-sso | 8000 | Central SSO API, dashboard, and settings management |
 | tenant1-app | 8001 | First client application |
 | tenant2-app | 8002 | Second client application |
-| mariadb | 3307 | Database server (external access) |
+| sso-mariadb | 3307 | Database server (external access) |
 
 ## 🔒 Security Features
 
-- **JWT Token Security** - Signed with HMAC-SHA256, configurable expiration
+- **JWT Token Security** - Signed with HMAC-SHA256, configurable expiration via settings
+- **Dynamic Configuration** - JWT TTL, session lifetime, and security parameters configurable
 - **Password Security** - Bcrypt hashing with 12 rounds
 - **Tenant Isolation** - Complete data separation at database level
+- **Permission-based Settings** - Admin-only access to system configuration
 - **CORS Protection** - Proper cross-origin request handling
 - **Rate Limiting** - Authentication endpoint protection
 - **CSRF Protection** - Form submission security

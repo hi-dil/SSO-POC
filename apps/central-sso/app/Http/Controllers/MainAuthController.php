@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -154,7 +155,12 @@ class MainAuthController extends Controller
                 'current_tenant' => $tenantSlug,
             ];
             
-            $token = JWTAuth::customClaims($customClaims)->fromUser($user);
+            // Get JWT TTL from settings (in minutes)
+            $ttl = Setting::getJwtAccessTokenTtl();
+            
+            $token = JWTAuth::customClaims($customClaims)
+                ->setTTL($ttl)
+                ->fromUser($user);
             
             // Record SSO login for this tenant
             $this->auditService->recordLogin($user, $tenantSlug, 'sso');

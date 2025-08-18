@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Tenant;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -79,7 +80,12 @@ class SSOController extends Controller
                         'current_tenant' => $tenant_slug,
                     ];
                     
-                    $token = JWTAuth::customClaims($customClaims)->fromUser($user);
+                    // Get JWT TTL from settings (in minutes)
+                    $ttl = Setting::getJwtAccessTokenTtl();
+                    
+                    $token = JWTAuth::customClaims($customClaims)
+                        ->setTTL($ttl)
+                        ->fromUser($user);
                 } catch (\Exception $e) {
                     \Log::error('Auto-authentication token generation failed: ' . $e->getMessage());
                     return response()->json(['authenticated' => false, 'redirect_to_login' => true]);
@@ -136,7 +142,12 @@ class SSOController extends Controller
                 'current_tenant' => $tenant_slug,
             ];
             
-            $token = JWTAuth::customClaims($customClaims)->fromUser($user);
+            // Get JWT TTL from settings (in minutes)
+            $ttl = Setting::getJwtAccessTokenTtl();
+            
+            $token = JWTAuth::customClaims($customClaims)
+                ->setTTL($ttl)
+                ->fromUser($user);
         } catch (\Exception $e) {
             \Log::error('Auto-authentication failed: ' . $e->getMessage());
             return redirect()->back()->withErrors(['error' => 'Could not create authentication token']);
@@ -232,7 +243,12 @@ class SSOController extends Controller
                 'current_tenant' => $request->tenant_slug,
             ];
             
-            $token = JWTAuth::customClaims($customClaims)->fromUser($user);
+            // Get JWT TTL from settings (in minutes)
+            $ttl = Setting::getJwtAccessTokenTtl();
+            
+            $token = JWTAuth::customClaims($customClaims)
+                ->setTTL($ttl)
+                ->fromUser($user);
         } catch (\Exception $e) {
             return back()->withErrors(['email' => 'Could not create authentication token'])->withInput();
         }
