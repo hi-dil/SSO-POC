@@ -4,7 +4,9 @@ Complete guide to authentication flows, session management, and security in the 
 
 ## 🏗️ Architecture Overview
 
-The SSO system implements a **dual-session architecture** combining centralized authentication with local session management.
+The SSO system implements a **flexible session architecture** that varies by authentication method:
+- **Direct Login (API)**: Single session in tenant app only (stateless central SSO)
+- **SSO Redirect/Seamless**: Dual sessions in both central SSO and tenant app
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -59,33 +61,37 @@ The system supports multiple authentication approaches to provide flexibility an
 
 ## 🔄 Authentication Flows
 
-### Seamless SSO Flow (Recommended)
+### Seamless SSO Flow (Web-Based - Leverages Existing Session)
 
 ```mermaid
 sequenceDiagram
     participant U as User
     participant T as Tenant App
-    participant SSO as Central SSO
-    participant S as Session/Cookies
+    participant SSO as Central SSO Web
+    participant CS as Central Session
+    participant TS as Tenant Session
     
-    Note over U,S: Already Authenticated User
+    Note over U,CS: Leverages Existing Central SSO Session
     U->>T: 1. Visit tenant app
     U->>T: 2. Click "Login with SSO"
     T->>U: 3. Redirect to SSO Processing Page
     U->>SSO: 4. GET /auth/tenant1?callback_url=...
     SSO->>U: 5. Show processing page (loading state)
     
-    Note over U,S: JavaScript Authentication Check
+    Note over SSO,CS: ✅ Existing Central SSO Session (Session A)
     U->>SSO: 6. AJAX: GET /auth/tenant1/check
-    SSO->>S: 7. Check existing session
-    S->>SSO: 8. Session valid + user authenticated
+    SSO->>CS: 7. Check existing session
+    CS->>SSO: 8. Session valid + user authenticated
     SSO->>SSO: 9. Verify tenant access
     SSO->>SSO: 10. Generate JWT token
     SSO->>U: 11. JSON: {authenticated: true, redirect_to: "..."}
     U->>U: 12. JavaScript auto-redirect
     U->>T: 13. Callback with JWT token
     T->>T: 14. Validate token & authenticate user
-    T->>U: 15. Redirect to protected content
+    
+    Note over T,TS: ✅ Create New Tenant App Session (Session B)
+    T->>TS: 15. Create Laravel session in Tenant App
+    T->>U: 16. Redirect to protected content (dual sessions active)
 ```
 
 **Benefits:**
@@ -94,17 +100,17 @@ sequenceDiagram
 - **Loading States**: Clear progress indication
 - **Graceful Fallback**: Login form when needed
 
-### Dual-Session Direct Login
+### Direct Login (API-Based - Single Session)
 
 ```mermaid
 sequenceDiagram
     participant U as User
     participant T as Tenant App
-    participant API as SSO API
+    participant API as Central SSO API
     participant DB as Database
-    participant S as Local Session
+    participant S as Tenant Session
     
-    Note over U,S: Direct Login to Tenant App
+    Note over U,S: API-Based Direct Login (No Central SSO Session)
     U->>T: 1. Fill login form on tenant app
     T->>API: 2. POST /api/auth/login<br/>{email, password, tenant_slug}
     API->>DB: 3. Query user by email
@@ -113,37 +119,41 @@ sequenceDiagram
     API->>DB: 6. Check hasAccessToTenant()
     DB->>API: 7. Tenant relationships
     API->>API: 8. Generate JWT with custom claims
-    API->>T: 9. Return {token, user}
+    API->>T: 9. Return {token, user} (stateless - no session created)
     
-    Note over T,S: Local Session Creation
+    Note over API: ❌ NO Central SSO session created (stateless API)
+    Note over T,S: ✅ Single Session Creation in Tenant App
     T->>T: 10. Create/update local user record
     T->>S: 11. Create Laravel session
     T->>S: 12. Store JWT token + SSO user data
     T->>U: 13. Set session cookie & redirect
-    T->>U: 14. User logged in with local session
+    T->>U: 14. User logged in with local session only
 ```
 
 **Benefits:**
-- **🎯 Centralized Authentication**: All credentials validated by central SSO
-- **⚡ Local Session Management**: Independent sessions per tenant
-- **🚀 Performance**: Reduced API calls after authentication
-- **🔄 User Data Sync**: Auto-sync on login
+- **🎯 Centralized Authentication**: All credentials validated by central SSO API
+- **⚡ Single Session**: Only tenant app session created (no central SSO session)
+- **🚀 High Performance**: Stateless API calls, minimal server load
+- **🔄 User Data Sync**: Auto-sync on login via API response
 - **📊 Audit Trail**: All authentications tracked centrally
+- **📈 Scalability**: No session storage in central SSO for API requests
 
-### Traditional SSO Redirect
+### Traditional SSO Redirect (Web-Based - Dual Sessions)
 
 ```mermaid
 sequenceDiagram
     participant U as User
     participant T as Tenant App
-    participant SSO as Central SSO
+    participant SSO as Central SSO Web
     participant DB as Database
+    participant CS as Central Session
+    participant TS as Tenant Session
     
-    Note over U,DB: Standard SSO Flow
+    Note over U,TS: Web-Based SSO Flow (Creates Dual Sessions)
     U->>T: 1. Visit tenant app
     U->>T: 2. Click "Login with SSO"
     T->>T: 3. Store return URL in session
-    T->>U: 4. Redirect to SSO
+    T->>U: 4. Redirect to Central SSO website
     U->>SSO: 5. GET /auth/tenant1?callback_url=...
     SSO->>U: 6. Show login form
     U->>SSO: 7. Submit credentials
@@ -152,12 +162,17 @@ sequenceDiagram
     SSO->>SSO: 10. Verify password
     SSO->>DB: 11. Check tenant access
     DB->>SSO: 12. Tenant relationships
-    SSO->>SSO: 13. Generate JWT with claims
-    SSO->>T: 14. Redirect with token
-    T->>SSO: 15. Validate token via API
-    SSO->>T: 16. Return validation result
-    T->>T: 17. Create session
-    T->>U: 18. User logged in
+    
+    Note over SSO,CS: ✅ Central SSO Session Created (Session A)
+    SSO->>CS: 13. Create Laravel session in Central SSO
+    SSO->>SSO: 14. Generate JWT with claims
+    SSO->>T: 15. Redirect with token
+    T->>SSO: 16. Validate token via API
+    SSO->>T: 17. Return validation result
+    
+    Note over T,TS: ✅ Tenant App Session Created (Session B)
+    T->>TS: 18. Create Laravel session in Tenant App
+    T->>U: 19. User logged in (dual sessions active)
 ```
 
 ## 🔑 JWT Token Management
@@ -243,11 +258,135 @@ public function refreshTokenIfNeeded($token)
 }
 ```
 
+## 📊 Session Architecture Comparison
+
+> **✅ CONFIRMED**: Analysis based on actual codebase implementation. API login endpoint (`POST /api/auth/login`) is completely stateless and creates no Central SSO session.
+
+### Session Creation by Authentication Type
+
+| Authentication Method | Central SSO Session | Tenant App Session | Total Sessions | Notes |
+|----------------------|-------------------|------------------|---------------|-------|
+| **Direct Login (API)** | ❌ **No session** | ✅ **Creates session** | **1 Session** | Stateless API call |
+| **SSO Redirect** | ✅ **Creates session** | ✅ **Creates session** | **2 Sessions** | Web-based flow |
+| **Seamless SSO** | ✅ **Reuses existing** | ✅ **Creates session** | **2 Sessions** | Leverages existing |
+| **Pure API Access** | ❌ No session | ❌ No session | **0 Sessions** | Stateless only |
+
+### Session Storage Locations
+
+```php
+// Direct Login - Single Session Architecture
+// Central SSO: NO SESSION STORAGE (stateless API)
+// Tenant App (Port 8001): 1 session file
+[
+    '_token' => 'tenant_csrf_token',
+    'login_web_AUTH_ID' => 123,  // Local tenant user ID
+    'jwt_token' => 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...',
+    'sso_user_data' => [
+        'id' => 25,  // Central SSO user ID from JWT
+        'email' => 'user@tenant1.com'
+    ]
+]
+
+// SSO Redirect - Dual Session Architecture  
+// Central SSO (Port 8000): 1 session file
+[
+    '_token' => 'central_csrf_token',
+    'login_web_AUTH_ID' => 25,  // Central SSO user ID
+    'authenticated_tenants' => ['tenant1', 'tenant2'],
+    'current_tenant' => 'tenant1'
+]
+
+// Tenant App (Port 8001): 1 session file  
+[
+    '_token' => 'tenant_csrf_token',
+    'login_web_AUTH_ID' => 123,  // Local tenant user ID
+    'jwt_token' => 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...',
+    'sso_user_data' => [...]
+]
+```
+
+### Performance & Scalability Impact
+
+```php
+// Performance comparison by authentication type
+public function getPerformanceMetrics()
+{
+    return [
+        'direct_login' => [
+            'central_sso_load' => 'Low (stateless API only)',
+            'session_files' => 1,
+            'memory_usage' => 'Lower',
+            'scalability' => 'Excellent (stateless)',
+            'complexity' => 'Simple (single session)'
+        ],
+        'sso_redirect' => [
+            'central_sso_load' => 'Higher (web sessions + API)',
+            'session_files' => 2,
+            'memory_usage' => 'Higher', 
+            'scalability' => 'Good (but session overhead)',
+            'complexity' => 'Complex (dual session sync)'
+        ]
+    ];
+}
+```
+
+### API vs Web Interface Distinction
+
+```php
+// Direct Login - API Endpoint (No Session) - CONFIRMED STATELESS
+// Route: POST /api/auth/login
+public function login(Request $request)
+{
+    // ❌ NO session operations - completely stateless
+    $user = User::where('email', $request->email)->first();
+    
+    if ($user && Hash::check($request->password, $user->password)) {
+        // Generate JWT token (no session creation)
+        $token = JWTAuth::customClaims($customClaims)->fromUser($user);
+        
+        // Record audit (no session ID - uses null)
+        $this->auditService->recordLogin($user, $tenant, 'api', null);
+        
+        // Return JSON - no session storage in Central SSO
+        return response()->json([
+            'success' => true,
+            'token' => $token,
+            'user' => $userDto->toArray()
+        ]);
+    }
+    
+    return response()->json(['error' => 'Invalid credentials'], 401);
+}
+
+// Key differences from web login:
+// ❌ No auth()->login() call
+// ❌ No session()->put() operations  
+// ❌ No Laravel session creation
+// ❌ No session cookie setting
+// ✅ Only JWT generation and JSON response
+
+// SSO Redirect - Web Interface (Creates Session)  
+// Route: GET /auth/tenant1
+public function webLogin(Request $request)
+{
+    // ✅ Traditional web login - DOES create session
+    if (auth()->attempt($credentials)) {
+        // Laravel automatically creates session
+        session()->regenerate();
+        
+        $token = $this->generateJWT(auth()->user());
+        return redirect($callbackUrl . '?token=' . $token);
+    }
+    
+    return back()->withErrors('Invalid credentials');
+}
+```
+
 ## 🗂️ Session Management
 
 ### Session Data Structure
 
-The dual-session architecture maintains both Laravel session data and SSO integration data:
+The session architecture varies by authentication method. Direct Login creates single sessions, while SSO flows create dual sessions:
 
 ```php
 // Laravel Session Storage
