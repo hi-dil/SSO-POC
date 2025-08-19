@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Setting;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -13,10 +14,12 @@ use App\Services\LoginAuditService;
 
 class MainAuthController extends Controller
 {
-    private LoginAuditService $auditService;
+    private LoginAuditService $loginAuditService;
+    private AuditService $auditService;
 
-    public function __construct(LoginAuditService $auditService)
+    public function __construct(LoginAuditService $loginAuditService, AuditService $auditService)
     {
+        $this->loginAuditService = $loginAuditService;
         $this->auditService = $auditService;
     }
 
@@ -35,12 +38,26 @@ class MainAuthController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
-            // Record failed login attempt
-            $this->auditService->recordFailedLogin(
+            // Record failed login attempt (legacy audit)
+            $this->loginAuditService->recordFailedLogin(
                 $request->email,
                 null,
                 'direct',
                 'Invalid credentials'
+            );
+            
+            // Log authentication failure (new audit system)
+            $this->auditService->logAuthentication(
+                'login_failed',
+                "Failed login attempt for email: {$request->email}",
+                null,
+                [
+                    'email' => $request->email,
+                    'method' => 'direct',
+                    'reason' => 'Invalid credentials',
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent()
+                ]
             );
             
             return back()->withErrors(['email' => 'Invalid credentials'])->withInput();
@@ -53,8 +70,22 @@ class MainAuthController extends Controller
         // Log the user in for Laravel session authentication
         Auth::login($user);
 
-        // Record successful login
-        $this->auditService->recordLogin($user, null, 'direct');
+        // Record successful login (legacy audit)
+        $this->loginAuditService->recordLogin($user, null, 'direct');
+        
+        // Log authentication success (new audit system)
+        $this->auditService->logAuthentication(
+            'login_success',
+            "Successful login for user: {$user->name}",
+            $user,
+            [
+                'method' => 'direct',
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent()
+            ]
+        );
 
         // Redirect to dashboard after login
         return redirect()->route('dashboard');
@@ -162,8 +193,24 @@ class MainAuthController extends Controller
                 ->setTTL($ttl)
                 ->fromUser($user);
             
-            // Record SSO login for this tenant
-            $this->auditService->recordLogin($user, $tenantSlug, 'sso');
+            // Record SSO login for this tenant (legacy audit)
+            $this->loginAuditService->recordLogin($user, $tenantSlug, 'sso');
+            
+            // Log SSO authentication (new audit system)
+            $this->auditService->logAuthentication(
+                'sso_login',
+                "SSO login for user: {$user->name} to tenant: {$tenantSlug}",
+                $user,
+                [
+                    'method' => 'sso',
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'tenant_slug' => $tenantSlug,
+                    'token_ttl_minutes' => $ttl,
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent()
+                ]
+            );
             
         } catch (\Exception $e) {
             return redirect()->route('login')->withErrors(['error' => 'Could not create authentication token']);
@@ -196,8 +243,26 @@ class MainAuthController extends Controller
 
     public function logout()
     {
-        // Record logout before clearing session
-        $this->auditService->recordLogout();
+        $user = Auth::user();
+        
+        // Record logout before clearing session (legacy audit)
+        $this->loginAuditService->recordLogout();
+        
+        // Log authentication logout (new audit system)
+        if ($user) {
+            $this->auditService->logAuthentication(
+                'logout',
+                "User logout: {$user->name}",
+                $user,
+                [
+                    'method' => 'manual',
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent()
+                ]
+            );
+        }
         
         // Logout from Laravel session
         Auth::logout();

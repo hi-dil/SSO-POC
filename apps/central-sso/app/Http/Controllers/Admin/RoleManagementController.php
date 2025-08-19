@@ -9,6 +9,7 @@ use App\Models\Permission;
 use App\Models\Tenant;
 use App\DTOs\Request\CreateRoleRequestDTO;
 use App\DTOs\Response\RoleResponseDTO;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
@@ -16,6 +17,12 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class RoleManagementController extends Controller
 {
+    private AuditService $auditService;
+
+    public function __construct(AuditService $auditService)
+    {
+        $this->auditService = $auditService;
+    }
     public function index()
     {
         // Load all data for the UI
@@ -125,9 +132,25 @@ class RoleManagementController extends Controller
                 'is_system' => false
             ]);
 
+            // Log role creation
+            $this->auditService->logRolesPermissions(
+                'role_created',
+                "Created role: {$role->name}",
+                $role,
+                ['role_data' => $role->toArray()]
+            );
+
             if (!empty($dto->permissions)) {
                 $permissions = Permission::whereIn('slug', $dto->permissions)->get();
                 $role->permissions()->sync($permissions->pluck('id'));
+                
+                // Log permission assignment
+                $this->auditService->logRolesPermissions(
+                    'permissions_assigned',
+                    "Assigned {$permissions->count()} permissions to role: {$role->name}",
+                    $role,
+                    ['assigned_permissions' => $permissions->pluck('name')->toArray()]
+                );
             }
 
             $role->load('permissions');
@@ -183,18 +206,47 @@ class RoleManagementController extends Controller
 
             $dto = CreateRoleRequestDTO::fromArray($validatedData);
 
+            $originalData = $role->toArray();
+            
             $role->update([
                 'name' => $dto->name,
                 'slug' => $dto->slug ?: \Str::slug($dto->name),
                 'description' => $dto->description
             ]);
 
+            // Log role update
+            $this->auditService->logModelChange(
+                'roles_permissions',
+                'role_updated', 
+                'updated',
+                $role,
+                $originalData,
+                $role->fresh()->toArray()
+            );
+
+            $oldPermissions = $role->permissions->pluck('name')->toArray();
+            
             if (!empty($dto->permissions)) {
                 $permissions = Permission::whereIn('slug', $dto->permissions)->get();
                 $role->permissions()->sync($permissions->pluck('id'));
+                $newPermissions = $permissions->pluck('name')->toArray();
             } else {
                 $role->permissions()->sync([]);
+                $newPermissions = [];
             }
+            
+            // Log permission changes
+            $this->auditService->logRolesPermissions(
+                'permissions_updated',
+                "Updated permissions for role: {$role->name}",
+                $role,
+                [
+                    'old_permissions' => $oldPermissions,
+                    'new_permissions' => $newPermissions,
+                    'added_permissions' => array_diff($newPermissions, $oldPermissions),
+                    'removed_permissions' => array_diff($oldPermissions, $newPermissions)
+                ]
+            );
 
             $role->load('permissions');
 
@@ -236,6 +288,14 @@ class RoleManagementController extends Controller
                 ], 403);
             }
 
+            // Log role deletion before deleting
+            $this->auditService->logRolesPermissions(
+                'role_deleted',
+                "Deleted role: {$role->name}",
+                $role,
+                ['deleted_role_data' => $role->toArray()]
+            );
+            
             $role->delete();
 
             return response()->json([
@@ -278,6 +338,22 @@ class RoleManagementController extends Controller
             
             // Use the assignRole method which should handle tenant-specific assignments
             $user->assignRole($role->name, $validated['tenant_id']);
+            
+            // Log role assignment
+            $tenantInfo = $validated['tenant_id'] ? 
+                Tenant::find($validated['tenant_id'])->name ?? 'Unknown Tenant' : 
+                'Global';
+                
+            $this->auditService->logRolesPermissions(
+                'user_role_assigned',
+                "Assigned role '{$role->name}' to user '{$user->name}' (Scope: {$tenantInfo})",
+                $user,
+                [
+                    'assigned_role' => $role->name,
+                    'tenant_id' => $validated['tenant_id'],
+                    'tenant_name' => $tenantInfo
+                ]
+            );
 
             return response()->json([
                 'success' => true,
@@ -314,6 +390,22 @@ class RoleManagementController extends Controller
             ]);
 
             $role = Role::where('slug', $validated['role_slug'])->firstOrFail();
+            
+            // Log role removal before removing
+            $tenantInfo = $validated['tenant_id'] ? 
+                Tenant::find($validated['tenant_id'])->name ?? 'Unknown Tenant' : 
+                'Global';
+                
+            $this->auditService->logRolesPermissions(
+                'user_role_removed',
+                "Removed role '{$role->name}' from user '{$user->name}' (Scope: {$tenantInfo})",
+                $user,
+                [
+                    'removed_role' => $role->name,
+                    'tenant_id' => $validated['tenant_id'],
+                    'tenant_name' => $tenantInfo
+                ]
+            );
             
             // Use the removeRole method which should handle tenant-specific assignments
             $user->removeRole($role->name, $validated['tenant_id']);

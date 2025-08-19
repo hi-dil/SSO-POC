@@ -5,10 +5,12 @@ namespace App\Models;
 use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Tenant extends BaseTenant implements TenantWithDatabase
 {
-    use HasDatabase;
+    use HasDatabase, LogsActivity;
 
     protected $fillable = [
         'id',
@@ -63,6 +65,24 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     {
         return $this->belongsToMany(User::class, 'tenant_users')
                     ->withTimestamps();
+    }
+
+    /**
+     * Configure activity logging
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'slug', 'domain', 'is_active', 'max_users', 'plan', 'billing_status'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('tenants')
+            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
+                'created' => "Tenant {$this->name} created",
+                'updated' => "Tenant {$this->name} updated",
+                'deleted' => "Tenant {$this->name} deleted",
+                default => "Tenant {$this->name} {$eventName}",
+            });
     }
 
     public static function boot()

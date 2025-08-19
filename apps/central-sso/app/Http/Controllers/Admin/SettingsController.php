@@ -4,14 +4,18 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class SettingsController extends Controller
 {
-    public function __construct()
+    private AuditService $auditService;
+
+    public function __construct(AuditService $auditService)
     {
         $this->middleware('can:system.settings');
+        $this->auditService = $auditService;
     }
 
     /**
@@ -53,11 +57,28 @@ class SettingsController extends Controller
                 }
             }
 
+            // Store old value for audit
+            $oldValue = $setting->value;
+
             // Cast the value appropriately before saving
             $castValue = $this->castValueForStorage($value, $setting->type);
             
             if (Setting::set($key, $castValue)) {
                 $updated[] = $setting->label;
+                
+                // Log the setting change
+                $this->auditService->logSettings(
+                    'setting_updated',
+                    "Setting '{$setting->label}' updated",
+                    $setting->fresh(),
+                    [
+                        'setting_key' => $key,
+                        'old_value' => $oldValue,
+                        'new_value' => $castValue,
+                        'setting_group' => $setting->group,
+                        'setting_type' => $setting->type,
+                    ]
+                );
             }
         }
 
@@ -95,10 +116,27 @@ class SettingsController extends Controller
             return response()->json(['error' => 'Setting not found'], 404);
         }
 
+        // Store old value for audit
+        $oldValue = $setting->value;
+
         // Get default value from seeder or fallback
         $defaultValue = $this->getDefaultValue($key);
         
         if (Setting::set($key, $defaultValue)) {
+            // Log the setting reset
+            $this->auditService->logSettings(
+                'setting_reset',
+                "Setting '{$setting->label}' reset to default value",
+                $setting->fresh(),
+                [
+                    'setting_key' => $key,
+                    'old_value' => $oldValue,
+                    'default_value' => $defaultValue,
+                    'setting_group' => $setting->group,
+                    'setting_type' => $setting->type,
+                ]
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => "Setting '{$setting->label}' reset to default value",
@@ -137,6 +175,14 @@ class SettingsController extends Controller
     public function clearCache()
     {
         Setting::clearCache();
+        
+        // Log the cache clear operation
+        $this->auditService->logSettings(
+            'cache_cleared',
+            'Settings cache cleared',
+            null,
+            ['operation' => 'cache_clear']
+        );
         
         return response()->json([
             'success' => true,

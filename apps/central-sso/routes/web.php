@@ -222,6 +222,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::put('settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('settings.update');
     Route::post('settings/reset/{key}', [\App\Http\Controllers\Admin\SettingsController::class, 'reset'])->name('settings.reset');
     Route::post('settings/clear-cache', [\App\Http\Controllers\Admin\SettingsController::class, 'clearCache'])->name('settings.clear-cache');
+    
+    // Audit Logs Management
+    Route::get('audit-logs', [\App\Http\Controllers\Admin\AuditLogController::class, 'index'])->name('audit-logs.index');
+    Route::get('audit-logs/{activity}', [\App\Http\Controllers\Admin\AuditLogController::class, 'show'])->name('audit-logs.show');
+    Route::get('audit-logs/api/activities', [\App\Http\Controllers\Admin\AuditLogController::class, 'activities'])->name('audit-logs.activities');
+    Route::get('audit-logs/api/statistics', [\App\Http\Controllers\Admin\AuditLogController::class, 'statistics'])->name('audit-logs.statistics');
+    Route::post('audit-logs/export', [\App\Http\Controllers\Admin\AuditLogController::class, 'export'])->name('audit-logs.export');
+    Route::post('audit-logs/cleanup', [\App\Http\Controllers\Admin\AuditLogController::class, 'cleanup'])->name('audit-logs.cleanup');
+    Route::get('audit-logs/users/{userId}', [\App\Http\Controllers\Admin\AuditLogController::class, 'userActivities'])->name('audit-logs.user-activities');
 });
 
 // API-style routes for admin role management (web authenticated)

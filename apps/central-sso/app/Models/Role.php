@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\Permission\Models\Role as SpatieRole;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Role extends SpatieRole
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'name',
@@ -46,6 +48,24 @@ class Role extends SpatieRole
     public function scopeCustom($query)
     {
         return $query->where('is_system', false);
+    }
+
+    /**
+     * Configure activity logging
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'slug', 'description', 'is_system'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('roles')
+            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
+                'created' => "Role {$this->name} created",
+                'updated' => "Role {$this->name} updated",
+                'deleted' => "Role {$this->name} deleted",
+                default => "Role {$this->name} {$eventName}",
+            });
     }
 
     /**

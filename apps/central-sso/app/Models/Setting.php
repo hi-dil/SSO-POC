@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Setting extends Model
 {
+    use LogsActivity;
     protected $fillable = [
         'key',
         'value',
@@ -140,6 +143,24 @@ class Setting extends Model
     public static function getSessionLifetime(): int
     {
         return static::get('session.lifetime', 120);
+    }
+
+    /**
+     * Configure activity logging
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['key', 'value', 'type', 'group'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('settings')
+            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
+                'created' => "Setting {$this->key} created",
+                'updated' => "Setting {$this->key} updated",
+                'deleted' => "Setting {$this->key} deleted",
+                default => "Setting {$this->key} {$eventName}",
+            });
     }
 
     /**

@@ -198,6 +198,7 @@ The SSO system uses **tenant slugs** for clean, user-friendly URLs and tenant id
 - **Tenant Management**: Multi-tenant configuration and user assignment
 - **Admin Interface**: Modern, responsive admin panel with shadcn/ui design
 - **Real-time Updates**: Live data refresh without page reloads
+- **Audit Logging**: Comprehensive activity tracking with module organization and real-time monitoring
 
 ### Role-Based Access Control (RBAC) - Central SSO Only
 - **Scope**: Roles and permissions apply **only to the central SSO server**
@@ -228,6 +229,17 @@ Comprehensive authentication tracking across the entire SSO ecosystem:
 - **Multi-Method Support**: Tracks direct logins, SSO logins, and API authentication
 - **Real-Time Analytics**: Live dashboard with auto-refresh capabilities
 - **Failed Attempt Monitoring**: Detailed tracking of unsuccessful login attempts
+
+### Comprehensive Audit System
+Enterprise-grade activity logging with complete visibility into system operations:
+- **Module Organization**: Structured by functional areas (Authentication, User Management, Tenant Management, Settings, Roles & Permissions, Security, System)
+- **Real-Time Monitoring**: Live activity feed with auto-refresh and filtering capabilities
+- **Detailed Tracking**: Captures IP addresses, user agents, request details, and change histories
+- **Export Capabilities**: CSV and JSON export with filtering options
+- **Performance Optimized**: Indexed database with caching for fast queries
+- **Retention Management**: Configurable data retention and automated cleanup
+- **Role-Based Access**: Granular permissions for audit viewing, export, and management
+- **Comprehensive Coverage**: Tracks all CRUD operations, configuration changes, and security events
 
 ## 🔒 Enterprise Security Implementation
 
@@ -469,6 +481,7 @@ For detailed documentation, see `/docs/` directory:
 - **Production Deployment**: Complete production setup guide
 - **API Documentation**: REST API reference
 - **Testing Guide**: Comprehensive testing strategies
+- **Audit System**: Comprehensive audit logging documentation at `/docs/audit-system.md`
 
 ---
 

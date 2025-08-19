@@ -9,6 +9,7 @@ use App\Models\UserContact;
 use App\Models\UserAddress;
 use App\Models\UserFamilyMember;
 use App\Models\UserSocialMedia;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
@@ -17,6 +18,13 @@ use Illuminate\Support\Facades\Hash;
 
 class UserManagementController extends Controller
 {
+    private AuditService $auditService;
+
+    public function __construct(AuditService $auditService)
+    {
+        $this->auditService = $auditService;
+    }
+
     public function index(Request $request)
     {
         $query = User::with(['roles', 'tenants', 'familyMembers']);
@@ -157,7 +165,33 @@ class UserManagementController extends Controller
             // Attach tenants if provided
             if (!empty($validatedData['tenant_ids'])) {
                 $user->tenants()->sync($validatedData['tenant_ids']);
+                
+                // Log tenant assignment
+                $tenantNames = Tenant::whereIn('id', $validatedData['tenant_ids'])->pluck('name')->toArray();
+                $this->auditService->logUserManagement(
+                    'tenant_assigned',
+                    "User '{$user->name}' assigned to tenants: " . implode(', ', $tenantNames),
+                    $user,
+                    [
+                        'tenant_ids' => $validatedData['tenant_ids'],
+                        'tenant_names' => $tenantNames,
+                        'operation' => 'bulk_assign'
+                    ]
+                );
             }
+
+            // Log user creation
+            $this->auditService->logUserManagement(
+                'user_created',
+                "User '{$user->name}' created",
+                $user,
+                [
+                    'user_email' => $user->email,
+                    'is_admin' => $user->is_admin,
+                    'has_tenant_access' => !empty($validatedData['tenant_ids']),
+                    'tenant_count' => count($validatedData['tenant_ids'] ?? [])
+                ]
+            );
 
             $user->load(['tenants', 'roles']);
 
@@ -213,8 +247,32 @@ class UserManagementController extends Controller
                     'tenant_ids.*' => 'string|exists:tenants,id',
                 ]);
                 
+                // Get old tenant IDs for audit
+                $oldTenantIds = $user->tenants->pluck('id')->toArray();
+                $newTenantIds = $validatedData['tenant_ids'] ?? [];
+
                 // Update tenant associations only
-                $user->tenants()->sync($validatedData['tenant_ids'] ?? []);
+                $user->tenants()->sync($newTenantIds);
+                
+                // Log tenant assignment changes
+                if (array_diff($oldTenantIds, $newTenantIds) || array_diff($newTenantIds, $oldTenantIds)) {
+                    $removedTenants = array_diff($oldTenantIds, $newTenantIds);
+                    $addedTenants = array_diff($newTenantIds, $oldTenantIds);
+                    
+                    $this->auditService->logUserManagement(
+                        'tenant_updated',
+                        "User '{$user->name}' tenant assignments updated",
+                        $user,
+                        [
+                            'old_tenant_ids' => $oldTenantIds,
+                            'new_tenant_ids' => $newTenantIds,
+                            'added_tenants' => $addedTenants,
+                            'removed_tenants' => $removedTenants,
+                            'operation' => 'tenant_only_update'
+                        ]
+                    );
+                }
+                
                 $user->load(['tenants', 'roles']);
                 
                 if ($request->expectsJson()) {
@@ -276,14 +334,51 @@ class UserManagementController extends Controller
                 unset($updateData['password']);
             }
             
+            // Store original values for audit
+            $originalData = $user->only(['name', 'email', 'is_admin', 'phone', 'job_title', 'department']);
+            $oldTenantIds = $user->tenants->pluck('id')->toArray();
+
             // Remove fields that shouldn't be mass assigned
             unset($updateData['tenant_ids'], $updateData['password_confirmation']);
 
             $user->update($updateData);
 
             // Update tenant associations
+            $tenantChanges = [];
             if (isset($validatedData['tenant_ids'])) {
-                $user->tenants()->sync($validatedData['tenant_ids']);
+                $newTenantIds = $validatedData['tenant_ids'];
+                $user->tenants()->sync($newTenantIds);
+                
+                if (array_diff($oldTenantIds, $newTenantIds) || array_diff($newTenantIds, $oldTenantIds)) {
+                    $tenantChanges = [
+                        'old_tenant_ids' => $oldTenantIds,
+                        'new_tenant_ids' => $newTenantIds,
+                        'added_tenants' => array_diff($newTenantIds, $oldTenantIds),
+                        'removed_tenants' => array_diff($oldTenantIds, $newTenantIds),
+                    ];
+                }
+            }
+
+            // Log user update
+            $changes = [];
+            foreach ($originalData as $key => $oldValue) {
+                if (isset($updateData[$key]) && $updateData[$key] != $oldValue) {
+                    $changes[$key] = ['old' => $oldValue, 'new' => $updateData[$key]];
+                }
+            }
+
+            if (!empty($changes) || !empty($tenantChanges) || !empty($validatedData['password'])) {
+                $auditData = array_merge(['field_changes' => $changes], $tenantChanges);
+                if (!empty($validatedData['password'])) {
+                    $auditData['password_changed'] = true;
+                }
+
+                $this->auditService->logUserManagement(
+                    'user_updated',
+                    "User '{$user->name}' updated",
+                    $user,
+                    $auditData
+                );
             }
 
             $user->load(['tenants', 'roles']);
@@ -340,6 +435,23 @@ class UserManagementController extends Controller
             }
 
             $userName = $user->name;
+            $userEmail = $user->email;
+            $tenantCount = $user->tenants->count();
+            $isAdmin = $user->is_admin;
+            
+            // Log user deletion before actual deletion
+            $this->auditService->logUserManagement(
+                'user_deleted',
+                "User '{$userName}' deleted",
+                $user,
+                [
+                    'user_email' => $userEmail,
+                    'was_admin' => $isAdmin,
+                    'tenant_count' => $tenantCount,
+                    'deleted_by' => auth()->user()->name
+                ]
+            );
+            
             $user->delete();
 
             if ($request->expectsJson()) {

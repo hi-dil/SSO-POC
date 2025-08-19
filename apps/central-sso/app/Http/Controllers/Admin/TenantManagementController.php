@@ -5,14 +5,18 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 
 class TenantManagementController extends Controller
 {
-    public function __construct()
+    private AuditService $auditService;
+
+    public function __construct(AuditService $auditService)
     {
+        $this->auditService = $auditService;
         $this->middleware('can:tenants.view')->only(['index', 'show']);
         $this->middleware('can:tenants.create')->only(['create', 'store', 'bulkCreate']);
         $this->middleware('can:tenants.edit')->only(['edit', 'update']);
@@ -155,6 +159,22 @@ class TenantManagementController extends Controller
             $tenant->max_users = $request->max_users;
             $tenant->save();
 
+            // Log tenant creation
+            $this->auditService->logTenantManagement(
+                'tenant_created',
+                "Tenant '{$tenant->name}' created",
+                $tenant,
+                [
+                    'tenant_slug' => $tenant->slug,
+                    'plan' => $tenant->plan,
+                    'industry' => $tenant->industry,
+                    'region' => $tenant->region,
+                    'max_users' => $tenant->max_users,
+                    'is_active' => $tenant->is_active,
+                    'features' => $features
+                ]
+            );
+
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
@@ -244,6 +264,19 @@ class TenantManagementController extends Controller
         }
 
         try {
+            // Store original values for audit
+            $originalData = [
+                'name' => $tenant->name,
+                'domain' => $tenant->domain,
+                'description' => $tenant->description,
+                'is_active' => $tenant->is_active,
+                'max_users' => $tenant->max_users,
+                'plan' => $tenant->plan,
+                'industry' => $tenant->industry,
+                'region' => $tenant->region,
+                'employee_count' => $tenant->employee_count,
+            ];
+
             // Prepare features based on plan
             $features = $this->getFeaturesForPlan($request->plan);
             
@@ -262,6 +295,38 @@ class TenantManagementController extends Controller
             $tenant->employee_count = $request->employee_count;
             $tenant->features = $features;
             $tenant->save();
+
+            // Log tenant update - detect changes
+            $newData = [
+                'name' => $tenant->name,
+                'domain' => $tenant->domain,
+                'description' => $tenant->description,
+                'is_active' => $tenant->is_active,
+                'max_users' => $tenant->max_users,
+                'plan' => $tenant->plan,
+                'industry' => $tenant->industry,
+                'region' => $tenant->region,
+                'employee_count' => $tenant->employee_count,
+            ];
+
+            $changes = [];
+            foreach ($originalData as $key => $oldValue) {
+                if ($newData[$key] != $oldValue) {
+                    $changes[$key] = ['old' => $oldValue, 'new' => $newData[$key]];
+                }
+            }
+
+            if (!empty($changes)) {
+                $this->auditService->logTenantManagement(
+                    'tenant_updated',
+                    "Tenant '{$tenant->name}' updated",
+                    $tenant,
+                    [
+                        'field_changes' => $changes,
+                        'features_updated' => $features
+                    ]
+                );
+            }
 
             if ($request->wantsJson()) {
                 return response()->json([
@@ -307,6 +372,23 @@ class TenantManagementController extends Controller
             }
 
             $tenantName = $tenant->name;
+            $tenantSlug = $tenant->slug;
+            $tenantPlan = $tenant->plan;
+            $tenantUserCount = $tenant->users()->count();
+
+            // Log tenant deletion before actual deletion
+            $this->auditService->logTenantManagement(
+                'tenant_deleted',
+                "Tenant '{$tenantName}' deleted",
+                $tenant,
+                [
+                    'tenant_slug' => $tenantSlug,
+                    'plan' => $tenantPlan,
+                    'user_count' => $tenantUserCount,
+                    'deleted_by' => auth()->user()->name
+                ]
+            );
+
             $tenant->delete();
 
             if ($request->wantsJson()) {
