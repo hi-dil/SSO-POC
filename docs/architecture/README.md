@@ -32,6 +32,13 @@ Understanding the design and structure of the multi-tenant SSO system.
 - Admin interface architecture
 - JWT integration patterns
 
+### **[Challenges & Solutions](challenges-and-solutions.md)**
+🚨 **Architectural challenges** - Current limitations and proposed solutions
+- Cross-system permission verification challenges
+- Sub-tenant architecture requirements
+- Business impact analysis with ROI calculations
+- Implementation roadmap and risk assessment
+
 ## 🏗️ High-Level Architecture
 
 ```
@@ -190,6 +197,7 @@ For detailed information on specific architectural components:
 - **[Multi-Tenancy Design](multi-tenancy.md)** - Tenant isolation and management
 - **[Database Design](database-design.md)** - Schema and relationships
 - **[Settings System](settings-system.md)** - Configuration management architecture
+- **[Challenges & Solutions](challenges-and-solutions.md)** - Current limitations and proposed solutions
 
 ## 🔗 Related Documentation
 
