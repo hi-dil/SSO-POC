@@ -2,6 +2,19 @@
 
 Complete documentation for the multi-tenant SSO system, organized by audience and use case.
 
+## 🎯 Why This Project?
+
+This SSO POC was created to solve critical security and architectural problems in the previous system:
+
+- **🚨 Security Risk**: The original system used shared database access across multiple tenants/projects, creating potential data exposure risks
+- **🗄️ Table Pollution**: Business logic tables (`organizations`, `clients`, `employers`, `status`) were mixed with authentication tables, causing confusion and violating separation of concerns  
+- **🤔 Developer Confusion**: New projects encountered unrelated business tables in the central SSO database
+- **🔗 Tight Coupling**: Business logic became tightly coupled with authentication systems
+
+**This POC solves these problems** by implementing proper **Identity & Access Management (IAM)** with clean separation of concerns, API-driven architecture, and isolated databases per tenant.
+
+👉 **[Read the complete story](architecture/project-motivation.md)** - Detailed background and motivation
+
 ## 🚀 Quick Navigation
 
 ### **New to the project?**

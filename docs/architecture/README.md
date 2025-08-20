@@ -4,6 +4,13 @@ Understanding the design and structure of the multi-tenant SSO system.
 
 ## 📖 Documentation in This Section
 
+### **[Project Background & Motivation](project-motivation.md)**
+🎯 **Why this POC exists** - Understanding the original problems and solutions
+- Original shared database security concerns
+- Database table pollution issues
+- Separation of concerns architecture
+- Benefits achieved and strategic value
+
 ### **[Authentication Systems](authentication.md)**
 🔐 **Complete authentication guide** - All authentication flows and methods
 - SSO redirect authentication
@@ -34,10 +41,17 @@ Understanding the design and structure of the multi-tenant SSO system.
 
 ### **[Challenges & Solutions](challenges-and-solutions.md)**
 🚨 **Architectural challenges** - Current limitations and proposed solutions
-- Cross-system permission verification challenges
-- Sub-tenant architecture requirements
-- Business impact analysis with ROI calculations
-- Implementation roadmap and risk assessment
+- Cross-system permission verification challenges with dual-session architecture
+- Sub-tenant architecture requirements for hierarchical tenant management
+- Four comprehensive solutions with Laravel code examples
+- Complete implementation migration guide with deployment scripts
+
+### **[Data Privacy Considerations](data-privacy-considerations.md)**
+🔒 **Legal and privacy compliance** - Understanding data protection requirements
+- Malaysian PDPA compliance requirements
+- International data protection considerations
+- Data ownership boundaries in multi-tenant systems
+- Architectural patterns that support compliance
 
 ## 🏗️ High-Level Architecture
 
@@ -193,10 +207,12 @@ External System → Central SSO API → JWT Token → Protected Resources
 
 For detailed information on specific architectural components:
 
+- **[Project Background & Motivation](project-motivation.md)** - Why this POC was created and problems solved
 - **[Authentication Systems](authentication.md)** - Complete authentication flows
 - **[Multi-Tenancy Design](multi-tenancy.md)** - Tenant isolation and management
 - **[Database Design](database-design.md)** - Schema and relationships
 - **[Settings System](settings-system.md)** - Configuration management architecture
+- **[Data Privacy Considerations](data-privacy-considerations.md)** - Legal compliance and data protection
 - **[Challenges & Solutions](challenges-and-solutions.md)** - Current limitations and proposed solutions
 
 ## 🔗 Related Documentation
